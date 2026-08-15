@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nhập môn RNA-seq — Đào Huy Mạnh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  /* Styles specific to the article template.
+     Kept in-page so this file can be duplicated freely for new posts. */
+  .article-header { padding: 56px 0 32px; }
+  .article-header .wrap { max-width: 760px; }
+  .article-header h1 {
+    font-family: var(--serif);
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.2;
+    margin: 18px 0 20px;
+  }
+  .article-meta {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    display: flex;
+    gap: 16px;
+  }
+  article.post-body { padding: 8px 0 72px; }
+  article.post-body .wrap { max-width: 760px; }
+  article.post-body h2 {
+    font-family: var(--serif);
+    font-size: 24px;
+    margin: 44px 0 16px;
+  }
+  article.post-body p {
+    font-size: 16.5px;
+    color: var(--ink);
+    margin: 0 0 20px;
+  }
+  article.post-body p.lead {
+    font-size: 18px;
+    color: var(--ink-soft);
+  }
+  article.post-body pre {
+    background: var(--navy);
+    color: #dfeee6;
+    font-family: var(--mono);
+    font-size: 13.5px;
+    line-height: 1.6;
+    padding: 20px 22px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 0 0 24px;
+  }
+  article.post-body code {
+    font-family: var(--mono);
+    background: var(--bg-panel);
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-size: 0.9em;
+  }
+  article.post-body pre code { background: none; padding: 0; }
+  .video-embed {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    border-radius: var(--radius);
+    margin: 8px 0 28px;
+    background: var(--navy);
+  }
+  .video-embed iframe {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;
+  }
+  figcaption {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    margin: -18px 0 28px;
+  }
+  .back-link {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--green-deep);
+    text-decoration: none;
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="index.html" class="logo">
+      <span class="logo-mark">chr::DHM</span>
+      <span class="logo-name">Đào Huy Mạnh</span>
+    </a>
+    <nav class="primary-nav" id="primaryNav">
+      <a href="index.html">trang chủ</a>
+      <a href="index.html#bai-viet">bài viết</a>
+      <a href="index.html#chu-de">chủ đề</a>
+      <a href="index.html#gioi-thieu">giới thiệu</a>
+      <a href="index.html#lien-he">liên hệ</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Mở menu" aria-expanded="false" aria-controls="primaryNav"></button>
+  </div>
+</header>
+
+<div class="track"></div>
+
+<div class="wrap" style="padding-top:24px;">
+  <a href="index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
+</div>
+
+<header class="article-header">
+  <div class="wrap">
+    <span class="tag tag--genomics">Genomics</span>
+    <h1>Nhập môn RNA-seq: từ đọc trình tự đến bảng biểu hiện gen</h1>
+    <div class="article-meta">
+      <span>Đào Huy Mạnh</span>
+      <span>2026.08.10</span>
+      <span>12 phút đọc</span>
+    </div>
+  </div>
+</header>
+
+<article class="post-body">
+  <div class="wrap">
+    <p class="lead">
+      Đây là trang mẫu cho một bài viết — sao chép file này để tạo bài mới.
+      Bên dưới là ví dụ các khối nội dung thường dùng: đoạn văn, tiêu đề phụ,
+      code block và video nhúng.
+    </p>
+
+    <h2>1. Dữ liệu đầu vào là gì</h2>
+    <p>
+      Thay đoạn này bằng nội dung thật của bạn. Mỗi bài viết nên bắt đầu bằng
+      một câu hỏi cụ thể mà người đọc đang tìm câu trả lời, sau đó dẫn dắt từng bước.
+    </p>
+
+    <h2>2. Ví dụ đoạn mã (code block)</h2>
+    <p>Dùng thẻ <code>&lt;pre&gt;&lt;code&gt;</code> cho các đoạn lệnh hoặc script:</p>
+    <pre><code>fastqc sample_R1.fastq.gz sample_R2.fastq.gz -o qc/
+STAR --runThreadN 8 --genomeDir index/ \
+     --readFilesIn sample_R1.fastq.gz sample_R2.fastq.gz \
+     --readFilesCommand zcat --outSAMtype BAM SortedByCoordinate</code></pre>
+
+    <h2>3. Ví dụ nhúng video (YouTube)</h2>
+    <p>Thay <code>VIDEO_ID</code> bằng mã video YouTube thật của bạn:</p>
+    <figure>
+      <div class="video-embed">
+        <iframe src="https://www.youtube.com/embed/VIDEO_ID" title="Video minh họa" allowfullscreen></iframe>
+      </div>
+      <figcaption>Hình 1 — thay bằng chú thích thật cho video của bạn.</figcaption>
+    </figure>
+
+    <h2>4. Kết luận</h2>
+    <p>
+      Tóm tắt lại điểm chính, và nếu phù hợp, gợi ý bài viết liên quan hoặc bước
+      tiếp theo cho người đọc.
+    </p>
+  </div>
+</article>
+
+<div class="track"></div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span class="foot-brand">© 2026 Đào Huy Mạnh · Ghi chép Y Sinh &amp; Bioinformatics</span>
+    <ul class="foot-links">
+      <li><a href="https://github.com/daohuymanh" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://orcid.org/0000-0003-3874-5051" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="mailto:you@example.com">Email</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+  const navToggle = document.getElementById('navToggle');
+  const primaryNav = document.getElementById('primaryNav');
+  navToggle.addEventListener('click', () => {
+    const isOpen = primaryNav.classList.toggle('is-open');
+    navToggle.setAttribute('aria-expanded', isOpen);
+  });
+</script>
+
+</body>
+</html>
