@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vẽ biểu đồ cột số mẫu theo tỉnh với ggplot2 — Đào Huy Mạnh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .article-header { padding: 56px 0 32px; }
+  .article-header .wrap { max-width: 760px; }
+  .article-header h1 {
+    font-family: var(--serif);
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.2;
+    margin: 18px 0 20px;
+  }
+  .article-meta {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    display: flex;
+    gap: 16px;
+  }
+  article.post-body { padding: 8px 0 72px; }
+  article.post-body .wrap { max-width: 760px; }
+  article.post-body h2 {
+    font-family: var(--serif);
+    font-size: 24px;
+    margin: 44px 0 16px;
+  }
+  article.post-body h3 {
+    font-family: var(--serif);
+    font-size: 19px;
+    margin: 30px 0 12px;
+  }
+  article.post-body p {
+    font-size: 16.5px;
+    color: var(--ink);
+    margin: 0 0 20px;
+  }
+  article.post-body p.lead {
+    font-size: 18px;
+    color: var(--ink-soft);
+  }
+  article.post-body ul, article.post-body ol {
+    margin: 0 0 20px;
+    padding-left: 22px;
+    font-size: 16px;
+  }
+  article.post-body li { margin-bottom: 6px; }
+  article.post-body pre {
+    background: var(--navy);
+    color: #dfeee6;
+    font-family: var(--mono);
+    font-size: 13.5px;
+    line-height: 1.6;
+    padding: 20px 22px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 0 0 24px;
+  }
+  article.post-body code {
+    font-family: var(--mono);
+    background: var(--bg-panel);
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-size: 0.9em;
+  }
+  article.post-body pre code { background: none; padding: 0; }
+  figure { margin: 8px 0 28px; }
+  figure img {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  figcaption {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    margin-top: 10px;
+  }
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+  .data-table th, .data-table td {
+    border: 1px solid var(--line);
+    padding: 8px 10px;
+    text-align: left;
+  }
+  .data-table th {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--bg-panel);
+    text-transform: lowercase;
+  }
+  .data-table td.num { text-align: right; font-family: var(--mono); }
+  .callout {
+    border-left: 3px solid var(--green-deep);
+    background: var(--bg-panel);
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    font-size: 15px;
+    margin: 0 0 24px;
+  }
+  .callout strong { color: var(--green-deep); }
+  .back-link {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--green-deep);
+    text-decoration: none;
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="index.html" class="logo">
+      <span class="logo-mark">chr::DHM</span>
+      <span class="logo-name">Đào Huy Mạnh</span>
+    </a>
+    <nav class="primary-nav" id="primaryNav">
+      <a href="index.html">trang chủ</a>
+      <a href="index.html#bai-viet">bài viết</a>
+      <a href="index.html#chu-de">chủ đề</a>
+      <a href="index.html#gioi-thieu">giới thiệu</a>
+      <a href="index.html#lien-he">liên hệ</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Mở menu" aria-expanded="false" aria-controls="primaryNav"></button>
+  </div>
+</header>
+
+<div class="track"></div>
+
+<div class="wrap" style="padding-top:24px;">
+  <a href="index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
+</div>
+
+<header class="article-header">
+  <div class="wrap">
+    <span class="tag tag--tools">Công cụ</span>
+    <h1>Vẽ biểu đồ cột số mẫu theo tỉnh với ggplot2 (dự án NS1 Biosensor)</h1>
+    <div class="article-meta">
+      <span>Đào Huy Mạnh</span>
+      <span>2026.08.15</span>
+      <span>10 phút đọc</span>
+    </div>
+  </div>
+</header>
+
+<article class="post-body">
+  <div class="wrap">
+    <p class="lead">
+      Ghi lại cách dùng <code>Bar_plot.R</code> trong repo
+      <a href="https://github.com/daohuymanh/NS1_Biosensor_Analysis" target="_blank" rel="noopener">NS1_Biosensor_Analysis</a>
+      để vẽ biểu đồ cột số mẫu xét nghiệm NS1 theo từng tỉnh — từ việc đọc file Excel gốc
+      đến giải thích từng dòng code, và cách chỉnh sửa nếu muốn áp dụng cho bộ dữ liệu khác.
+    </p>
+
+    <h2>1. Bộ dữ liệu</h2>
+    <p>
+      Dữ liệu nằm trong thư mục <code>data/</code> của repo, dạng file Excel với sheet
+      <code>NS1_analysis_R</code>. Mỗi dòng là một mẫu bệnh phẩm, với các cột chính:
+    </p>
+    <table class="data-table">
+      <thead>
+        <tr><th>cột</th><th>ý nghĩa</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Ma_so</td><td>Mã số mẫu</td></tr>
+        <tr><td>Gioi_tinh</td><td>Giới tính bệnh nhân</td></tr>
+        <tr><td>Tuoi_nam</td><td>Tuổi (năm)</td></tr>
+        <tr><td>Tinh</td><td>Tỉnh/thành nơi lấy mẫu</td></tr>
+        <tr><td>SXH</td><td>Phân loại sốt xuất huyết</td></tr>
+        <tr><td>Ngay_khoi_benh</td><td>Ngày khởi bệnh</td></tr>
+        <tr><td>PCR / Ct</td><td>Kết quả và chu kỳ ngưỡng PCR</td></tr>
+        <tr><td>Ket_qua_NS1_Biosensor / COI_NS1</td><td>Kết quả và chỉ số biosensor NS1</td></tr>
+      </tbody>
+    </table>
+    <p>
+      Bài này chỉ dùng cột <code>Tinh</code> để đếm số mẫu theo từng tỉnh — một bước
+      khảo sát nhanh (exploratory) rất hay làm đầu tiên trước khi đi vào phân tích sâu hơn.
+    </p>
+
+    <h2>2. Cài thư viện &amp; đọc dữ liệu</h2>
+    <p>Script dùng <code>dplyr</code> để xử lý dữ liệu và <code>ggplot2</code> để vẽ. Đọc file Excel cần thêm <code>readxl</code>:</p>
+    <pre><code>install.packages(c("readxl", "dplyr", "ggplot2"))
+
+library(readxl)
+library(dplyr)
+library(ggplot2)
+
+df &lt;- read_excel("data/NS1_Biosensor_analysis.xlsx", sheet = "NS1_analysis_R")</code></pre>
+    <p>
+      <code>df</code> chính là data frame mà toàn bộ <code>Bar_plot.R</code> thao tác lên —
+      cần chạy đoạn đọc dữ liệu này trước, vì bản thân <code>Bar_plot.R</code> không tự đọc file.
+    </p>
+
+    <h2>3. Đếm số mẫu theo tỉnh</h2>
+    <pre><code>province_counts &lt;- df %&gt;%
+  filter(!is.na(Tinh), Tinh != "") %&gt;%
+  count(Tinh, name = "so_mau") %&gt;%
+  arrange(desc(so_mau))</code></pre>
+    <ul>
+      <li><code>filter(!is.na(Tinh), Tinh != "")</code> — loại các dòng thiếu tên tỉnh, tránh cột trống hiện lên biểu đồ.</li>
+      <li><code>count(Tinh, name = "so_mau")</code> — đếm số dòng ứng với mỗi tỉnh, đặt tên cột kết quả là <code>so_mau</code>.</li>
+      <li><code>arrange(desc(so_mau))</code> — sắp xếp giảm dần, để bước vẽ ở dưới hiển thị tỉnh nhiều mẫu nhất trước.</li>
+    </ul>
+    <p>Với dữ liệu hiện tại, kết quả có 653 mẫu trải trên 24 tỉnh/thành, dẫn đầu là Vĩnh Long, Cà Mau, Tiền Giang.</p>
+
+    <h2>4. Vẽ biểu đồ với ggplot2</h2>
+    <pre><code>p_province &lt;- ggplot(province_counts,
+                     aes(x = reorder(Tinh, -so_mau), y = so_mau)) +
+  geom_col(fill = "#2C7FB8", width = 0.75) +
+  geom_text(aes(label = so_mau),
+            vjust = -0.3,
+            size = 4.5,
+            fontface = "bold") +
+  labs(
+    title = "Số mẫu theo tỉnh",
+    x = "Tỉnh",
+    y = "Số mẫu"
+  ) +
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.08))
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(face = "bold")
+  )
+
+p_province</code></pre>
+    <p>Giải thích từng lớp (layer):</p>
+    <ul>
+      <li><code>reorder(Tinh, -so_mau)</code> — sắp trục X theo số mẫu giảm dần, thay vì theo thứ tự alphabet mặc định.</li>
+      <li><code>geom_col(fill = "#2C7FB8")</code> — vẽ cột đặc, màu xanh dương cố định cho tất cả các tỉnh.</li>
+      <li><code>geom_text(..., vjust = -0.3)</code> — in số mẫu ngay phía trên mỗi cột, đẩy lên một chút để không dính vào đỉnh cột.</li>
+      <li><code>scale_y_continuous(expand = expansion(mult = c(0, 0.08)))</code> — chừa thêm 8% khoảng trống phía trên trục Y, để số hiển thị không bị cắt bởi viền biểu đồ.</li>
+      <li><code>theme(axis.text.x = element_text(angle = 45, hjust = 1))</code> — xoay nhãn tỉnh 45 độ, cần thiết vì có 24 tỉnh — để ngang sẽ đè lên nhau.</li>
+    </ul>
+
+    <h2>5. Kết quả</h2>
+    <figure>
+      <img src="bar_plot_so_mau_theo_tinh.png" alt="Biểu đồ cột số mẫu NS1 Biosensor theo tỉnh, dẫn đầu là Vĩnh Long, Cà Mau, Tiền Giang">
+      <figcaption>Hình 1 — Số mẫu theo tỉnh, dựng lại từ dữ liệu thật trong repo (653 mẫu / 24 tỉnh).</figcaption>
+    </figure>
+
+    <div class="callout">
+      <strong>Lưu ý khi chạy trên máy khác:</strong> nếu Rstudio báo lỗi <code>could not find function "%&gt;%"</code>,
+      nghĩa là chưa <code>library(dplyr)</code>. Nếu báo <code>object 'df' not found</code>, nghĩa là chưa chạy
+      bước đọc file Excel ở mục 2 trước khi chạy <code>Bar_plot.R</code>.
+    </div>
+
+    <h2>6. Muốn tùy biến thêm?</h2>
+    <ul>
+      <li>Đổi màu cột theo nhóm — ví dụ tô màu theo <code>SXH</code> (loại sốt xuất huyết): thay <code>fill = "#2C7FB8"</code> bằng <code>aes(fill = SXH)</code> trong <code>geom_col()</code>.</li>
+      <li>Chỉ hiển thị top N tỉnh nhiều mẫu nhất: thêm <code>slice_head(n = 10)</code> vào chuỗi <code>%&gt;%</code> ở bước đếm, trước khi vẽ.</li>
+      <li>Lưu hình ra file: thêm <code>ggsave("bar_plot_tinh.png", p_province, width = 10, height = 6, dpi = 300)</code> ở cuối script.</li>
+    </ul>
+
+    <p>
+      Code gốc và dữ liệu đầy đủ nằm trong repo
+      <a href="https://github.com/daohuymanh/NS1_Biosensor_Analysis" target="_blank" rel="noopener">daohuymanh/NS1_Biosensor_Analysis</a>,
+      thư mục <code>scripts/</code> và <code>data/</code>.
+    </p>
+  </div>
+</article>
+
+<div class="track"></div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span class="foot-brand">© 2026 Đào Huy Mạnh · Ghi chép Y Sinh &amp; Bioinformatics</span>
+    <ul class="foot-links">
+      <li><a href="https://github.com/daohuymanh" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://orcid.org/0000-0003-3874-5051" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="mailto:you@example.com">Email</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+  const navToggle = document.getElementById('navToggle');
+  const primaryNav = document.getElementById('primaryNav');
+  navToggle.addEventListener('click', () => {
+    const isOpen = primaryNav.classList.toggle('is-open');
+    navToggle.setAttribute('aria-expanded', isOpen);
+  });
+</script>
+
+</body>
+</html>
