@@ -105,27 +105,42 @@ img { max-width: 100%; display: block; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 76px;
+  height: 92px;
 }
 
 .logo {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  align-items: center;
+  gap: 14px;
   text-decoration: none;
   color: var(--ink);
 }
 
 .logo-mark {
-  height: 42px;
+  height: 60px;
   width: auto;
   display: block;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.15;
 }
 
 .logo-name {
   font-family: var(--serif);
   font-weight: 600;
-  font-size: 19px;
+  font-size: 20px;
+}
+
+.logo-tagline {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--green-deep);
+  text-transform: uppercase;
 }
 
 nav.primary-nav {
@@ -604,7 +619,7 @@ footer.site-footer .foot-links a:hover { color: var(--green); }
   nav.primary-nav {
     display: none;
     position: absolute;
-    top: 76px; left: 0; right: 0;
+    top: 92px; left: 0; right: 0;
     background: var(--bg);
     border-bottom: 1px solid var(--line);
     flex-direction: column;
