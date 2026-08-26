@@ -1,671 +1,1003 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Mạnh Phượng — Ghi chép Y Sinh &amp; Bioinformatics</title>
+<head>
+
+<meta charset="UTF-8">
 
 <meta
-  name="description"
-  content="Mạnh Phượng — không gian chia sẻ kiến thức về y sinh, bioinformatics, phân tích dữ liệu gen và các công cụ pipeline."
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
 >
 
-<meta name="author" content="Đào Huy Mạnh và các tác giả cộng tác">
+<title>
+    Mạnh Phượng — Ghi chép Y Sinh &amp; Bioinformatics
+</title>
+
+<meta
+    name="description"
+    content="Mạnh Phượng — không gian chia sẻ kiến thức về Y Sinh, Bioinformatics, Genomics và Data Science."
+>
+
+<meta
+    name="author"
+    content="Đào Huy Mạnh và Nguyễn Thị Ngọc Phượng"
+>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
+
 <link
-  href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
-  rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
 >
 
-<link rel="stylesheet" href="style.css">
+<link
+    rel="stylesheet"
+    href="style.css"
+>
+
 </head>
 
+
 <body>
+
 
 <!-- =========================================================
      HEADER
      ========================================================= -->
+
 <header class="site-header">
-  <div class="wrap">
 
-    <a href="index.html" class="logo">
-      <img
-        class="logo-mark"
-        src="assets/logo-icon.png"
-        alt="Logo Mạnh Phượng"
-      >
+    <div class="wrap">
 
-      <span class="logo-text">
-        <span class="logo-name">Mạnh Phượng</span>
-        <span class="logo-tagline">Biomedicine &amp; Bioinformatics</span>
-      </span>
-    </a>
 
-    <nav class="primary-nav" id="primaryNav">
-      <a href="index.html" class="is-active">trang chủ</a>
-      <a href="#bai-viet">bài viết</a>
-      <a href="#chu-de">chủ đề</a>
-      <a href="#gioi-thieu">giới thiệu</a>
-      <a href="#lien-he">liên hệ</a>
-    </nav>
+        <a
+            href="index.html"
+            class="logo"
+        >
 
-    <button
-      class="nav-toggle"
-      id="navToggle"
-      aria-label="Mở menu"
-      aria-expanded="false"
-      aria-controls="primaryNav"
-    ></button>
+            <img
+                class="logo-mark"
+                src="assets/logo-icon.png"
+                alt="Logo Mạnh Phượng"
+            >
 
-  </div>
+            <span class="logo-text">
+
+                <span class="logo-name">
+                    Mạnh Phượng
+                </span>
+
+                <span class="logo-tagline">
+                    Biomedicine &amp; Bioinformatics
+                </span>
+
+            </span>
+
+        </a>
+
+
+        <nav
+            class="primary-nav"
+            id="primaryNav"
+        >
+
+            <a
+                href="index.html"
+                class="is-active"
+            >
+                trang chủ
+            </a>
+
+            <a href="#bai-viet">
+                bài viết
+            </a>
+
+            <a href="#chu-de">
+                chủ đề
+            </a>
+
+            <a href="#gioi-thieu">
+                giới thiệu
+            </a>
+
+            <a href="#lien-he">
+                liên hệ
+            </a>
+
+        </nav>
+
+
+        <button
+            class="nav-toggle"
+            id="navToggle"
+            aria-label="Mở menu"
+            aria-expanded="false"
+            aria-controls="primaryNav"
+        ></button>
+
+
+    </div>
+
 </header>
+
+
+
+<div class="track"></div>
+
 
 
 <!-- =========================================================
      HERO
      ========================================================= -->
+
 <section class="hero">
 
-  <div class="wrap">
+    <div class="wrap">
 
-    <div>
 
-      <p class="eyebrow">
-        notebook của một không gian y sinh
-      </p>
+        <div>
 
-      <h1>
-        Ghi chép về <em>Y Sinh</em> &amp; Bioinformatics
-      </h1>
+            <p class="eyebrow">
+                notebook của một không gian y sinh
+            </p>
 
-      <p class="lede">
-        Mạnh Phượng là nơi lưu lại và chia sẻ những kiến thức về gen,
-        dữ liệu sinh học, y sinh và các công cụ phân tích — viết lại
-        cho dễ hiểu và chia sẻ cho những ai đang cần.
-      </p>
 
-      <div class="btn-row">
+            <h1>
+                Ghi chép về
+                <em>Y Sinh</em>
+                &amp; Bioinformatics
+            </h1>
 
-        <a href="#bai-viet" class="btn btn-primary">
-          Đọc bài mới nhất
-        </a>
 
-        <a href="#gioi-thieu" class="btn btn-ghost">
-          Về Mạnh Phượng
-        </a>
+            <p class="lede">
 
-      </div>
+                Mạnh Phượng là nơi lưu lại và chia sẻ
+                những kiến thức về gen, dữ liệu sinh học,
+                y sinh và các công cụ phân tích —
+                được viết lại theo hướng dễ hiểu,
+                thực tế và có thể áp dụng.
+
+            </p>
+
+
+            <div class="btn-row">
+
+                <a
+                    href="#bai-viet"
+                    class="btn btn-primary"
+                >
+                    Đọc bài mới nhất
+                </a>
+
+
+                <a
+                    href="#gioi-thieu"
+                    class="btn btn-ghost"
+                >
+                    Về Mạnh Phượng
+                </a>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Sanger-style chromatogram -->
+
+        <svg
+            class="chromatogram"
+            viewBox="0 0 460 220"
+            xmlns="http://www.w3.org/2000/svg"
+            role="img"
+            aria-label="Biểu đồ minh họa dữ liệu giải trình tự gen"
+        >
+
+            <line
+                x1="0"
+                y1="150"
+                x2="460"
+                y2="150"
+                stroke="#d3dad6"
+                stroke-width="1"
+                class="baseline"
+            />
+
+
+            <polyline
+                points="0,150 15,140 30,155 45,110 60,150 75,90 90,150 105,145 120,70 135,150 150,155 165,120 180,150 195,60 210,150 225,150 240,100 255,150 270,145 285,80 300,150 315,150 330,110 345,150 360,55 375,150 390,150 405,95 420,150 435,150 450,120"
+                fill="none"
+                stroke="#2e9e6b"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+
+
+            <polyline
+                points="0,150 15,150 30,100 45,150 60,145 75,150 90,60 105,150 120,150 135,90 150,150 165,150 180,50 195,150 210,145 225,75 240,150 255,150 270,110 285,150 300,150 315,65 330,150 345,145 360,120 375,150 390,55 405,150 420,150 435,100 450,150"
+                fill="none"
+                stroke="#0e2233"
+                stroke-width="2"
+                opacity="0.55"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+
+
+            <polyline
+                points="0,150 15,150 30,150 45,90 60,150 75,150 90,140 105,60 120,150 135,150 150,80 165,150 180,150 195,145 210,55 225,150 240,150 255,90 270,150 285,150 300,70 315,150 330,150 345,120 360,150 375,150 390,95 405,150 420,150 435,145 450,60"
+                fill="none"
+                stroke="#d98f2b"
+                stroke-width="2"
+                opacity="0.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+
+
+            <polyline
+                points="0,150 15,150 30,150 45,150 60,110 75,150 90,150 105,150 120,90 135,150 150,150 165,150 180,145 195,150 210,150 225,60 240,150 255,150 270,150 285,105 300,150 315,150 330,150 345,80 360,150 375,150 390,150 405,55 420,150 435,150 450,150"
+                fill="none"
+                stroke="#cf5c48"
+                stroke-width="2"
+                opacity="0.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+
+
+            <text
+                x="0"
+                y="185"
+            >
+                A T G C A A T C G T A C
+            </text>
+
+
+            <text
+                x="0"
+                y="205"
+                fill="#7c8b8f"
+            >
+                chr7:117,559,590–117,559,602
+            </text>
+
+        </svg>
 
     </div>
 
-
-    <!-- Signature graphic: Sanger-style sequencing chromatogram -->
-
-    <svg
-      class="chromatogram"
-      viewBox="0 0 460 220"
-      xmlns="http://www.w3.org/2000/svg"
-      role="img"
-      aria-label="Biểu đồ minh họa dữ liệu giải trình tự gen"
-    >
-
-      <line
-        x1="0"
-        y1="150"
-        x2="460"
-        y2="150"
-        stroke="#d3dad6"
-        stroke-width="1"
-        class="baseline"
-      />
-
-      <polyline
-        points="0,150 15,140 30,155 45,110 60,150 75,90 90,150 105,145 120,70 135,150 150,155 165,120 180,150 195,60 210,150 225,150 240,100 255,150 270,145 285,80 300,150 315,150 330,110 345,150 360,55 375,150 390,150 405,95 420,150 435,150 450,120"
-        fill="none"
-        stroke="#2e9e6b"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-
-      <polyline
-        points="0,150 15,150 30,100 45,150 60,145 75,150 90,60 105,150 120,150 135,90 150,150 165,150 180,50 195,150 210,145 225,75 240,150 255,150 270,110 285,150 300,150 315,65 330,150 345,145 360,120 375,150 390,55 405,150 420,150 435,100 450,150"
-        fill="none"
-        stroke="#0e2233"
-        stroke-width="2"
-        opacity="0.55"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-
-      <polyline
-        points="0,150 15,150 30,150 45,90 60,150 75,150 90,140 105,60 120,150 135,150 150,80 165,150 180,150 195,145 210,55 225,150 240,150 255,90 270,150 285,150 300,70 315,150 330,150 345,120 360,150 375,150 390,95 405,150 420,150 435,145 450,60"
-        fill="none"
-        stroke="#d98f2b"
-        stroke-width="2"
-        opacity="0.6"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-
-      <polyline
-        points="0,150 15,150 30,150 45,150 60,110 75,150 90,150 105,150 120,90 135,150 150,150 165,150 180,145 195,150 210,150 225,60 240,150 255,150 270,150 285,105 300,150 315,150 330,150 345,80 360,150 375,150 390,150 405,55 420,150 435,150 450,150"
-        fill="none"
-        stroke="#cf5c48"
-        stroke-width="2"
-        opacity="0.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-
-      <text x="0" y="185">
-        A T G C A A T C G T A C
-      </text>
-
-      <text
-        x="0"
-        y="205"
-        fill="#7c8b8f"
-      >
-        chr7:117,559,590–117,559,602
-      </text>
-
-    </svg>
-
-  </div>
-
 </section>
 
+
+
 <div class="track"></div>
+
 
 
 <!-- =========================================================
      FEATURED POSTS
      ========================================================= -->
+
 <section id="bai-viet">
 
-  <div class="wrap">
-
-    <div class="section-head">
-
-      <h2>Bài viết mới nhất</h2>
-
-      <a href="#" class="view-all">
-        xem tất cả bài viết →
-      </a>
-
-    </div>
+    <div class="wrap">
 
 
-    <div class="post-grid featured-grid">
+        <div class="section-head">
+
+            <h2>
+                Bài viết mới nhất
+            </h2>
 
 
-      <!-- Article 1 -->
+            <a
+                href="#"
+                class="view-all"
+            >
+                xem tất cả bài viết →
+            </a>
 
-      <a href="bai-viet-mau.html" class="post-card">
+        </div>
 
-        <div class="thumb">
 
-          <svg
-            viewBox="0 0 400 260"
-            xmlns="http://www.w3.org/2000/svg"
-          >
 
-            <rect
-              width="400"
-              height="260"
-              fill="#0e2233"
-            />
+        <div class="post-grid featured-grid">
 
-            <g
-              opacity="0.5"
-              stroke="#2e9e6b"
-              stroke-width="2"
-              fill="none"
+
+            <!-- ARTICLE 1 -->
+
+            <a
+                href="bai-viet-mau.html"
+                class="post-card"
             >
 
-              <path d="M40,40 C120,40 120,100 200,100 C280,100 280,40 360,40"/>
-              <path d="M40,90 C120,90 120,150 200,150 C280,150 280,90 360,90"/>
-              <path d="M40,140 C120,140 120,200 200,200 C280,200 280,140 360,140"/>
-              <path d="M40,190 C120,190 120,230 200,230 C280,230 280,190 360,190"/>
+                <div class="thumb">
 
-            </g>
+                    <svg
+                        viewBox="0 0 400 260"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
 
-          </svg>
+                        <rect
+                            width="400"
+                            height="260"
+                            fill="#0e2233"
+                        />
+
+
+                        <g
+                            opacity="0.5"
+                            stroke="#2e9e6b"
+                            stroke-width="2"
+                            fill="none"
+                        >
+
+                            <path
+                                d="M40,40 C120,40 120,100 200,100 C280,100 280,40 360,40"
+                            />
+
+                            <path
+                                d="M40,90 C120,90 120,150 200,150 C280,150 280,90 360,90"
+                            />
+
+                            <path
+                                d="M40,140 C120,140 120,200 200,200 C280,200 280,140 360,140"
+                            />
+
+                            <path
+                                d="M40,190 C120,190 120,230 200,230 C280,230 280,190 360,190"
+                            />
+
+                        </g>
+
+                    </svg>
+
+                </div>
+
+
+                <div class="body">
+
+
+                    <span class="tag tag--genomics">
+                        Genomics
+                    </span>
+
+
+                    <h3>
+                        Nhập môn RNA-seq:
+                        từ đọc trình tự đến bảng biểu hiện gen
+                    </h3>
+
+
+                    <p class="excerpt">
+
+                        Đi từ file FASTQ thô,
+                        qua các bước căn chỉnh và định lượng,
+                        đến khi có được ma trận biểu hiện gen
+                        sẵn sàng cho phân tích thống kê.
+
+                    </p>
+
+
+                    <div class="post-meta">
+
+                        <span>
+                            2026.08.10
+                        </span>
+
+                        <span>
+                            12 phút đọc
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+
+
+            <!-- ARTICLE 2 -->
+
+            <a
+                href="#"
+                class="post-card"
+            >
+
+                <div class="thumb"></div>
+
+
+                <div class="body">
+
+                    <span class="tag tag--tools">
+                        Công cụ
+                    </span>
+
+
+                    <h3>
+                        Docker &amp; Nextflow:
+                        dựng pipeline phân tích tái lập được
+                    </h3>
+
+
+                    <p class="excerpt">
+
+                        Vì sao pipeline của bạn nên chạy
+                        giống nhau trên laptop và trên
+                        cụm máy chủ.
+
+                    </p>
+
+
+                    <div class="post-meta">
+
+                        <span>
+                            2026.08.03
+                        </span>
+
+                        <span>
+                            9 phút đọc
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+
+
+            <!-- ARTICLE 3 -->
+
+            <a
+                href="#"
+                class="post-card"
+            >
+
+                <div class="thumb"></div>
+
+
+                <div class="body">
+
+                    <span class="tag tag--vcf">
+                        VCF
+                    </span>
+
+
+                    <h3>
+                        Đọc hiểu một file VCF trong 10 phút
+                    </h3>
+
+
+                    <p class="excerpt">
+
+                        Giải thích từng cột trong file biến thể
+                        di truyền, kèm ví dụ thực tế.
+
+                    </p>
+
+
+                    <div class="post-meta">
+
+                        <span>
+                            2026.07.27
+                        </span>
+
+                        <span>
+                            7 phút đọc
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+
+
+            <!-- ARTICLE 4 -->
+
+            <a
+                href="#"
+                class="post-card"
+            >
+
+                <div class="thumb"></div>
+
+
+                <div class="body">
+
+                    <span class="tag tag--clinical">
+                        Y sinh lâm sàng
+                    </span>
+
+
+                    <h3>
+                        CRISPR-Cas9 hoạt động như thế nào
+                        ở cấp độ phân tử
+                    </h3>
+
+
+                    <p class="excerpt">
+
+                        Cơ chế cắt-sửa DNA đứng sau công cụ
+                        chỉnh sửa gen đang thay đổi y học.
+
+                    </p>
+
+
+                    <div class="post-meta">
+
+                        <span>
+                            2026.07.18
+                        </span>
+
+                        <span>
+                            8 phút đọc
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+
+
+            <!-- ARTICLE 5 -->
+
+            <a
+                href="ns1-bar-plot-tinh.html"
+                class="post-card"
+            >
+
+                <div class="thumb"></div>
+
+
+                <div class="body">
+
+                    <span class="tag tag--tools">
+                        Công cụ
+                    </span>
+
+
+                    <h3>
+                        Vẽ biểu đồ cột số mẫu theo tỉnh
+                        với ggplot2
+                    </h3>
+
+
+                    <p class="excerpt">
+
+                        Đọc code Bar_plot.R từng dòng —
+                        từ đếm mẫu bằng dplyr đến tinh chỉnh
+                        nhãn, màu và khoảng cách trong ggplot2.
+
+                    </p>
+
+
+                    <div class="post-meta">
+
+                        <span>
+                            2026.08.15
+                        </span>
+
+                        <span>
+                            10 phút đọc
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </a>
+
 
         </div>
-
-
-        <div class="body">
-
-          <span class="tag tag--genomics">
-            Genomics
-          </span>
-
-          <h3>
-            Nhập môn RNA-seq: từ đọc trình tự đến bảng biểu hiện gen
-          </h3>
-
-          <p class="excerpt">
-            Đi từ file FASTQ thô, qua các bước căn chỉnh và định lượng,
-            đến khi có được ma trận biểu hiện gen sẵn sàng cho phân tích thống kê.
-          </p>
-
-          <div class="post-meta">
-            <span>2026.08.10</span>
-            <span>12 phút đọc</span>
-          </div>
-
-        </div>
-
-      </a>
-
-
-      <!-- Article 2 -->
-
-      <a href="#" class="post-card">
-
-        <div class="thumb"></div>
-
-        <div class="body">
-
-          <span class="tag tag--tools">
-            Công cụ
-          </span>
-
-          <h3>
-            Docker &amp; Nextflow: dựng pipeline phân tích tái lập được
-          </h3>
-
-          <p class="excerpt">
-            Vì sao pipeline của bạn nên chạy giống nhau trên laptop
-            và trên cụm máy chủ.
-          </p>
-
-          <div class="post-meta">
-            <span>2026.08.03</span>
-            <span>9 phút đọc</span>
-          </div>
-
-        </div>
-
-      </a>
-
-
-      <!-- Article 3 -->
-
-      <a href="#" class="post-card">
-
-        <div class="thumb"></div>
-
-        <div class="body">
-
-          <span class="tag tag--vcf">
-            VCF
-          </span>
-
-          <h3>
-            Đọc hiểu một file VCF trong 10 phút
-          </h3>
-
-          <p class="excerpt">
-            Giải thích từng cột trong file biến thể di truyền,
-            kèm ví dụ thực tế.
-          </p>
-
-          <div class="post-meta">
-            <span>2026.07.27</span>
-            <span>7 phút đọc</span>
-          </div>
-
-        </div>
-
-      </a>
-
-
-      <!-- Article 4 -->
-
-      <a href="#" class="post-card">
-
-        <div class="thumb"></div>
-
-        <div class="body">
-
-          <span class="tag tag--clinical">
-            Y sinh lâm sàng
-          </span>
-
-          <h3>
-            CRISPR-Cas9 hoạt động như thế nào ở cấp độ phân tử
-          </h3>
-
-          <p class="excerpt">
-            Cơ chế cắt-sửa DNA đứng sau công cụ chỉnh sửa gen
-            đang thay đổi y học.
-          </p>
-
-          <div class="post-meta">
-            <span>2026.07.18</span>
-            <span>8 phút đọc</span>
-          </div>
-
-        </div>
-
-      </a>
-
-
-      <!-- Article 5 -->
-
-      <a href="ns1-bar-plot-tinh.html" class="post-card">
-
-        <div class="thumb"></div>
-
-        <div class="body">
-
-          <span class="tag tag--tools">
-            Công cụ
-          </span>
-
-          <h3>
-            Vẽ biểu đồ cột số mẫu theo tỉnh với ggplot2
-            (dự án NS1 Biosensor)
-          </h3>
-
-          <p class="excerpt">
-            Đọc code Bar_plot.R từng dòng — từ đếm mẫu bằng dplyr
-            đến tinh chỉnh nhãn, màu, khoảng cách trong ggplot2.
-          </p>
-
-          <div class="post-meta">
-            <span>2026.08.15</span>
-            <span>10 phút đọc</span>
-          </div>
-
-        </div>
-
-      </a>
 
     </div>
-
-  </div>
 
 </section>
 
+
+
 <div class="track"></div>
+
 
 
 <!-- =========================================================
      TOPICS
      ========================================================= -->
+
 <section id="chu-de">
 
-  <div class="wrap">
+    <div class="wrap">
 
-    <div class="section-head">
 
-      <h2>Chủ đề</h2>
+        <div class="section-head">
 
-      <span class="section-note">
-        5 chuyên mục
-      </span>
+            <h2>
+                Chủ đề
+            </h2>
+
+
+            <span class="section-note">
+                5 chuyên mục
+            </span>
+
+        </div>
+
+
+        <div class="topics-panel">
+
+            <ul class="topic-list">
+
+
+                <li>
+
+                    <a href="#">
+
+                        <span class="topic-count">
+                            12 bài
+                        </span>
+
+                        <span class="topic-name">
+                            Genomics
+                        </span>
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <a href="#">
+
+                        <span class="topic-count">
+                            8 bài
+                        </span>
+
+                        <span class="topic-name">
+                            Proteomics
+                        </span>
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <a href="#">
+
+                        <span class="topic-count">
+                            10 bài
+                        </span>
+
+                        <span class="topic-name">
+                            Công cụ &amp; Pipeline
+                        </span>
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <a href="#">
+
+                        <span class="topic-count">
+                            6 bài
+                        </span>
+
+                        <span class="topic-name">
+                            Y sinh lâm sàng
+                        </span>
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <a href="#">
+
+                        <span class="topic-count">
+                            9 bài
+                        </span>
+
+                        <span class="topic-name">
+                            Data Science
+                        </span>
+
+                    </a>
+
+                </li>
+
+
+            </ul>
+
+        </div>
 
     </div>
-
-    <div class="topics-panel">
-
-      <ul class="topic-list">
-
-        <li>
-          <a href="#">
-            <span class="topic-count">12 bài</span>
-            <span class="topic-name">Genomics</span>
-          </a>
-        </li>
-
-        <li>
-          <a href="#">
-            <span class="topic-count">8 bài</span>
-            <span class="topic-name">Proteomics</span>
-          </a>
-        </li>
-
-        <li>
-          <a href="#">
-            <span class="topic-count">10 bài</span>
-            <span class="topic-name">Công cụ &amp; Pipeline</span>
-          </a>
-        </li>
-
-        <li>
-          <a href="#">
-            <span class="topic-count">6 bài</span>
-            <span class="topic-name">Y sinh lâm sàng</span>
-          </a>
-        </li>
-
-        <li>
-          <a href="#">
-            <span class="topic-count">9 bài</span>
-            <span class="topic-name">Data Science</span>
-          </a>
-        </li>
-
-      </ul>
-
-    </div>
-
-  </div>
 
 </section>
+
 
 
 <!-- =========================================================
      ABOUT
      ========================================================= -->
+
 <section
-  class="about-section"
-  id="gioi-thieu"
+    class="about-section"
+    id="gioi-thieu"
 >
 
-  <div class="track track--dark"></div>
 
-  <div
-    class="wrap"
-    style="padding-top:56px;"
-  >
+    <div class="track track--dark"></div>
 
-    <div class="avatar-block">
-      DHM
+
+    <div
+        class="wrap"
+        style="padding-top:56px;"
+    >
+
+
+        <div class="avatar-block">
+            DHM
+        </div>
+
+
+        <div>
+
+
+            <h2>
+                Về Mạnh Phượng
+            </h2>
+
+
+            <p>
+
+                <strong>Mạnh Phượng</strong>
+                là một không gian ghi chép và chia sẻ
+                kiến thức về Y Sinh, Bioinformatics,
+                Genomics, Data Science và các công cụ
+                phân tích dữ liệu.
+
+            </p>
+
+
+            <p>
+
+                Website được xây dựng và duy trì bởi
+                <strong>Đào Huy Mạnh và Nguyễn Thị Ngọc Phượng</strong>.
+                Tùy từng bài viết, tác giả có thể là
+                Đào Huy Mạnh, Nguyễn Thị Ngọc Phượng,
+                hoặc hai người cùng đóng góp.
+                Tác giả cụ thể được ghi rõ trên từng bài viết.
+
+            </p>
+
+
+            <p>
+
+                Nội dung gốc trên website được chia sẻ
+                theo giấy phép
+                <strong>CC BY-NC 4.0</strong>,
+                trừ khi bài viết có ghi chú khác.
+                Tên và logo
+                <strong>Mạnh Phượng</strong>
+                không thuộc giấy phép này.
+
+            </p>
+
+
+            <div class="about-links">
+
+
+                <a
+                    href="https://github.com/daohuymanh"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    GitHub ↗
+                </a>
+
+
+                <a
+                    href="https://orcid.org/0000-0003-3874-5051"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    ORCID ↗
+                </a>
+
+
+                <a href="copyright.html">
+                    Copyright &amp; License
+                </a>
+
+
+                <a href="mailto:daohuymanh@gmail.com">
+                    Email
+                </a>
+
+
+            </div>
+
+        </div>
+
     </div>
-
-    <div>
-
-      <h2>
-        Về Mạnh Phượng
-      </h2>
-
-      <p>
-        <strong>Mạnh Phượng</strong> là một không gian ghi chép và
-        chia sẻ kiến thức về Y Sinh, Bioinformatics, Genomics,
-        Data Science và các công cụ phân tích dữ liệu.
-      </p>
-
-      <p>
-        Website được xây dựng và duy trì bởi
-        <strong>Đào Huy Mạnh và gia đình</strong>.
-        Tùy từng bài viết, tác giả có thể là Đào Huy Mạnh,
-        một tác giả cộng tác, hoặc nhiều tác giả cùng đóng góp.
-        Tác giả cụ thể luôn được ghi trên từng bài viết.
-      </p>
-
-      <p>
-        Nội dung gốc trên website được chia sẻ theo giấy phép
-        <strong>CC BY-NC 4.0</strong>, trừ khi bài viết có ghi chú
-        khác. Tên và logo <strong>Mạnh Phượng</strong> không thuộc
-        giấy phép này.
-      </p>
-
-      <div class="about-links">
-
-        <a
-          href="https://github.com/daohuymanh"
-          target="_blank"
-          rel="noopener"
-        >
-          GitHub ↗
-        </a>
-
-        <a
-          href="https://orcid.org/0000-0003-3874-5051"
-          target="_blank"
-          rel="noopener"
-        >
-          ORCID ↗
-        </a>
-
-        <a href="copyright.html">
-          Copyright &amp; License
-        </a>
-
-        <a href="mailto:daohuymanh@gmail.com">
-          Email
-        </a>
-
-      </div>
-
-    </div>
-
-  </div>
 
 </section>
+
 
 
 <!-- =========================================================
      NEWSLETTER
      ========================================================= -->
+
 <section id="lien-he">
 
-  <div class="wrap">
+    <div class="wrap">
 
-    <div class="newsletter">
 
-      <div>
+        <div class="newsletter">
 
-        <h2>
-          Nhận bài viết mới qua email
-        </h2>
 
-        <p>
-          Không spam — chỉ gửi khi có bài mới,
-          khoảng 1-2 lần/tháng.
-        </p>
+            <div>
 
-      </div>
+                <h2>
+                    Nhận bài viết mới qua email
+                </h2>
 
-      <form>
 
-        <input
-          type="email"
-          placeholder="email@vidu.com"
-          required
-        >
+                <p>
+                    Không spam — chỉ gửi khi có bài mới.
+                </p>
 
-        <button type="submit">
-          Đăng ký
-        </button>
+            </div>
 
-      </form>
+
+            <form>
+
+                <input
+                    type="email"
+                    placeholder="email@vidu.com"
+                    required
+                >
+
+
+                <button type="submit">
+                    Đăng ký
+                </button>
+
+            </form>
+
+
+        </div>
 
     </div>
 
-  </div>
-
 </section>
+
 
 
 <!-- =========================================================
      FOOTER
      ========================================================= -->
+
 <footer class="site-footer">
 
-  <div class="wrap">
 
-    <div class="foot-brand">
+    <div class="wrap">
 
-      <strong>
-        © 2026 Mạnh Phượng
-      </strong>
 
-      <span>
-        · Ghi chép Y Sinh &amp; Bioinformatics
-      </span>
+        <div class="foot-brand">
+
+            <strong>
+                © 2026 Mạnh Phượng
+            </strong>
+
+            <span>
+                · Ghi chép Y Sinh &amp; Bioinformatics
+            </span>
+
+        </div>
+
+
+        <ul class="foot-links">
+
+
+            <li>
+
+                <a href="copyright.html">
+                    Copyright &amp; License
+                </a>
+
+            </li>
+
+
+            <li>
+
+                <a
+                    href="https://github.com/daohuymanh"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    GitHub
+                </a>
+
+            </li>
+
+
+            <li>
+
+                <a
+                    href="https://orcid.org/0000-0003-3874-5051"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    ORCID
+                </a>
+
+            </li>
+
+
+            <li>
+
+                <a href="mailto:daohuymanh@gmail.com">
+                    Email
+                </a>
+
+            </li>
+
+
+        </ul>
 
     </div>
-
-    <ul class="foot-links">
-
-      <li>
-        <a href="copyright.html">
-          Copyright &amp; License
-        </a>
-      </li>
-
-      <li>
-        <a
-          href="https://github.com/daohuymanh"
-          target="_blank"
-          rel="noopener"
-        >
-          GitHub
-        </a>
-      </li>
-
-      <li>
-        <a
-          href="https://orcid.org/0000-0003-3874-5051"
-          target="_blank"
-          rel="noopener"
-        >
-          ORCID
-        </a>
-      </li>
-
-      <li>
-        <a href="mailto:daohuymanh@gmail.com">
-          Email
-        </a>
-      </li>
-
-    </ul>
-
-  </div>
 
 </footer>
 
 
+
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
+
 <script>
 
-  const navToggle =
-    document.getElementById('navToggle');
+const navToggle =
+    document.getElementById("navToggle");
 
-  const primaryNav =
-    document.getElementById('primaryNav');
+const primaryNav =
+    document.getElementById("primaryNav");
 
-  navToggle.addEventListener('click', () => {
 
-    const isOpen =
-      primaryNav.classList.toggle('is-open');
+navToggle.addEventListener(
+    "click",
+    () => {
 
-    navToggle.setAttribute(
-      'aria-expanded',
-      isOpen
-    );
+        const isOpen =
+            primaryNav.classList.toggle("is-open");
 
-  });
+        navToggle.setAttribute(
+            "aria-expanded",
+            isOpen
+        );
+
+    }
+);
 
 </script>
 
+
 </body>
+
 </html>

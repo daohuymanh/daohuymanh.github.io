@@ -6,208 +6,366 @@
 <meta charset="UTF-8">
 
 <meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
 >
 
 <title>
-  Nhập môn RNA-seq — Mạnh Phượng
+    Tên bài viết — Mạnh Phượng
 </title>
 
-<meta
-  name="description"
-  content="Bài viết về RNA-seq từ dữ liệu FASTQ đến ma trận biểu hiện gen."
->
 
 <meta
-  name="author"
-  content="Đào Huy Mạnh"
+    name="description"
+    content="Mô tả ngắn của bài viết."
 >
+
+
+<!--
+    THAY TÊN TÁC GIẢ TÙY TỪNG BÀI
+
+    Nếu bạn viết:
+    Đào Huy Mạnh
+
+    Nếu vợ viết:
+    Nguyễn Thị Ngọc Phượng
+
+    Nếu cùng viết:
+    Đào Huy Mạnh và Nguyễn Thị Ngọc Phượng
+-->
+
+<meta
+    name="author"
+    content="Đào Huy Mạnh"
+>
+
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 
-<link
-  href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
-  rel="stylesheet"
->
 
 <link
-  rel="stylesheet"
-  href="style.css"
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+>
+
+
+<link
+    rel="stylesheet"
+    href="style.css"
 >
 
 
 <style>
 
 /* =========================================================
-   ARTICLE TEMPLATE
+   ARTICLE
    ========================================================= */
 
 .article-header {
-  padding: 56px 0 32px;
+
+    padding: 56px 0 32px;
+
 }
+
 
 .article-header .wrap {
-  max-width: 760px;
+
+    max-width: 760px;
+
 }
+
 
 .article-header h1 {
-  font-family: var(--serif);
-  font-size: clamp(28px, 4vw, 40px);
-  line-height: 1.2;
-  margin: 18px 0 20px;
+
+    font-family: var(--serif);
+
+    font-size: clamp(
+        28px,
+        4vw,
+        40px
+    );
+
+    line-height: 1.2;
+
+    margin: 18px 0 20px;
+
 }
+
 
 .article-meta {
-  font-family: var(--mono);
-  font-size: 12.5px;
-  color: var(--ink-faint);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 16px;
+
+    font-family: var(--mono);
+
+    font-size: 12.5px;
+
+    color: var(--ink-faint);
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 10px 16px;
+
 }
+
 
 .article-meta span:not(:last-child)::after {
-  content: "·";
-  margin-left: 16px;
-  color: var(--line);
+
+    content: "·";
+
+    margin-left: 16px;
+
+    color: var(--line);
+
 }
+
 
 .article-author {
-  margin-top: 14px;
-  font-size: 14px;
-  color: var(--ink-soft);
+
+    margin-top: 14px;
+
+    font-size: 14px;
+
+    color: var(--ink-soft);
+
 }
+
 
 .article-author strong {
-  color: var(--ink);
+
+    color: var(--ink);
+
 }
+
 
 .article-license {
-  margin-top: 56px;
-  padding: 22px 24px;
-  background: var(--bg-panel);
-  border-left: 3px solid var(--green-deep);
-  border-radius: var(--radius);
+
+    margin-top: 56px;
+
+    padding: 22px 24px;
+
+    background: var(--bg-panel);
+
+    border-left: 3px solid var(--green-deep);
+
+    border-radius: var(--radius);
+
 }
+
 
 .article-license p {
-  font-size: 13.5px !important;
-  color: var(--ink-soft) !important;
-  margin-bottom: 8px !important;
+
+    font-size: 13.5px;
+
+    color: var(--ink-soft);
+
+    margin: 0 0 8px;
+
 }
+
 
 .article-license p:last-child {
-  margin-bottom: 0 !important;
+
+    margin-bottom: 0;
+
 }
+
 
 .article-license a {
-  color: var(--green-deep);
-  font-weight: 600;
-  text-decoration: none;
+
+    color: var(--green-deep);
+
+    font-weight: 600;
+
+    text-decoration: none;
+
 }
+
 
 .article-license a:hover {
-  text-decoration: underline;
+
+    text-decoration: underline;
+
 }
+
 
 .article-license .license-title {
-  font-family: var(--serif);
-  font-size: 17px;
-  color: var(--ink);
-  font-weight: 600;
+
+    font-family: var(--serif);
+
+    font-size: 17px;
+
+    color: var(--ink);
+
+    font-weight: 600;
+
 }
+
 
 article.post-body {
-  padding: 8px 0 72px;
+
+    padding: 8px 0 72px;
+
 }
+
 
 article.post-body .wrap {
-  max-width: 760px;
+
+    max-width: 760px;
+
 }
+
 
 article.post-body h2 {
-  font-family: var(--serif);
-  font-size: 24px;
-  margin: 44px 0 16px;
+
+    font-family: var(--serif);
+
+    font-size: 24px;
+
+    margin: 44px 0 16px;
+
 }
+
 
 article.post-body p {
-  font-size: 16.5px;
-  color: var(--ink);
-  margin: 0 0 20px;
+
+    font-size: 16.5px;
+
+    color: var(--ink);
+
+    margin: 0 0 20px;
+
 }
+
 
 article.post-body p.lead {
-  font-size: 18px;
-  color: var(--ink-soft);
+
+    font-size: 18px;
+
+    color: var(--ink-soft);
+
 }
+
 
 article.post-body pre {
-  background: var(--navy);
-  color: #dfeee6;
-  font-family: var(--mono);
-  font-size: 13.5px;
-  line-height: 1.6;
-  padding: 20px 22px;
-  border-radius: var(--radius);
-  overflow-x: auto;
-  margin: 0 0 24px;
+
+    background: var(--navy);
+
+    color: #dfeee6;
+
+    font-family: var(--mono);
+
+    font-size: 13.5px;
+
+    line-height: 1.6;
+
+    padding: 20px 22px;
+
+    border-radius: var(--radius);
+
+    overflow-x: auto;
+
+    margin: 0 0 24px;
+
 }
+
 
 article.post-body code {
-  font-family: var(--mono);
-  background: var(--bg-panel);
-  padding: 2px 6px;
-  border-radius: 2px;
-  font-size: 0.9em;
+
+    font-family: var(--mono);
+
+    background: var(--bg-panel);
+
+    padding: 2px 6px;
+
+    border-radius: 2px;
+
+    font-size: 0.9em;
+
 }
+
 
 article.post-body pre code {
-  background: none;
-  padding: 0;
+
+    background: none;
+
+    padding: 0;
+
 }
+
 
 .video-embed {
-  position: relative;
-  padding-bottom: 56.25%;
-  height: 0;
-  overflow: hidden;
-  border-radius: var(--radius);
-  margin: 8px 0 28px;
-  background: var(--navy);
+
+    position: relative;
+
+    padding-bottom: 56.25%;
+
+    height: 0;
+
+    overflow: hidden;
+
+    border-radius: var(--radius);
+
+    margin: 8px 0 28px;
+
+    background: var(--navy);
+
 }
+
 
 .video-embed iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
+
+    position: absolute;
+
+    top: 0;
+
+    left: 0;
+
+    width: 100%;
+
+    height: 100%;
+
+    border: 0;
+
 }
+
 
 figcaption {
-  font-family: var(--mono);
-  font-size: 12.5px;
-  color: var(--ink-faint);
-  margin: -18px 0 28px;
+
+    font-family: var(--mono);
+
+    font-size: 12.5px;
+
+    color: var(--ink-faint);
+
+    margin: -18px 0 28px;
+
 }
+
 
 .back-link {
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--green-deep);
-  text-decoration: none;
+
+    font-family: var(--mono);
+
+    font-size: 13px;
+
+    color: var(--green-deep);
+
+    text-decoration: none;
+
 }
 
+
 .back-link:hover {
-  text-decoration: underline;
+
+    text-decoration: underline;
+
 }
 
 </style>
 
 </head>
+
 
 
 <body>
@@ -219,95 +377,103 @@ figcaption {
 
 <header class="site-header">
 
-  <div class="wrap">
-
-    <a
-      href="index.html"
-      class="logo"
-    >
-
-      <img
-        class="logo-mark"
-        src="assets/logo-icon.png"
-        alt="Logo Mạnh Phượng"
-      >
-
-      <span class="logo-text">
-
-        <span class="logo-name">
-          Mạnh Phượng
-        </span>
-
-        <span class="logo-tagline">
-          Biomedicine &amp; Bioinformatics
-        </span>
-
-      </span>
-
-    </a>
+    <div class="wrap">
 
 
-    <nav
-      class="primary-nav"
-      id="primaryNav"
-    >
+        <a
+            href="index.html"
+            class="logo"
+        >
 
-      <a href="index.html">
-        trang chủ
-      </a>
-
-      <a href="index.html#bai-viet">
-        bài viết
-      </a>
-
-      <a href="index.html#chu-de">
-        chủ đề
-      </a>
-
-      <a href="index.html#gioi-thieu">
-        giới thiệu
-      </a>
-
-      <a href="index.html#lien-he">
-        liên hệ
-      </a>
-
-    </nav>
+            <img
+                class="logo-mark"
+                src="assets/logo-icon.png"
+                alt="Logo Mạnh Phượng"
+            >
 
 
-    <button
-      class="nav-toggle"
-      id="navToggle"
-      aria-label="Mở menu"
-      aria-expanded="false"
-      aria-controls="primaryNav"
-    ></button>
+            <span class="logo-text">
 
-  </div>
+                <span class="logo-name">
+                    Mạnh Phượng
+                </span>
+
+                <span class="logo-tagline">
+                    Biomedicine &amp; Bioinformatics
+                </span>
+
+            </span>
+
+        </a>
+
+
+
+        <nav
+            class="primary-nav"
+            id="primaryNav"
+        >
+
+            <a href="index.html">
+                trang chủ
+            </a>
+
+            <a href="index.html#bai-viet">
+                bài viết
+            </a>
+
+            <a href="index.html#chu-de">
+                chủ đề
+            </a>
+
+            <a href="index.html#gioi-thieu">
+                giới thiệu
+            </a>
+
+            <a href="index.html#lien-he">
+                liên hệ
+            </a>
+
+        </nav>
+
+
+
+        <button
+            class="nav-toggle"
+            id="navToggle"
+            aria-label="Mở menu"
+            aria-expanded="false"
+            aria-controls="primaryNav"
+        ></button>
+
+
+    </div>
 
 </header>
+
 
 
 <div class="track"></div>
 
 
+
 <!-- =========================================================
-     BACK LINK
+     BACK
      ========================================================= -->
 
 <div
-  class="wrap"
-  style="padding-top:24px;"
+    class="wrap"
+    style="padding-top:24px;"
 >
 
-  <a
-    href="index.html#bai-viet"
-    class="back-link"
-  >
-    ← quay lại danh sách bài viết
-  </a>
+    <a
+        href="index.html#bai-viet"
+        class="back-link"
+    >
+        ← quay lại danh sách bài viết
+    </a>
 
 </div>
+
 
 
 <!-- =========================================================
@@ -316,100 +482,114 @@ figcaption {
 
 <header class="article-header">
 
-  <div class="wrap">
 
-    <span class="tag tag--genomics">
-      Genomics
-    </span>
+    <div class="wrap">
 
 
-    <h1>
-      Nhập môn RNA-seq:
-      từ đọc trình tự đến bảng biểu hiện gen
-    </h1>
+        <!-- CATEGORY -->
+
+        <span class="tag tag--genomics">
+            Genomics
+        </span>
 
 
-    <div class="article-meta">
+        <!-- TITLE -->
 
-      <span>
-        2026.08.10
-      </span>
+        <h1>
+            Nhập môn RNA-seq:
+            từ đọc trình tự đến bảng biểu hiện gen
+        </h1>
 
-      <span>
-        Cập nhật: 2026.08.10
-      </span>
 
-      <span>
-        12 phút đọc
-      </span>
+        <!-- DATE -->
+
+        <div class="article-meta">
+
+            <span>
+                2026.08.10
+            </span>
+
+            <span>
+                Cập nhật: 2026.08.10
+            </span>
+
+            <span>
+                12 phút đọc
+            </span>
+
+        </div>
+
+
+        <!-- =================================================
+             AUTHOR
+             ================================================= -->
+
+        <div class="article-author">
+
+            <strong>
+                Tác giả:
+            </strong>
+
+            Đào Huy Mạnh
+
+        </div>
+
 
     </div>
-
-
-    <!-- =====================================================
-         AUTHOR
-         ===================================================== -->
-
-    <div class="article-author">
-
-      <strong>Tác giả:</strong>
-      Đào Huy Mạnh
-
-    </div>
-
-  </div>
 
 </header>
 
 
+
 <!-- =========================================================
-     ARTICLE BODY
+     ARTICLE
      ========================================================= -->
 
 <article class="post-body">
 
-  <div class="wrap">
+
+    <div class="wrap">
 
 
-    <p class="lead">
+        <p class="lead">
 
-      Đây là trang mẫu cho một bài viết — sao chép file này
-      để tạo bài mới. Bên dưới là ví dụ các khối nội dung
-      thường dùng: đoạn văn, tiêu đề phụ, code block và video nhúng.
+            Đây là trang mẫu cho một bài viết.
+            Bạn có thể sao chép file này để tạo bài mới.
 
-    </p>
-
-
-    <h2>
-      1. Dữ liệu đầu vào là gì
-    </h2>
+        </p>
 
 
-    <p>
 
-      Thay đoạn này bằng nội dung thật của bạn.
-      Mỗi bài viết nên bắt đầu bằng một câu hỏi cụ thể
-      mà người đọc đang tìm câu trả lời, sau đó dẫn dắt
-      từng bước.
-
-    </p>
+        <h2>
+            1. Dữ liệu đầu vào là gì
+        </h2>
 
 
-    <h2>
-      2. Ví dụ đoạn mã (code block)
-    </h2>
+        <p>
+
+            Thay đoạn này bằng nội dung thật của bạn.
+            Mỗi bài viết nên bắt đầu bằng một vấn đề hoặc
+            câu hỏi cụ thể mà người đọc đang quan tâm.
+
+        </p>
 
 
-    <p>
 
-      Dùng thẻ
-      <code>&lt;pre&gt;&lt;code&gt;</code>
-      cho các đoạn lệnh hoặc script:
-
-    </p>
+        <h2>
+            2. Ví dụ đoạn mã
+        </h2>
 
 
-    <pre><code>fastqc sample_R1.fastq.gz sample_R2.fastq.gz -o qc/
+        <p>
+
+            Dùng thẻ
+            <code>&lt;pre&gt;&lt;code&gt;</code>
+            cho các đoạn lệnh.
+
+        </p>
+
+
+<pre><code>fastqc sample_R1.fastq.gz sample_R2.fastq.gz -o qc/
 
 STAR --runThreadN 8 --genomeDir index/ \
      --readFilesIn sample_R1.fastq.gz sample_R2.fastq.gz \
@@ -417,102 +597,128 @@ STAR --runThreadN 8 --genomeDir index/ \
      --outSAMtype BAM SortedByCoordinate</code></pre>
 
 
-    <h2>
-      3. Ví dụ nhúng video (YouTube)
-    </h2>
+
+        <h2>
+            3. Ví dụ nhúng video
+        </h2>
 
 
-    <p>
+        <p>
 
-      Thay
-      <code>VIDEO_ID</code>
-      bằng mã video YouTube thật của bạn:
+            Thay
+            <code>VIDEO_ID</code>
+            bằng mã video YouTube thật.
 
-    </p>
-
-
-    <figure>
-
-      <div class="video-embed">
-
-        <iframe
-          src="https://www.youtube.com/embed/VIDEO_ID"
-          title="Video minh họa"
-          allowfullscreen
-        ></iframe>
-
-      </div>
-
-      <figcaption>
-        Hình 1 — thay bằng chú thích thật cho video của bạn.
-      </figcaption>
-
-    </figure>
+        </p>
 
 
-    <h2>
-      4. Kết luận
-    </h2>
+        <figure>
 
 
-    <p>
+            <div class="video-embed">
 
-      Tóm tắt lại điểm chính, và nếu phù hợp,
-      gợi ý bài viết liên quan hoặc bước tiếp theo
-      cho người đọc.
+                <iframe
+                    src="https://www.youtube.com/embed/VIDEO_ID"
+                    title="Video minh họa"
+                    allowfullscreen
+                ></iframe>
 
-    </p>
-
-
-    <!-- =====================================================
-         COPYRIGHT / LICENSE
-         ===================================================== -->
-
-    <div class="article-license">
-
-      <p class="license-title">
-        Bản quyền &amp; giấy phép
-      </p>
+            </div>
 
 
-      <p>
-        © 2026 Đào Huy Mạnh.
-      </p>
+            <figcaption>
+
+                Hình 1 — chú thích video.
+
+            </figcaption>
 
 
-      <p>
-        Bài viết này được cấp phép theo
-        <a
-          href="https://creativecommons.org/licenses/by-nc/4.0/"
-          target="_blank"
-          rel="license noopener"
-        >
-          Creative Commons Attribution-NonCommercial 4.0 International
-          (CC BY-NC 4.0)
-        </a>.
-      </p>
+        </figure>
 
 
-      <p>
-        Bạn được phép chia sẻ và điều chỉnh nội dung
-        cho mục đích phi thương mại, với điều kiện ghi
-        rõ tên tác giả và dẫn liên kết tới bài viết gốc.
-      </p>
+
+        <h2>
+            4. Kết luận
+        </h2>
 
 
-      <p>
-        Hình ảnh, dữ liệu, biểu đồ hoặc tài liệu thuộc
-        bên thứ ba không mặc nhiên nằm trong giấy phép này.
-      </p>
+        <p>
+
+            Tóm tắt lại những điểm chính của bài viết
+            và đưa ra hướng tiếp theo nếu cần.
+
+        </p>
+
+
+
+        <!-- =================================================
+             COPYRIGHT
+             ================================================= -->
+
+        <div class="article-license">
+
+
+            <p class="license-title">
+
+                Bản quyền &amp; giấy phép
+
+            </p>
+
+
+            <p>
+
+                © 2026 Đào Huy Mạnh.
+
+            </p>
+
+
+            <p>
+
+                Bài viết này được cấp phép theo
+
+                <a
+                    href="https://creativecommons.org/licenses/by-nc/4.0/"
+                    target="_blank"
+                    rel="license noopener"
+                >
+                    Creative Commons
+                    Attribution-NonCommercial 4.0 International
+                    (CC BY-NC 4.0)
+                </a>.
+
+            </p>
+
+
+            <p>
+
+                Bạn được phép chia sẻ và điều chỉnh nội dung
+                cho mục đích phi thương mại, với điều kiện
+                ghi công tác giả phù hợp và dẫn liên kết
+                tới bài viết gốc.
+
+            </p>
+
+
+            <p>
+
+                Hình ảnh, dữ liệu, biểu đồ hoặc tài liệu
+                thuộc bên thứ ba không mặc nhiên nằm trong
+                giấy phép này.
+
+            </p>
+
+
+        </div>
+
 
     </div>
-
-  </div>
 
 </article>
 
 
+
 <div class="track"></div>
+
 
 
 <!-- =========================================================
@@ -521,84 +727,107 @@ STAR --runThreadN 8 --genomeDir index/ \
 
 <footer class="site-footer">
 
-  <div class="wrap">
 
-    <div class="foot-brand">
+    <div class="wrap">
 
-      <strong>
-        © 2026 Mạnh Phượng
-      </strong>
 
-      <span>
-        · Ghi chép Y Sinh &amp; Bioinformatics
-      </span>
+        <div class="foot-brand">
+
+            <strong>
+                © 2026 Mạnh Phượng
+            </strong>
+
+            <span>
+                · Ghi chép Y Sinh &amp; Bioinformatics
+            </span>
+
+        </div>
+
+
+
+        <ul class="foot-links">
+
+
+            <li>
+
+                <a href="copyright.html">
+                    Copyright &amp; License
+                </a>
+
+            </li>
+
+
+            <li>
+
+                <a
+                    href="https://github.com/daohuymanh"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    GitHub
+                </a>
+
+            </li>
+
+
+            <li>
+
+                <a
+                    href="https://orcid.org/0000-0003-3874-5051"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    ORCID
+                </a>
+
+            </li>
+
+
+            <li>
+
+                <a href="mailto:daohuymanh@gmail.com">
+                    daohuymanh@gmail.com
+                </a>
+
+            </li>
+
+
+        </ul>
+
 
     </div>
 
-
-    <ul class="foot-links">
-
-      <li>
-        <a href="copyright.html">
-          Copyright &amp; License
-        </a>
-      </li>
-
-      <li>
-        <a
-          href="https://github.com/daohuymanh"
-          target="_blank"
-          rel="noopener"
-        >
-          GitHub
-        </a>
-      </li>
-
-      <li>
-        <a
-          href="https://orcid.org/0000-0003-3874-5051"
-          target="_blank"
-          rel="noopener"
-        >
-          ORCID
-        </a>
-      </li>
-
-      <li>
-        <a href="mailto:daohuymanh@gmail.com">
-          Email
-        </a>
-      </li>
-
-    </ul>
-
-  </div>
-
 </footer>
+
 
 
 <script>
 
 const navToggle =
-  document.getElementById('navToggle');
+    document.getElementById("navToggle");
 
 const primaryNav =
-  document.getElementById('primaryNav');
+    document.getElementById("primaryNav");
 
-navToggle.addEventListener('click', () => {
 
-  const isOpen =
-    primaryNav.classList.toggle('is-open');
+navToggle.addEventListener(
+    "click",
+    () => {
 
-  navToggle.setAttribute(
-    'aria-expanded',
-    isOpen
-  );
+        const isOpen =
+            primaryNav.classList.toggle("is-open");
 
-});
+        navToggle.setAttribute(
+            "aria-expanded",
+            isOpen
+        );
+
+    }
+);
 
 </script>
 
 
 </body>
+
 </html>
