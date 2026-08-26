@@ -1,781 +1,194 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
-
 <meta charset="UTF-8">
-
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
->
-
-<title>
-  Copyright &amp; License — Mạnh Phượng
-</title>
-
-<meta
-  name="description"
-  content="Thông tin bản quyền, giấy phép nội dung và chính sách sử dụng nội dung của website Mạnh Phượng."
->
-
-<meta
-  name="author"
-  content="Mạnh Phượng"
->
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bản quyền &amp; Giấy phép — Mạnh Phượng</title>
+<meta name="description" content="Điều khoản bản quyền và giấy phép sử dụng nội dung trên website Mạnh Phượng.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-
-<link
-  href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
-  rel="stylesheet"
->
-
-<link
-  rel="stylesheet"
-  href="style.css"
->
-
-
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 <style>
-
-/* =========================================================
-   COPYRIGHT PAGE
-   ========================================================= */
-
-.legal-header {
-  padding: 64px 0 40px;
-}
-
-.legal-header .wrap {
-  max-width: 820px;
-}
-
-.legal-header h1 {
-  font-family: var(--serif);
-  font-size: clamp(32px, 5vw, 46px);
-  line-height: 1.15;
-  margin: 16px 0 18px;
-}
-
-.legal-header p {
-  color: var(--ink-soft);
-  font-size: 17px;
-  max-width: 720px;
-}
-
-.legal-body {
-  padding: 12px 0 80px;
-}
-
-.legal-body .wrap {
-  max-width: 820px;
-}
-
-.legal-section {
-  margin-bottom: 48px;
-}
-
-.legal-section h2 {
-  font-family: var(--serif);
-  font-size: 25px;
-  margin: 0 0 16px;
-}
-
-.legal-section h3 {
-  font-family: var(--serif);
-  font-size: 19px;
-  margin: 28px 0 10px;
-}
-
-.legal-section p {
-  font-size: 16px;
-  line-height: 1.75;
-  color: var(--ink);
-  margin: 0 0 16px;
-}
-
-.legal-section ul {
-  margin: 0 0 20px;
-  padding-left: 24px;
-}
-
-.legal-section li {
-  margin-bottom: 8px;
-  line-height: 1.65;
-}
-
-.license-box {
-  background: var(--bg-panel);
-  border-left: 4px solid var(--green-deep);
-  padding: 24px 26px;
-  border-radius: var(--radius);
-  margin: 24px 0;
-}
-
-.license-box strong {
-  color: var(--ink);
-}
-
-.license-box a {
-  color: var(--green-deep);
-  font-weight: 600;
-}
-
-.brand-box {
-  background: var(--navy);
-  color: #dfeee6;
-  padding: 24px 26px;
-  border-radius: var(--radius);
-  margin: 24px 0;
-}
-
-.brand-box strong {
-  color: #ffffff;
-}
-
-.legal-note {
-  font-size: 13.5px !important;
-  color: var(--ink-soft) !important;
-}
-
-.back-link {
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--green-deep);
-  text-decoration: none;
-}
-
-.back-link:hover {
-  text-decoration: underline;
-}
-
+  .article-header { padding: 56px 0 32px; }
+  .article-header .wrap { max-width: 720px; }
+  .article-header h1 {
+    font-family: var(--serif);
+    font-size: clamp(28px, 4vw, 38px);
+    line-height: 1.2;
+    margin: 18px 0 8px;
+  }
+  .article-meta {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+  article.post-body { padding: 8px 0 72px; }
+  article.post-body .wrap { max-width: 720px; }
+  article.post-body h2 {
+    font-family: var(--serif);
+    font-size: 22px;
+    margin: 40px 0 14px;
+  }
+  article.post-body p, article.post-body li {
+    font-size: 16px;
+    color: var(--ink);
+  }
+  article.post-body p { margin: 0 0 18px; }
+  article.post-body ul {
+    margin: 0 0 18px;
+    padding-left: 22px;
+  }
+  article.post-body li { margin-bottom: 8px; }
+  article.post-body code {
+    font-family: var(--mono);
+    background: var(--bg-panel);
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-size: 0.9em;
+  }
+  .license-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 13px;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    margin: 0 0 28px;
+  }
+  .callout {
+    border-left: 3px solid var(--green-deep);
+    background: var(--bg-panel);
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    font-size: 15px;
+    margin: 0 0 20px;
+  }
+  .callout strong { color: var(--green-deep); }
+  .back-link {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--green-deep);
+    text-decoration: none;
+  }
 </style>
-
 </head>
-
-
 <body>
 
-
-<!-- =========================================================
-     HEADER
-     ========================================================= -->
-
 <header class="site-header">
-
   <div class="wrap">
-
-    <a
-      href="index.html"
-      class="logo"
-    >
-
-      <img
-        class="logo-mark"
-        src="assets/logo-icon.png"
-        alt="Logo Mạnh Phượng"
-      >
-
+    <a href="index.html" class="logo">
+      <img class="logo-mark" src="assets/logo-icon.png" alt="Logo Mạnh Phượng">
       <span class="logo-text">
-
-        <span class="logo-name">
-          Mạnh Phượng
-        </span>
-
-        <span class="logo-tagline">
-          Biomedicine &amp; Bioinformatics
-        </span>
-
+        <span class="logo-name">Mạnh Phượng</span>
+        <span class="logo-tagline">Biomedicine &amp; Bioinformatics</span>
       </span>
-
     </a>
-
-
-    <nav
-      class="primary-nav"
-      id="primaryNav"
-    >
-
-      <a href="index.html">
-        trang chủ
-      </a>
-
-      <a href="index.html#bai-viet">
-        bài viết
-      </a>
-
-      <a href="index.html#chu-de">
-        chủ đề
-      </a>
-
-      <a href="index.html#gioi-thieu">
-        giới thiệu
-      </a>
-
-      <a href="index.html#lien-he">
-        liên hệ
-      </a>
-
+    <nav class="primary-nav" id="primaryNav">
+      <a href="index.html">trang chủ</a>
+      <a href="index.html#bai-viet">bài viết</a>
+      <a href="index.html#chu-de">chủ đề</a>
+      <a href="index.html#gioi-thieu">giới thiệu</a>
+      <a href="index.html#lien-he">liên hệ</a>
     </nav>
-
-
-    <button
-      class="nav-toggle"
-      id="navToggle"
-      aria-label="Mở menu"
-      aria-expanded="false"
-      aria-controls="primaryNav"
-    ></button>
-
+    <button class="nav-toggle" id="navToggle" aria-label="Mở menu" aria-expanded="false" aria-controls="primaryNav"></button>
   </div>
-
 </header>
-
 
 <div class="track"></div>
 
+<div class="wrap" style="padding-top:24px;">
+  <a href="index.html" class="back-link">← quay lại trang chủ</a>
+</div>
 
-<!-- =========================================================
-     HEADER
-     ========================================================= -->
+<header class="article-header">
+  <div class="wrap">
+    <h1>Bản quyền &amp; Giấy phép</h1>
+    <div class="article-meta">Cập nhật lần cuối: 2026.08.26</div>
+  </div>
+</header>
 
-<section class="legal-header">
-
+<article class="post-body">
   <div class="wrap">
 
-    <a
-      href="index.html"
-      class="back-link"
-    >
-      ← quay lại trang chủ
-    </a>
+    <div class="license-badge">
+      CC BY-NC 4.0 — Creative Commons Attribution-NonCommercial 4.0
+    </div>
 
-
-    <h1>
-      Copyright &amp; License
-    </h1>
-
-
+    <h2>1. Nội dung được cấp phép</h2>
     <p>
-      Thông tin về tác giả, bản quyền, giấy phép sử dụng
-      nội dung và nhận diện thương hiệu của Mạnh Phượng.
+      Trừ khi có ghi chú khác ngay trong bài viết, toàn bộ nội dung gốc trên
+      website này — bài viết, hình minh họa, biểu đồ, đoạn văn giải thích —
+      được chia sẻ theo giấy phép
+      <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.vi" target="_blank" rel="noopener"><strong>CC BY-NC 4.0</strong></a>.
+      Theo giấy phép này, bạn được phép:
+    </p>
+    <ul>
+      <li>Chia sẻ — sao chép và phân phối lại nội dung dưới mọi hình thức, mọi định dạng</li>
+      <li>Chuyển thể — biên tập, biến đổi, phát triển thêm từ nội dung gốc</li>
+    </ul>
+    <p>Với điều kiện:</p>
+    <ul>
+      <li><strong>Ghi công</strong> — nêu rõ nguồn và tác giả, kèm liên kết về bài viết gốc</li>
+      <li><strong>Phi thương mại</strong> — không được sử dụng nội dung cho mục đích thương mại nếu không có sự đồng ý trước</li>
+    </ul>
+
+    <h2>2. Ngoại lệ — không thuộc giấy phép CC BY-NC 4.0</h2>
+    <div class="callout">
+      <strong>Tên gọi và logo "Mạnh Phượng"</strong> là thương hiệu riêng của website,
+      không nằm trong phạm vi giấy phép Creative Commons nói trên. Vui lòng không sử
+      dụng lại tên hoặc logo cho mục đích gây nhầm lẫn về nguồn gốc nội dung.
+    </div>
+    <p>Ngoài ra, các phần sau cũng không thuộc giấy phép CC BY-NC 4.0 và giữ nguyên bản quyền/giấy phép riêng của chúng:</p>
+    <ul>
+      <li>Mã nguồn (HTML, CSS, JavaScript) của website — nếu bạn muốn tái sử dụng khung mã nguồn, vui lòng liên hệ trước</li>
+      <li>Dữ liệu và code phân tích trong các repository liên kết trên GitHub — mỗi repo có giấy phép riêng, ghi trong file <code>README</code>/<code>LICENSE</code> tương ứng</li>
+      <li>Nội dung trích dẫn hoặc tham khảo từ nguồn bên ngoài (bài báo khoa học, hình ảnh, dữ liệu công khai) — thuộc bản quyền của tác giả/nguồn gốc, được trích dẫn rõ trong bài viết</li>
+    </ul>
+
+    <h2>3. Cách trích dẫn</h2>
+    <p>Khi trích dẫn lại một bài viết trên website này, vui lòng ghi rõ theo dạng:</p>
+    <p>
+      <code>Mạnh Phượng, "[tên bài viết]", [năm]. Truy cập tại: [đường link bài viết].</code>
+    </p>
+
+    <h2>4. Liên hệ</h2>
+    <p>
+      Nếu bạn muốn sử dụng nội dung cho mục đích thương mại, hoặc có câu hỏi về giấy
+      phép, vui lòng liên hệ qua email
+      <a href="mailto:daohuymanh@gmail.com">daohuymanh@gmail.com</a>.
     </p>
 
   </div>
+</article>
 
-</section>
-
-
-<!-- =========================================================
-     LEGAL CONTENT
-     ========================================================= -->
-
-<main class="legal-body">
-
-  <div class="wrap">
-
-
-    <!-- =====================================================
-         1. WEBSITE
-         ===================================================== -->
-
-    <section class="legal-section">
-
-      <h2>
-        1. Website &amp; thương hiệu
-      </h2>
-
-
-      <p>
-
-        <strong>Mạnh Phượng</strong> là tên của website và
-        không gian chia sẻ kiến thức về Y Sinh,
-        Bioinformatics và các lĩnh vực liên quan.
-
-      </p>
-
-
-      <p>
-
-        Tên <strong>Mạnh Phượng</strong>, logo Mạnh Phượng,
-        logo DHM và các yếu tố nhận diện thương hiệu
-        không thuộc giấy phép Creative Commons được
-        áp dụng cho các bài viết, trừ khi có ghi chú
-        riêng.
-
-      </p>
-
-
-      <div class="brand-box">
-
-        <strong>
-          Mạnh Phượng — Brand / Website
-        </strong>
-
-        <br><br>
-
-        Tên thương hiệu và logo không được cấp quyền
-        sử dụng theo CC BY-NC 4.0.
-
-        <br><br>
-
-        © 2026 Mạnh Phượng. All rights reserved.
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         2. AUTHORS
-         ===================================================== -->
-
-    <section class="legal-section">
-
-      <h2>
-        2. Tác giả bài viết
-      </h2>
-
-
-      <p>
-
-        Mỗi bài viết trên website được ghi rõ tác giả
-        hoặc các đồng tác giả.
-
-      </p>
-
-
-      <p>
-        Tác giả có thể là:
-      </p>
-
-
-      <ul>
-
-        <li>
-          Đào Huy Mạnh;
-        </li>
-
-        <li>
-          Nguyễn Thị Ngọc Phượng;
-        </li>
-
-        <li>
-          Đào Huy Mạnh và Nguyễn Thị Ngọc Phượng;
-        </li>
-
-        <li>
-          hoặc các tác giả cộng tác khác nếu được ghi rõ
-          trên bài viết.
-        </li>
-
-      </ul>
-
-
-      <p>
-
-        Thông tin tác giả trên từng bài viết là căn cứ
-        để xác định người tạo ra nội dung tương ứng.
-
-      </p>
-
-    </section>
-
-
-    <!-- =====================================================
-         3. CC BY-NC
-         ===================================================== -->
-
-    <section class="legal-section">
-
-      <h2>
-        3. Giấy phép cho nội dung gốc
-      </h2>
-
-
-      <p>
-
-        Trừ khi có ghi chú khác, các bài viết và nội dung
-        nguyên gốc được tạo bởi các tác giả của Mạnh Phượng
-        được cấp phép theo:
-
-      </p>
-
-
-      <div class="license-box">
-
-        <strong>
-          Creative Commons
-          Attribution-NonCommercial 4.0 International
-          (CC BY-NC 4.0)
-        </strong>
-
-
-        <p style="margin-top:12px;">
-
-          Người khác có thể chia sẻ và điều chỉnh nội dung
-          cho mục đích phi thương mại, với điều kiện ghi
-          công tác giả phù hợp và dẫn liên kết tới nguồn gốc.
-
-        </p>
-
-
-        <a
-          href="https://creativecommons.org/licenses/by-nc/4.0/"
-          target="_blank"
-          rel="license noopener"
-        >
-          Xem đầy đủ điều khoản CC BY-NC 4.0 →
-        </a>
-
-      </div>
-
-
-      <h3>
-        Khi trích dẫn nội dung
-      </h3>
-
-
-      <p>
-
-        Khi sử dụng nội dung của Mạnh Phượng,
-        vui lòng ghi rõ tên tác giả của bài viết,
-        tên website và đường dẫn tới bài viết gốc.
-
-      </p>
-
-
-      <p>
-        Ví dụ:
-      </p>
-
-
-      <div class="license-box">
-
-        Đào Huy Mạnh.
-        “Tên bài viết.”
-        <em>Mạnh Phượng — Ghi chép Y Sinh &amp; Bioinformatics</em>,
-        2026.
-        URL bài viết.
-
-      </div>
-
-
-      <h3>
-        Sử dụng thương mại
-      </h3>
-
-
-      <p>
-
-        CC BY-NC 4.0 không cấp quyền sử dụng nội dung
-        cho mục đích thương mại.
-
-      </p>
-
-
-      <p>
-
-        Nếu bạn muốn sử dụng nội dung cho mục đích thương mại,
-        vui lòng liên hệ trực tiếp với tác giả để xin phép.
-
-      </p>
-
-    </section>
-
-
-    <!-- =====================================================
-         4. THIRD PARTY
-         ===================================================== -->
-
-    <section class="legal-section">
-
-      <h2>
-        4. Nội dung của bên thứ ba
-      </h2>
-
-
-      <p>
-
-        Không phải tất cả nội dung xuất hiện trên website
-        đều thuộc quyền sở hữu của Mạnh Phượng hoặc các
-        tác giả của website.
-
-      </p>
-
-
-      <p>
-        Ví dụ:
-      </p>
-
-
-      <ul>
-
-        <li>
-          hình ảnh của bên thứ ba;
-        </li>
-
-        <li>
-          biểu đồ hoặc hình minh họa từ các tài liệu khác;
-        </li>
-
-        <li>
-          dữ liệu từ các cơ sở dữ liệu công khai;
-        </li>
-
-        <li>
-          video nhúng từ các nền tảng khác;
-        </li>
-
-        <li>
-          đoạn trích hoặc tài liệu được sử dụng theo
-          giấy phép của chủ sở hữu tương ứng.
-        </li>
-
-      </ul>
-
-
-      <p>
-
-        Các tài liệu này không mặc nhiên thuộc CC BY-NC 4.0
-        của website và tiếp tục chịu sự điều chỉnh của
-        bản quyền hoặc giấy phép tương ứng.
-
-      </p>
-
-    </section>
-
-
-    <!-- =====================================================
-         5. LOGO
-         ===================================================== -->
-
-    <section class="legal-section">
-
-      <h2>
-        5. Logo và nhận diện
-      </h2>
-
-
-      <p>
-
-        Logo Mạnh Phượng, logo DHM và các thiết kế nhận diện
-        do website sở hữu không được cấp phép theo
-        CC BY-NC 4.0.
-
-      </p>
-
-
-      <p>
-
-        Việc sao chép, sử dụng hoặc đưa logo/nhận diện
-        của Mạnh Phượng vào một website, sản phẩm,
-        dịch vụ hoặc thương hiệu khác không được xem
-        là được cấp phép chỉ vì logo xuất hiện trên
-        website công khai.
-
-      </p>
-
-
-      <div class="brand-box">
-
-        <strong>
-          Logo / Brand
-        </strong>
-
-        <br><br>
-
-        © 2026 Mạnh Phượng.
-        All rights reserved.
-
-        <br><br>
-
-        Not licensed under CC BY-NC 4.0.
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         6. SOURCE CODE
-         ===================================================== -->
-
-    <section class="legal-section">
-
-      <h2>
-        6. Mã nguồn website
-      </h2>
-
-
-      <p>
-
-        Mã nguồn HTML, CSS, JavaScript và các tài nguyên
-        kỹ thuật của website không mặc nhiên được cấp
-        giấy phép Creative Commons chỉ vì website được
-        công khai trên GitHub.
-
-      </p>
-
-
-      <p>
-
-        Trừ khi có file hoặc thông báo cấp phép riêng,
-        không nên hiểu rằng mã nguồn website được cấp
-        quyền sử dụng, sao chép hoặc phân phối tự do.
-
-      </p>
-
-    </section>
-
-
-    <!-- =====================================================
-         7. CONTACT
-         ===================================================== -->
-
-    <section class="legal-section">
-
-      <h2>
-        7. Xin phép sử dụng
-      </h2>
-
-
-      <p>
-
-        Nếu bạn muốn sử dụng nội dung cho mục đích thương mại,
-        sử dụng logo Mạnh Phượng, hoặc cần xin phép đối với
-        nội dung không thuộc giấy phép CC BY-NC 4.0,
-        vui lòng liên hệ:
-
-      </p>
-
-
-      <p>
-
-        <a href="mailto:daohuymanh@gmail.com">
-          daohuymanh@gmail.com
-        </a>
-
-      </p>
-
-    </section>
-
-
-    <!-- =====================================================
-         8. LAST UPDATED
-         ===================================================== -->
-
-    <section class="legal-section">
-
-      <p class="legal-note">
-
-        Trang Copyright &amp; License được cập nhật lần cuối:
-        26 August 2026.
-
-      </p>
-
-      <p class="legal-note">
-
-        Giấy phép Creative Commons chỉ áp dụng đối với
-        những nội dung mà người cấp phép có quyền cấp phép.
-        Các quyền đối với nội dung của bên thứ ba vẫn thuộc
-        về chủ sở hữu tương ứng.
-
-      </p>
-
-    </section>
-
-
-  </div>
-
-</main>
-
-
-<!-- =========================================================
-     FOOTER
-     ========================================================= -->
+<div class="track"></div>
 
 <footer class="site-footer">
-
   <div class="wrap">
-
     <div class="foot-brand">
-
-      <strong>
-        © 2026 Mạnh Phượng
-      </strong>
-
-      <span>
-        · Ghi chép Y Sinh &amp; Bioinformatics
-      </span>
-
+      <strong>© 2026 Mạnh Phượng</strong>
+      <span>· Ghi chép Y Sinh &amp; Bioinformatics</span>
     </div>
-
-
     <ul class="foot-links">
-
-      <li>
-        <a href="copyright.html">
-          Copyright &amp; License
-        </a>
-      </li>
-
-      <li>
-        <a
-          href="https://github.com/daohuymanh"
-          target="_blank"
-          rel="noopener"
-        >
-          GitHub
-        </a>
-      </li>
-
-      <li>
-        <a
-          href="https://orcid.org/0000-0003-3874-5051"
-          target="_blank"
-          rel="noopener"
-        >
-          ORCID
-        </a>
-      </li>
-
-      <li>
-        <a href="mailto:daohuymanh@gmail.com">
-          Email
-        </a>
-      </li>
-
+      <li><a href="copyright.html">Copyright &amp; License</a></li>
+      <li><a href="https://github.com/daohuymanh" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://orcid.org/0000-0003-3874-5051" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="mailto:daohuymanh@gmail.com">Email</a></li>
     </ul>
-
   </div>
-
 </footer>
 
-
 <script>
-
-const navToggle =
-  document.getElementById('navToggle');
-
-const primaryNav =
-  document.getElementById('primaryNav');
-
-navToggle.addEventListener('click', () => {
-
-  const isOpen =
-    primaryNav.classList.toggle('is-open');
-
-  navToggle.setAttribute(
-    'aria-expanded',
-    isOpen
-  );
-
-});
-
+  const navToggle = document.getElementById('navToggle');
+  const primaryNav = document.getElementById('primaryNav');
+  navToggle.addEventListener('click', () => {
+    const isOpen = primaryNav.classList.toggle('is-open');
+    navToggle.setAttribute('aria-expanded', isOpen);
+  });
 </script>
-
 
 </body>
 </html>
