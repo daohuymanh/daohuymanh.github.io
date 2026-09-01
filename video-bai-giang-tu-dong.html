@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
+<title>
+  Tự động tạo video bài giảng từ PowerPoint và Word bằng Python — Mạnh Phượng
+</title>
+<meta
+  name="description"
+  content="Hướng dẫn xây dựng một công cụ Python miễn phí, dùng Edge-TTS và FFmpeg, để tự động ghép PowerPoint và script Word thành video bài giảng có phụ đề."
+>
+<!--
+THAY TÊN TÁC GIẢ TÙY TỪNG BÀI
+Nếu bạn viết: Đào Huy Mạnh
+Nếu vợ viết: Nguyễn Thị Ngọc Phượng
+Nếu cùng viết: Đào Huy Mạnh và Nguyễn Thị Ngọc Phượng
+-->
+<meta
+  name="author"
+  content="Đào Huy Mạnh"
+>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link
+  href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+  rel="stylesheet"
+>
+<link
+  rel="stylesheet"
+  href="style.css"
+>
+
+<style>
+/* =========================================================
+   ARTICLE
+   ========================================================= */
+.article-header {
+  padding: 56px 0 32px;
+}
+.article-header .wrap {
+  max-width: 760px;
+}
+.article-header h1 {
+  font-family: var(--serif);
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.2;
+  margin: 18px 0 20px;
+}
+.article-meta {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+.article-meta span:not(:last-child)::after {
+  content: "·";
+  margin-left: 16px;
+  color: var(--line);
+}
+.article-author {
+  margin-top: 14px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.article-author strong {
+  color: var(--ink);
+}
+.article-license {
+  margin-top: 56px;
+  padding: 22px 24px;
+  background: var(--bg-panel);
+  border-left: 3px solid var(--green-deep);
+  border-radius: var(--radius);
+}
+.article-license p {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  margin: 0 0 8px;
+}
+.article-license p:last-child {
+  margin-bottom: 0;
+}
+.article-license a {
+  color: var(--green-deep);
+  font-weight: 600;
+  text-decoration: none;
+}
+.article-license a:hover {
+  text-decoration: underline;
+}
+.article-license .license-title {
+  font-family: var(--serif);
+  font-size: 17px;
+  color: var(--ink);
+  font-weight: 600;
+}
+article.post-body {
+  padding: 8px 0 72px;
+}
+article.post-body .wrap {
+  max-width: 760px;
+}
+article.post-body h2 {
+  font-family: var(--serif);
+  font-size: 24px;
+  margin: 44px 0 16px;
+}
+article.post-body h3 {
+  font-family: var(--serif);
+  font-size: 19px;
+  margin: 32px 0 12px;
+}
+article.post-body p {
+  font-size: 16.5px;
+  color: var(--ink);
+  margin: 0 0 20px;
+}
+article.post-body p.lead {
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+article.post-body ul,
+article.post-body ol {
+  font-size: 16.5px;
+  color: var(--ink);
+  margin: 0 0 20px;
+  padding-left: 22px;
+}
+article.post-body li {
+  margin-bottom: 6px;
+}
+article.post-body pre {
+  background: var(--navy);
+  color: #dfeee6;
+  font-family: var(--mono);
+  font-size: 13.5px;
+  line-height: 1.6;
+  padding: 20px 22px;
+  border-radius: var(--radius);
+  overflow-x: auto;
+  margin: 0 0 24px;
+}
+article.post-body code {
+  font-family: var(--mono);
+  background: var(--bg-panel);
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-size: 0.9em;
+}
+article.post-body pre code {
+  background: none;
+  padding: 0;
+}
+.callout {
+  background: var(--bg-panel);
+  border-left: 3px solid var(--green-deep);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin: 0 0 24px;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+.callout strong {
+  color: var(--ink);
+}
+.video-embed {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  border-radius: var(--radius);
+  margin: 8px 0 28px;
+  background: var(--navy);
+}
+.video-embed iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+figcaption {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  margin: -18px 0 28px;
+}
+.back-link {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--green-deep);
+  text-decoration: none;
+}
+.back-link:hover {
+  text-decoration: underline;
+}
+details.code-fold {
+  margin: 0 0 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+details.code-fold summary {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 12px 18px;
+  background: var(--bg-panel);
+  color: var(--ink);
+  list-style: none;
+}
+details.code-fold summary::-webkit-details-marker {
+  display: none;
+}
+details.code-fold summary::before {
+  content: "▸ ";
+  color: var(--green-deep);
+}
+details.code-fold[open] summary::before {
+  content: "▾ ";
+}
+details.code-fold pre {
+  margin: 0;
+  border-radius: 0;
+}
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     HEADER
+     ========================================================= -->
+<header class="site-header">
+  <div class="wrap">
+    <a href="index.html" class="logo">
+      <img class="logo-mark" src="assets/logo-icon.png" alt="Logo Mạnh Phượng">
+      <span class="logo-text">
+        <span class="logo-name">Mạnh Phượng</span>
+        <span class="logo-tagline">Biomedicine &amp; Bioinformatics</span>
+      </span>
+    </a>
+    <nav class="primary-nav" id="primaryNav">
+      <a href="index.html">trang chủ</a>
+      <a href="index.html#bai-viet">bài viết</a>
+      <a href="index.html#chu-de">chủ đề</a>
+      <a href="index.html#gioi-thieu">giới thiệu</a>
+      <a href="index.html#lien-he">liên hệ</a>
+    </nav>
+    <button
+      class="nav-toggle"
+      id="navToggle"
+      aria-label="Mở menu"
+      aria-expanded="false"
+      aria-controls="primaryNav"
+    ></button>
+  </div>
+</header>
+
+<div class="track"></div>
+
+<!-- =========================================================
+     BACK
+     ========================================================= -->
+<div class="wrap" style="padding-top:24px;">
+  <a href="index.html#bai-viet" class="back-link">
+    ← quay lại danh sách bài viết
+  </a>
+</div>
+
+<!-- =========================================================
+     ARTICLE HEADER
+     ========================================================= -->
+<header class="article-header">
+  <div class="wrap">
+    <span class="tag tag--tools">Công cụ</span>
+
+    <h1>
+      Tự động tạo video bài giảng từ PowerPoint
+      và Word script bằng Python
+    </h1>
+
+    <div class="article-meta">
+      <span>2026.09.01</span>
+      <span>Cập nhật: 2026.09.01</span>
+      <span>11 phút đọc</span>
+    </div>
+
+    <div class="article-author">
+      <strong>Tác giả:</strong> Đào Huy Mạnh
+    </div>
+  </div>
+</header>
+
+<!-- =========================================================
+     ARTICLE
+     ========================================================= -->
+<article class="post-body">
+  <div class="wrap">
+
+    <p class="lead">
+      Khi xây dựng khóa học e-learning, tài liệu đào tạo nội bộ
+      hoặc video hướng dẫn, chúng ta thường đã có sẵn một file
+      PowerPoint chứa nội dung trình bày và một file Word chứa
+      lời thuyết minh cho từng slide. Thay vì thu âm thủ công
+      rồi căn chỉnh từng slide bằng tay, bài viết này hướng dẫn
+      xây dựng một công cụ Python miễn phí để tự động hoá toàn
+      bộ quy trình, chỉ với một lệnh duy nhất.
+    </p>
+
+    <h2>1. Ý tưởng chung</h2>
+    <p>
+      Công cụ này dùng ba thành phần: <strong>Python</strong>
+      để điều phối toàn bộ quy trình, <strong>Edge-TTS</strong>
+      để sinh giọng đọc AI miễn phí, và <strong>FFmpeg</strong>
+      để ghép ảnh slide với audio thành video. Luồng xử lý tổng
+      quát như sau:
+    </p>
+    <pre><code>PowerPoint + Script
+        ↓
+    AI Voice (Edge-TTS)
+        ↓
+    Video MP4
+        ↓
+    Subtitle SRT</code></pre>
+    <p>
+      Cụ thể hơn, mỗi slide trong PowerPoint được xuất ra thành
+      một ảnh PNG, còn nội dung thuyết minh tương ứng được tách
+      ra từ file Word theo từng đoạn "SLIDE n". Mỗi đoạn text
+      này được Edge-TTS chuyển thành một file MP3, sau đó FFmpeg
+      ghép từng cặp ảnh–audio lại thành một đoạn video ngắn, rồi
+      nối toàn bộ các đoạn lại thành video hoàn chỉnh. Cuối cùng,
+      chương trình tự sinh luôn file phụ đề SRT dựa trên thời
+      lượng thực tế của từng đoạn audio.
+    </p>
+    <pre><code>presentation.pptx          script.docx
+        ↓                        ↓
+  Xuất slide PNG          Tách nội dung theo slide
+        └───────────┬───────────┘
+                     ↓
+                 Edge-TTS
+                     ↓
+      slide_1.mp3  slide_2.mp3  slide_3.mp3 ...
+                     ↓
+                  FFmpeg
+                     ↓
+      final_course.mp4  +  final_course.srt</code></pre>
+
+    <p>
+      Kết quả cuối cùng là một video có giọng đọc AI, slide tự
+      chuyển theo đúng nhịp thuyết minh, và phụ đề đi kèm — có
+      thể tải thẳng lên YouTube, Microsoft Stream, Moodle hay bất
+      kỳ LMS nào, và người xem có thể bật/tắt Caption tuỳ ý vì
+      phụ đề được lưu ở file riêng.
+    </p>
+
+    <h2>2. Chuẩn bị dữ liệu đầu vào</h2>
+
+    <h3>2.1. File PowerPoint</h3>
+    <p>
+      Ví dụ ở đây dùng file <code>presentation.pptx</code>.
+      Xuất toàn bộ slide thành ảnh bằng PowerPoint:
+      <code>File → Save As → PNG → Every Slide</code>.
+      Kết quả sẽ là một thư mục ảnh:
+    </p>
+    <pre><code>slides/
+├── Slide1.PNG
+├── Slide2.PNG
+├── Slide3.PNG
+└── ...</code></pre>
+
+    <h3>2.2. File script Word</h3>
+    <p>
+      File <code>script.docx</code> chứa lời thuyết minh, được
+      đánh dấu theo từng slide bằng nhãn <code>SLIDE n</code> để
+      chương trình ghép đúng nội dung với đúng slide. Ví dụ:
+    </p>
+    <pre><code>SLIDE 1
+
+Welcome everyone to this course.
+
+SLIDE 2
+
+In this lesson we will learn
+the basic concepts of biosafety.
+
+SLIDE 3
+
+Let's begin with the first topic.</code></pre>
+    <div class="callout">
+      <strong>Lưu ý:</strong> nhãn <code>SLIDE n</code> phải viết
+      đúng định dạng (không dấu, có khoảng trắng trước số) vì
+      chương trình dùng regex để tách đoạn — sai định dạng sẽ
+      khiến một slide bị gộp nhầm nội dung với slide kế bên.
+    </div>
+
+    <h3>2.3. Cấu trúc thư mục dự án</h3>
+    <pre><code>Course/
+│
+├── build_course.py
+├── presentation.pptx
+├── script.docx
+│
+└── slides/
+    ├── Slide1.PNG
+    ├── Slide2.PNG
+    ├── Slide3.PNG
+    └── ...</code></pre>
+
+    <h2>3. Cài đặt môi trường</h2>
+    <p>
+      Cài <strong>Python</strong> từ
+      <code>python.org</code>, nhớ tick chọn
+      <code>Add Python to PATH</code> lúc cài. Cài
+      <strong>FFmpeg</strong> từ
+      <code>gyan.dev/ffmpeg/builds</code>, rồi kiểm tra lại bằng:
+    </p>
+    <pre><code>ffmpeg -version</code></pre>
+    <p>Sau đó cài các thư viện Python cần thiết:</p>
+    <pre><code>pip install edge-tts
+pip install python-docx
+pip install mutagen</code></pre>
+
+    <h2>4. Chạy chương trình</h2>
+    <p>Sau khi đã có đủ file trong đúng cấu trúc thư mục, chỉ cần chạy:</p>
+    <pre><code>python build_course.py</code></pre>
+    <p>Chương trình sẽ tự động thực hiện tuần tự 5 bước:</p>
+    <ol>
+      <li>Đọc script từ <code>script.docx</code>, tách theo từng slide</li>
+      <li>Sinh audio bằng Edge-TTS cho từng đoạn</li>
+      <li>Ghép ảnh slide với audio tương ứng thành video ngắn</li>
+      <li>Nối toàn bộ video ngắn lại thành một video hoàn chỉnh</li>
+      <li>Sinh file phụ đề SRT dựa trên thời lượng audio thực tế</li>
+    </ol>
+    <p>Kết quả đầu ra gồm:</p>
+    <pre><code>audio/
+video_parts/
+
+final_course.mp4
+final_course.srt</code></pre>
+
+    <h2>5. Mã nguồn — build_course.py</h2>
+    <p>
+      Toàn bộ logic nằm trong một file duy nhất, có thể tái sử
+      dụng cho bất kỳ khóa học nào chỉ bằng cách thay
+      <code>presentation.pptx</code> và <code>script.docx</code>
+      rồi chạy lại. Phần cấu hình ở đầu file (
+      <code>SCRIPT_FILE</code>, <code>SLIDES_DIR</code>,
+      <code>VOICE</code>, <code>RATE</code>...) là nơi chỉnh
+      nhanh nhất nếu muốn đổi giọng đọc hay tốc độ nói.
+    </p>
+
+    <details class="code-fold" open>
+      <summary>Xem toàn bộ mã nguồn build_course.py</summary>
+      <pre><code>import os
+import re
+import sys
+import asyncio
+import subprocess
+from pathlib import Path
+
+import edge_tts
+from docx import Document
+from mutagen.mp3 import MP3
+
+
+# =====================================================
+# CONFIG
+# =====================================================
+
+SCRIPT_FILE = "script.docx"
+
+SLIDES_DIR = "slides"
+
+AUDIO_DIR = "audio"
+
+VIDEO_DIR = "video_parts"
+
+FINAL_VIDEO = "final_course.mp4"
+
+FINAL_SRT = "final_course.srt"
+
+VOICE = "en-US-JennyNeural"
+
+RATE = "+5%"
+
+# Các giọng khác:
+#
+# en-US-JennyNeural
+# en-US-GuyNeural
+# en-GB-SoniaNeural
+# en-GB-RyanNeural
+
+
+# =====================================================
+# HELPER
+# =====================================================
+
+def log(message):
+    print(f"[INFO] {message}")
+
+
+def fatal(message):
+    print(f"[ERROR] {message}")
+    sys.exit(1)
+
+
+# =====================================================
+# CHECK ENVIRONMENT
+# =====================================================
+
+def validate():
+
+    if not os.path.exists(SCRIPT_FILE):
+        fatal(f"Missing file: {SCRIPT_FILE}")
+
+    if not os.path.exists(SLIDES_DIR):
+        fatal(f"Missing folder: {SLIDES_DIR}")
+
+    try:
+        subprocess.run(
+            ["ffmpeg", "-version"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True
+        )
+    except Exception:
+        fatal("FFmpeg not found in PATH")
+
+
+# =====================================================
+# READ DOCX
+# =====================================================
+
+def extract_slide_scripts():
+
+    log("Reading script.docx")
+
+    doc = Document(SCRIPT_FILE)
+
+    text = "\n".join(
+        p.text.strip()
+        for p in doc.paragraphs
+        if p.text.strip()
+    )
+
+    slides = re.split(
+        r"SLIDE\s+\d+",
+        text,
+        flags=re.IGNORECASE
+    )
+
+    slides = [
+        s.strip()
+        for s in slides
+        if s.strip()
+    ]
+
+    if len(slides) == 0:
+        fatal("No slide scripts found")
+
+    log(f"Found {len(slides)} scripts")
+
+    return slides
+
+
+# =====================================================
+# TTS
+# =====================================================
+
+async def generate_audio(slides):
+
+    os.makedirs(AUDIO_DIR, exist_ok=True)
+
+    total = len(slides)
+
+    for idx, slide_text in enumerate(
+            slides,
+            start=1):
+
+        mp3_file = os.path.join(
+            AUDIO_DIR,
+            f"slide_{idx}.mp3"
+        )
+
+        if os.path.exists(mp3_file):
+
+            log(
+                f"Skip audio slide {idx}"
+            )
+
+            continue
+
+        log(
+            f"TTS slide {idx}/{total}"
+        )
+
+        communicate = edge_tts.Communicate(
+            text=slide_text,
+            voice=VOICE,
+            rate=RATE
+        )
+
+        await communicate.save(mp3_file)
+
+
+# =====================================================
+# GET SLIDE IMAGES
+# =====================================================
+
+def slide_num(filename):
+
+    match = re.search(
+        r'(\d+)',
+        filename
+    )
+
+    if match:
+        return int(match.group(1))
+
+    return 999999
+
+
+def get_slide_images():
+
+    exts = (
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".bmp"
+    )
+
+    images = []
+
+    for file in os.listdir(
+            SLIDES_DIR):
+
+        if file.lower().endswith(exts):
+            images.append(file)
+
+    images.sort(key=slide_num)
+
+    if len(images) == 0:
+        fatal("No slide images found")
+
+    log(
+        f"Found {len(images)} slide images"
+    )
+
+    return images
+
+
+# =====================================================
+# VIDEO PARTS
+# =====================================================
+
+def create_video_parts(images):
+
+    os.makedirs(
+        VIDEO_DIR,
+        exist_ok=True
+    )
+
+    for idx, image_name in enumerate(
+            images,
+            start=1):
+
+        image_path = os.path.join(
+            SLIDES_DIR,
+            image_name
+        )
+
+        audio_path = os.path.join(
+            AUDIO_DIR,
+            f"slide_{idx}.mp3"
+        )
+
+        if not os.path.exists(audio_path):
+
+            print(
+                f"[WARNING] Missing audio slide {idx}"
+            )
+
+            continue
+
+        output_file = os.path.join(
+            VIDEO_DIR,
+            f"part_{idx}.mp4"
+        )
+
+        log(
+            f"Creating video slide {idx}"
+        )
+
+        cmd = [
+            "ffmpeg",
+            "-y",
+
+            "-loop", "1",
+
+            "-i", image_path,
+
+            "-i", audio_path,
+
+            "-shortest",
+
+            "-c:v", "libx264",
+            "-preset", "medium",
+
+            "-pix_fmt", "yuv420p",
+
+            "-c:a", "aac",
+            "-b:a", "192k",
+
+            output_file
+        ]
+
+        subprocess.run(
+            cmd,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+
+
+# =====================================================
+# MERGE
+# =====================================================
+
+def merge_videos():
+
+    video_files = sorted(
+        Path(VIDEO_DIR).glob(
+            "part_*.mp4"
+        ),
+        key=lambda x:
+        int(
+            re.search(
+                r'(\d+)',
+                x.name
+            ).group(1)
+        )
+    )
+
+    if len(video_files) == 0:
+        fatal("No video parts found")
+
+    concat_file = "concat.txt"
+
+    with open(
+            concat_file,
+            "w",
+            encoding="utf-8") as f:
+
+        for item in video_files:
+
+            f.write(
+                f"file '{item.as_posix()}'\n"
+            )
+
+    log("Merging final video")
+
+    subprocess.run([
+        "ffmpeg",
+        "-y",
+        "-f", "concat",
+        "-safe", "0",
+        "-i", concat_file,
+        "-c", "copy",
+        FINAL_VIDEO
+    ])
+
+    os.remove(concat_file)
+
+
+# =====================================================
+# SUBTITLE
+# =====================================================
+
+def format_time(seconds):
+
+    hours = int(seconds // 3600)
+
+    minutes = int(
+        (seconds % 3600) // 60
+    )
+
+    secs = int(seconds % 60)
+
+    millis = int(
+        (seconds - int(seconds))
+        * 1000
+    )
+
+    return (
+        f"{hours:02}:"
+        f"{minutes:02}:"
+        f"{secs:02},"
+        f"{millis:03}"
+    )
+
+
+def create_srt(slides):
+
+    log("Creating subtitle file")
+
+    current_time = 0.0
+
+    subtitle_id = 1
+
+    with open(
+            FINAL_SRT,
+            "w",
+            encoding="utf-8") as srt:
+
+        for idx, text in enumerate(
+                slides,
+                start=1):
+
+            audio_file = os.path.join(
+                AUDIO_DIR,
+                f"slide_{idx}.mp3"
+            )
+
+            if not os.path.exists(
+                    audio_file):
+                continue
+
+            audio = MP3(audio_file)
+
+            duration = (
+                audio.info.length
+            )
+
+            start = format_time(
+                current_time
+            )
+
+            end = format_time(
+                current_time + duration
+            )
+
+            clean_text = (
+                text.replace("\n", " ")
+                .replace("  ", " ")
+                .strip()
+            )
+
+            srt.write(
+                f"{subtitle_id}\n"
+            )
+
+            srt.write(
+                f"{start} --> {end}\n"
+            )
+
+            srt.write(
+                clean_text + "\n\n"
+            )
+
+            current_time += duration
+
+            subtitle_id += 1
+
+    log(
+        f"Created {FINAL_SRT}"
+    )
+
+
+# =====================================================
+# MAIN
+# =====================================================
+
+async def main():
+
+    print()
+    print("=" * 60)
+    print("ONLINE COURSE VIDEO BUILDER")
+    print("=" * 60)
+
+    validate()
+
+    slides_text = (
+        extract_slide_scripts()
+    )
+
+    slide_images = (
+        get_slide_images()
+    )
+
+    if len(slide_images) < len(slides_text):
+
+        print()
+        print(
+            "[WARNING] "
+            f"{len(slide_images)} slides "
+            f"but {len(slides_text)} scripts"
+        )
+        print()
+
+    await generate_audio(
+        slides_text
+    )
+
+    create_video_parts(
+        slide_images
+    )
+
+    merge_videos()
+
+    create_srt(
+        slides_text
+    )
+
+    print()
+    print("=" * 60)
+    print("FINISHED")
+    print("=" * 60)
+
+    print()
+    print("Generated:")
+    print(f" - {FINAL_VIDEO}")
+    print(f" - {FINAL_SRT}")
+    print()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())</code></pre>
+    </details>
+
+    <h2>6. Đổi giọng đọc</h2>
+    <p>
+      Chỉ cần đổi giá trị hằng số <code>VOICE</code> ở đầu file.
+      Một số lựa chọn thông dụng:
+    </p>
+    <pre><code># Tiếng Anh
+en-US-JennyNeural
+en-US-GuyNeural
+en-GB-SoniaNeural
+en-GB-RyanNeural
+
+# Tiếng Việt
+vi-VN-HoaiMyNeural
+vi-VN-NamMinhNeural</code></pre>
+
+    <h2>7. Về phụ đề (SRT)</h2>
+    <p>
+      Chương trình sinh riêng file <code>final_course.srt</code>,
+      không "đóng cứng" phụ đề vào hình video. Nhờ vậy người xem
+      có thể bật/tắt Caption, chọn kích thước hiển thị, hoặc dùng
+      tính năng dịch tự động trên YouTube — điều mà phụ đề hard-sub
+      không làm được.
+    </p>
+
+    <h2>8. Hướng nâng cấp tiếp theo</h2>
+    <ul>
+      <li>Tự xuất slide trực tiếp từ PowerPoint bằng COM Automation, bỏ qua bước xuất PNG thủ công</li>
+      <li>Tự động upload video lên YouTube hoặc Microsoft Stream sau khi build xong</li>
+      <li>Sinh phụ đề theo từng câu thay vì theo cả slide, để phụ đề "chạy" mượt hơn</li>
+      <li>Dịch tự động lời thuyết minh sang nhiều ngôn ngữ</li>
+      <li>Tạo giọng đọc đa ngôn ngữ cho cùng một khóa học</li>
+    </ul>
+
+    <h2>9. Kết luận</h2>
+    <p>
+      Với Python, Edge-TTS và FFmpeg, ta có thể xây dựng một quy
+      trình tạo video bài giảng hoàn toàn tự động, miễn phí và dễ
+      mở rộng — chỉ cần chuẩn bị slide và script, rồi chạy
+      <code>python build_course.py</code> là có ngay video kèm
+      phụ đề. Cách làm này giúp tiết kiệm đáng kể thời gian sản
+      xuất nội dung đào tạo, đồng thời đảm bảo tính nhất quán về
+      giọng đọc và nhịp độ giữa các khóa học khác nhau.
+    </p>
+
+    <!-- =================================================
+         COPYRIGHT
+         ================================================= -->
+    <div class="article-license">
+      <p class="license-title">Bản quyền &amp; giấy phép</p>
+      <p>© 2026 Đào Huy Mạnh.</p>
+      <p>
+        Bài viết này được cấp phép theo
+        <a
+          href="https://creativecommons.org/licenses/by-nc/4.0/"
+          target="_blank"
+          rel="license noopener"
+        >Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)</a>.
+      </p>
+      <p>
+        Bạn được phép chia sẻ và điều chỉnh nội dung cho mục đích
+        phi thương mại, với điều kiện ghi công tác giả phù hợp và
+        dẫn liên kết tới bài viết gốc.
+      </p>
+      <p>
+        Mã nguồn <code>build_course.py</code> trong bài viết có thể
+        tái sử dụng tự do cho các dự án cá nhân. Hình ảnh, dữ liệu
+        hoặc tài liệu thuộc bên thứ ba (ví dụ nội dung PowerPoint
+        minh họa) không mặc nhiên nằm trong giấy phép này.
+      </p>
+    </div>
+
+  </div>
+</article>
+
+<div class="track"></div>
+
+<!-- =========================================================
+     FOOTER
+     ========================================================= -->
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-brand">
+      <strong>© 2026 Mạnh Phượng</strong>
+      <span>· Ghi chép Y Sinh &amp; Bioinformatics</span>
+    </div>
+    <ul class="foot-links">
+      <li><a href="copyright.html">Copyright &amp; License</a></li>
+      <li>
+        <a href="https://github.com/daohuymanh" target="_blank" rel="noopener">GitHub</a>
+      </li>
+      <li>
+        <a href="https://orcid.org/0000-0003-3874-5051" target="_blank" rel="noopener">ORCID</a>
+      </li>
+      <li><a href="mailto:daohuymanh@gmail.com">daohuymanh@gmail.com</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+const navToggle = document.getElementById("navToggle");
+const primaryNav = document.getElementById("primaryNav");
+navToggle.addEventListener("click", () => {
+  const isOpen = primaryNav.classList.toggle("is-open");
+  navToggle.setAttribute("aria-expanded", isOpen);
+});
+</script>
+
+</body>
+</html>
