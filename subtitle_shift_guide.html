@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hướng dẫn chỉnh lệch phụ đề SRT</title>
+
+<style>
+body{
+    font-family: Arial, Helvetica, sans-serif;
+    max-width: 1000px;
+    margin:auto;
+    padding:30px;
+    line-height:1.7;
+    background:#f8fafc;
+    color:#1e293b;
+}
+
+h1{
+    color:#0f172a;
+    border-bottom:3px solid #2563eb;
+    padding-bottom:10px;
+}
+
+h2{
+    color:#1d4ed8;
+    margin-top:40px;
+}
+
+pre{
+    background:#0f172a;
+    color:#e2e8f0;
+    padding:15px;
+    border-radius:8px;
+    overflow:auto;
+}
+
+code{
+    font-family: Consolas, monospace;
+}
+
+.note{
+    background:#fef3c7;
+    border-left:5px solid #f59e0b;
+    padding:15px;
+    margin:20px 0;
+}
+
+.success{
+    background:#dcfce7;
+    border-left:5px solid #22c55e;
+    padding:15px;
+    margin:20px 0;
+}
+
+table{
+    border-collapse:collapse;
+    width:100%;
+}
+
+table,th,td{
+    border:1px solid #cbd5e1;
+}
+
+th,td{
+    padding:10px;
+}
+
+th{
+    background:#e2e8f0;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Hướng dẫn chỉnh lệch phụ đề SRT</h1>
+
+<p>
+Trường hợp phổ biến khi tạo caption tự động là phụ đề bị lệch so với giọng đọc
+trong video. Nếu toàn bộ phụ đề lệch một khoảng thời gian cố định
+(ví dụ 5 giây) thì có thể dịch chuyển timestamp hàng loạt.
+</p>
+
+<div class="note">
+<b>Lưu ý:</b><br>
+Nếu phụ đề xuất hiện sớm hơn giọng đọc 5 giây thì cần dời phụ đề trễ hơn 5 giây.
+</div>
+
+<h2>Ví dụ</h2>
+
+<p>Phụ đề hiện tại:</p>
+
+<pre><code>10
+00:01:20,000 --> 00:01:25,000
+Welcome to the laboratory.</code></pre>
+
+<p>Sau khi cộng thêm 5 giây:</p>
+
+<pre><code>10
+00:01:25,000 --> 00:01:30,000
+Welcome to the laboratory.</code></pre>
+
+<h2>Cách 1 - Dùng Subtitle Edit</h2>
+
+<ol>
+<li>Mở Subtitle Edit</li>
+<li>Mở file .srt</li>
+<li>Tools → Adjust all times</li>
+<li>Chọn Show Later</li>
+<li>Nhập 5000 milliseconds</li>
+<li>Áp dụng từ dòng cần chỉnh</li>
+</ol>
+
+<div class="success">
+Phương pháp này nhanh nhất và không cần lập trình.
+</div>
+
+<h2>Cách 2 - Python tự động</h2>
+
+<p>Cài thư viện:</p>
+
+<pre><code>pip install pysrt</code></pre>
+
+<p>Script dịch phụ đề từ mục số 10 trở đi trễ thêm 5 giây:</p>
+
+<pre><code>import pysrt
+
+subs = pysrt.open("video.srt")
+
+for sub in subs[9:]:
+    sub.shift(seconds=5)
+
+subs.save("video_fixed.srt")
+
+print("Done")</code></pre>
+
+<p>Chạy:</p>
+
+<pre><code>python fix_srt.py</code></pre>
+
+<h2>Điều chỉnh linh hoạt</h2>
+
+<table>
+<tr>
+<th>Tình huống</th>
+<th>Giải pháp</th>
+</tr>
+
+<tr>
+<td>Phụ đề sớm hơn 5 giây</td>
+<td>shift(seconds=5)</td>
+</tr>
+
+<tr>
+<td>Phụ đề trễ hơn 5 giây</td>
+<td>shift(seconds=-5)</td>
+</tr>
+
+<tr>
+<td>Chỉ sửa từ subtitle số 20 trở đi</td>
+<td>subs[19:]</td>
+</tr>
+
+<tr>
+<td>Sửa toàn bộ file</td>
+<td>for sub in subs:</td>
+</tr>
+</table>
+
+<h2>Khi nào không nên dùng Shift?</h2>
+
+<p>
+Nếu độ lệch tăng dần theo thời gian, ví dụ:
+</p>
+
+<ul>
+<li>5 phút đầu lệch 1 giây</li>
+<li>10 phút lệch 3 giây</li>
+<li>20 phút lệch 8 giây</li>
+</ul>
+
+<p>
+Lúc này video và subtitle có tốc độ khác nhau.
+Nên dùng chức năng Synchronization hoặc Visual Sync trong Subtitle Edit để kéo giãn timeline thay vì cộng trừ thời gian cố định.
+</p>
+
+<hr>
+
+<p>
+© Dao Huy Manh - Subtitle Utilities
+</p>
+
+</body>
+</html>
