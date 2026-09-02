@@ -1,0 +1,5 @@
+# Cài trên máy có internet + (khuyến nghị) GPU CUDA
+# pip install -r requirements.txt
+
+whisperx
+python-docx
