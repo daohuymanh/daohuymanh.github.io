@@ -438,14 +438,14 @@
         Chủ đề
       </h2>
       <span class="section-note">
-        4 chuyên mục
+        5 chuyên mục
       </span>
     </div>
 
     <div class="topics-panel">
       <ul class="topic-list">
         <li data-tag="tag--congdong">
-          <a href="#">
+          <a href="#bai-viet">
             <span class="topic-count">
               0 bài
             </span>
@@ -455,7 +455,7 @@
           </a>
         </li>
         <li data-tag="tag--tools">
-          <a href="#">
+          <a href="#bai-viet">
             <span class="topic-count">
               0 bài
             </span>
@@ -465,7 +465,7 @@
           </a>
         </li>
         <li data-tag="tag--miendich">
-          <a href="#">
+          <a href="#bai-viet">
             <span class="topic-count">
               0 bài
             </span>
@@ -475,12 +475,22 @@
           </a>
         </li>
         <li data-tag="tag--phantu">
-          <a href="#">
+          <a href="#bai-viet">
             <span class="topic-count">
               0 bài
             </span>
             <span class="topic-name">
               Sinh học phân tử
+            </span>
+          </a>
+        </li>
+        <li data-tag="tag--thongtin">
+          <a href="#bai-viet">
+            <span class="topic-count">
+              0 bài
+            </span>
+            <span class="topic-name">
+              Thông tin y sinh
             </span>
           </a>
         </li>
@@ -668,6 +678,57 @@ document.querySelectorAll(
     countEl.textContent = count + " bài";
   }
 });
+
+// Click vào một chủ đề -> chỉ hiện các bài
+// thuộc chủ đề đó trong mục "Bài viết mới nhất".
+// Click "xem tất cả bài viết" -> hiện lại hết.
+const postGridCards =
+  document.querySelectorAll("#bai-viet .post-card");
+const featuredHeading =
+  document.querySelector("#bai-viet .section-head h2");
+const featuredHeadingDefault =
+  featuredHeading ? featuredHeading.textContent.trim() : "";
+const viewAllLink =
+  document.querySelector("#bai-viet .view-all");
+
+function filterPostsByTopic(tagClass, topicName) {
+  postGridCards.forEach((card) => {
+    const matches =
+      !tagClass || card.querySelector(".tag." + tagClass);
+    card.style.display = matches ? "" : "none";
+  });
+  if (featuredHeading) {
+    featuredHeading.textContent = tagClass
+      ? "Bài viết — " + topicName
+      : featuredHeadingDefault;
+  }
+}
+
+document.querySelectorAll(
+  ".topic-list li[data-tag] a"
+).forEach((link) => {
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    const li = link.closest("li[data-tag]");
+    const tagClass = li.dataset.tag;
+    const topicName =
+      li.querySelector(".topic-name").textContent.trim();
+    filterPostsByTopic(tagClass, topicName);
+    document
+      .getElementById("bai-viet")
+      .scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+});
+
+if (viewAllLink) {
+  viewAllLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    filterPostsByTopic(null, null);
+    document
+      .getElementById("bai-viet")
+      .scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
 </script>
 
 </body>

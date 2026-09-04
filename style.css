@@ -383,10 +383,11 @@ section { padding: 64px 0; }
 .tag--clinical { background: #fdf1de; color: #a1690f; }
 .tag--data { background: #e6eef6; color: #2c5f8f; }
 
-/* 4 chủ đề chính (2026) */
+/* 5 chủ đề chính (2026) */
 .tag--congdong { background: #fdeee6; color: var(--coral); }      /* Sức khoẻ cộng đồng */
 .tag--miendich { background: #fdf1de; color: #a1690f; }           /* Miễn dịch học */
 .tag--phantu   { background: #e6eef6; color: var(--navy-soft); }  /* Sinh học phân tử */
+.tag--thongtin { background: #e6f4ee; color: var(--green); }      /* Thông tin y sinh */
 /* Công cụ phân tích dùng lại .tag--tools ở trên */
 
 .post-card h3 {
@@ -428,7 +429,7 @@ section { padding: 64px 0; }
   list-style: none;
   margin: 0; padding: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
 }
 
 .topic-list li {
@@ -621,8 +622,8 @@ footer.site-footer .foot-links a:hover { color: var(--green); }
   .post-grid.featured-grid > a:first-child { grid-row: auto; }
   .post-grid.featured-grid > a:first-child .thumb { height: 150px; }
   .post-grid.featured-grid > a:first-child h3 { font-size: 19px; }
-  .topic-list { grid-template-columns: repeat(2, 1fr); }
-  .topic-list li:nth-child(even) { border-right: none; }
+  .topic-list { grid-template-columns: repeat(3, 1fr); }
+  .topic-list li:nth-child(3) { border-right: none; }
   .topic-list li { border-bottom: 1px solid var(--line); }
   .about-section .wrap { grid-template-columns: 1fr; }
 }
