@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Viết bài mới cho blog bằng Markdown (.md) và script tự động — Mạnh Phượng</title>
+<meta name="description" content="Quy trình viết bài mới cho blog chỉ bằng 1 file Markdown, tự sinh ra file .html đúng style và tự thêm card vào trang chủ.">
+<meta name="author" content="Đào Huy Mạnh">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.article-header { padding: 56px 0 32px; }
+.article-header .wrap { max-width: 760px; }
+.article-header h1 { font-family: var(--serif); font-size: clamp(28px, 4vw, 40px); line-height: 1.2; margin: 18px 0 20px; }
+.article-meta { font-family: var(--mono); font-size: 12.5px; color: var(--ink-faint); display: flex; flex-wrap: wrap; gap: 10px 16px; }
+.article-meta span:not(:last-child)::after { content: "·"; margin-left: 16px; color: var(--line); }
+.article-author { margin-top: 14px; font-size: 14px; color: var(--ink-soft); }
+.article-author strong { color: var(--ink); }
+.article-license { margin-top: 56px; padding: 22px 24px; background: var(--bg-panel); border-left: 3px solid var(--green-deep); border-radius: var(--radius); }
+.article-license p { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 8px; }
+.article-license p:last-child { margin-bottom: 0; }
+.article-license a { color: var(--green-deep); font-weight: 600; text-decoration: none; }
+.article-license a:hover { text-decoration: underline; }
+.article-license .license-title { font-family: var(--serif); font-size: 17px; color: var(--ink); font-weight: 600; }
+article.post-body { padding: 8px 0 72px; }
+article.post-body .wrap { max-width: 760px; }
+article.post-body h2 { font-family: var(--serif); font-size: 24px; margin: 44px 0 16px; }
+article.post-body h3 { font-family: var(--serif); font-size: 19px; margin: 32px 0 14px; }
+article.post-body p { font-size: 16.5px; color: var(--ink); margin: 0 0 20px; }
+article.post-body p.lead { font-size: 18px; color: var(--ink-soft); }
+article.post-body a { color: var(--green-deep); text-decoration: underline; }
+article.post-body ul, article.post-body ol { margin: 0 0 20px; padding-left: 1.3em; }
+article.post-body li { font-size: 16.5px; color: var(--ink); margin: 0 0 8px; }
+article.post-body blockquote { margin: 0 0 24px; padding: 14px 20px; background: var(--bg-panel); border-left: 3px solid var(--green-deep); border-radius: var(--radius); color: var(--ink-soft); font-size: 15px; }
+article.post-body blockquote p { margin: 0; font-size: inherit; color: inherit; }
+article.post-body pre { background: var(--navy); color: #dfeee6; font-family: var(--mono); font-size: 13.5px; line-height: 1.6; padding: 20px 22px; border-radius: var(--radius); overflow-x: auto; margin: 0 0 24px; }
+article.post-body code { font-family: var(--mono); background: var(--bg-panel); padding: 2px 6px; border-radius: 2px; font-size: 0.9em; }
+article.post-body pre code { background: none; padding: 0; }
+article.post-body hr { border: none; border-top: 1px solid var(--line); margin: 40px 0; }
+article.post-body table { width: 100%; border-collapse: collapse; margin: 0 0 24px; font-size: 14.5px; }
+article.post-body th, article.post-body td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+article.post-body th { font-family: var(--mono); font-size: 12.5px; color: var(--ink-faint); font-weight: 500; }
+article.post-body td { color: var(--ink-soft); }
+.back-link { font-family: var(--mono); font-size: 13px; color: var(--green-deep); text-decoration: none; }
+.back-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="index.html" class="logo">
+      <img class="logo-mark" src="assets/logo-icon.png" alt="Logo Mạnh Phượng">
+      <span class="logo-text">
+        <span class="logo-name">Mạnh Phượng</span>
+        <span class="logo-tagline">Biomedicine &amp; Bioinformatics</span>
+      </span>
+    </a>
+    <nav class="primary-nav" id="primaryNav">
+      <a href="index.html">trang chủ</a>
+      <a href="index.html#bai-viet">bài viết</a>
+      <a href="index.html#chu-de">chủ đề</a>
+      <a href="index.html#gioi-thieu">giới thiệu</a>
+      <a href="index.html#lien-he">liên hệ</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Mở menu" aria-expanded="false" aria-controls="primaryNav"></button>
+  </div>
+</header>
+
+<div class="track"></div>
+
+<div class="wrap" style="padding-top:24px;">
+  <a href="index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
+</div>
+
+<header class="article-header">
+  <div class="wrap">
+    <span class="tag tag--tools">Công cụ phân tích</span>
+    <h1>Viết bài mới cho blog bằng Markdown (.md) và script tự động</h1>
+    <div class="article-meta">
+      <span>2026.09.04</span>
+      <span>6 phút đọc</span>
+    </div>
+    <div class="article-author">
+      <strong>Tác giả:</strong> Đào Huy Mạnh
+    </div>
+  </div>
+</header>
+
+<article class="post-body">
+  <div class="wrap">
+
+    <p class="lead">
+      Thay vì gõ tay từng thẻ HTML cho mỗi bài viết mới, blog này dùng một script Python nhỏ: bạn chỉ cần viết nội dung bằng Markdown, script sẽ tự sinh ra file <code>.html</code> đúng định dạng và tự thêm card vào trang chủ.
+    </p>
+
+<h2>Vì sao dùng Markdown thay vì gõ HTML tay</h2>
+<p>Gõ HTML tay cho mỗi bài viết dễ sai sót (quên đóng thẻ, lệch class, quên cập nhật <code>index.html</code>) và tốn thời gian. Markdown giải quyết việc đó:</p>
+<ul>
+<li>Cú pháp ngắn gọn, quen thuộc (<code>##</code>, <code>```</code>, <code>-</code>, <code>&gt;</code>...)</li>
+<li>Một thư viện chuẩn (<code>markdown</code>) lo phần chuyển đổi sang HTML, không cần tự viết trình phân tích cú pháp</li>
+<li>Script tự lo luôn phần khung trang (header, footer, license) và tự chèn card vào trang chủ</li>
+</ul>
+<h2>Chuẩn bị file .md</h2>
+<p>Mỗi bài viết là 1 file <code>.md</code>, chia làm 2 phần: <strong>front matter</strong> (thông tin bài viết) và <strong>nội dung</strong> — ngăn cách bằng dòng <code>---</code>.</p>
+<p>Front matter cần đủ 8 trường sau:</p>
+<table>
+<thead>
+<tr>
+<th>Trường</th>
+<th>Ý nghĩa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>title</td>
+<td>Tiêu đề bài viết</td>
+</tr>
+<tr>
+<td>slug</td>
+<td>Tên file .html sẽ được tạo ra</td>
+</tr>
+<tr>
+<td>tag</td>
+<td>Class CSS của chủ đề</td>
+</tr>
+<tr>
+<td>tag_label</td>
+<td>Tên chủ đề hiển thị</td>
+</tr>
+<tr>
+<td>date</td>
+<td>Ngày đăng</td>
+</tr>
+<tr>
+<td>reading_time</td>
+<td>Thời gian đọc ước tính</td>
+</tr>
+<tr>
+<td>author</td>
+<td>Tác giả</td>
+</tr>
+<tr>
+<td>excerpt</td>
+<td>Mô tả ngắn hiện trên card</td>
+</tr>
+</tbody>
+</table>
+<p>Giá trị <code>tag</code> phải là một trong 5 chủ đề đang có trên trang: <code>tag--congdong</code>, <code>tag--tools</code>, <code>tag--miendich</code>, <code>tag--phantu</code>, <code>tag--thongtin</code>.</p>
+<h2>Cú pháp Markdown được hỗ trợ</h2>
+<p>Phần nội dung phía dưới dòng <code>---</code> hỗ trợ đầy đủ Markdown chuẩn:</p>
+<ul>
+<li>Tiêu đề mục dùng <code>##</code></li>
+<li>Đoạn văn: gõ bình thường, cách nhau bằng dòng trống</li>
+<li><strong>In đậm</strong> với <code>**chữ**</code>, <em>in nghiêng</em> với <code>*chữ*</code></li>
+<li>Gạch đầu dòng với <code>-</code>, danh sách đánh số với <code>1.</code></li>
+<li>Khối trích dẫn / lưu ý với <code>&gt;</code></li>
+<li>Khối code đặt trong cặp dấu ba backtick</li>
+<li>Link dạng <code>[chữ hiển thị](đường-dẫn)</code></li>
+<li>Bảng dùng dấu <code>|</code> giữa các cột</li>
+</ul>
+<blockquote>
+<p>Đoạn văn đầu tiên trong file luôn được script tách riêng ra làm đoạn mở đầu (lead), hiển thị to hơn các đoạn khác — không cần đánh dấu gì thêm.</p>
+</blockquote>
+<h2>Chạy script</h2>
+<p>Đứng tại thư mục gốc của repo trong Termux, chạy:</p>
+<pre><code>python3 new_post.py ten-bai-viet.md
+</code></pre>
+<p>Script sẽ:</p>
+<ol>
+<li>Đọc front matter và nội dung Markdown</li>
+<li>Sinh ra file <code>.html</code> đúng tên đặt ở <code>slug</code>, dùng đúng khung và style của trang</li>
+<li>Tự chèn card bài viết mới vào đầu danh sách trong <code>index.html</code></li>
+</ol>
+<p>Vì card mới luôn được chèn vào vị trí đầu tiên, và CSS của trang tự hiển thị card đầu tiên lớn hơn các card khác, bài mới nhất luôn hiện nổi bật nhất mà không cần chỉnh gì thêm.</p>
+<h2>Kiểm tra và đẩy lên GitHub</h2>
+<p>Trước khi push, nên xem qua kết quả:</p>
+<pre><code>git diff index.html
+</code></pre>
+<p>Nếu mọi thứ ổn, đẩy lên như bình thường:</p>
+<pre><code>git add .
+git commit -m &quot;thêm bài viết mới&quot;
+git push
+</code></pre>
+<p>Vì SSH key đã được cấu hình từ trước, bước <code>git push</code> sẽ chạy thẳng, không hỏi mật khẩu.</p>
+
+    <div class="article-license">
+      <p class="license-title">Bản quyền &amp; giấy phép</p>
+      <p>© 2026 Đào Huy Mạnh.</p>
+      <p>
+        Bài viết này được cấp phép theo
+        <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="license noopener">
+          Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+        </a>.
+      </p>
+      <p>
+        Bạn được phép chia sẻ và điều chỉnh nội dung cho mục đích phi thương mại,
+        với điều kiện ghi công tác giả phù hợp và dẫn liên kết tới bài viết gốc.
+      </p>
+    </div>
+
+  </div>
+</article>
+
+<div class="track"></div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-brand">
+      <strong>© 2026 Mạnh Phượng</strong>
+      <span>· Ghi chép Y Sinh &amp; Bioinformatics</span>
+    </div>
+    <ul class="foot-links">
+      <li><a href="copyright.html">Copyright &amp; License</a></li>
+      <li><a href="https://github.com/daohuymanh" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://orcid.org/0000-0003-3874-5051" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="mailto:daohuymanh@gmail.com">daohuymanh@gmail.com</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+const navToggle = document.getElementById("navToggle");
+const primaryNav = document.getElementById("primaryNav");
+navToggle.addEventListener("click", () => {
+  const isOpen = primaryNav.classList.toggle("is-open");
+  navToggle.setAttribute("aria-expanded", isOpen);
+});
+</script>
+
+</body>
+</html>

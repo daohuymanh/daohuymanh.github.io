@@ -1,0 +1,31 @@
+title: Tiêu đề bài viết của bạn
+slug: ten-file-khong-dau.html
+tag: tag--tools
+tag_label: Công cụ phân tích
+date: 2026.09.10
+reading_time: 8 phút đọc
+author: Đào Huy Mạnh
+excerpt: Một câu mô tả ngắn (1-2 câu) sẽ hiện trên card ở trang chủ.
+---
+Đây là đoạn mở đầu (lead) của bài viết, hiện to hơn các đoạn khác.
+
+## Tiêu đề mục 1
+
+Đoạn văn bình thường nằm dưới mục 1.
+
+## Tiêu đề mục 2
+
+- Gạch đầu dòng thứ nhất
+- Gạch đầu dòng thứ hai
+- Gạch đầu dòng thứ ba
+
+> Đây là khối lưu ý / mẹo, sẽ hiện trong khung có viền xanh.
+
+## Đoạn có code
+
+```
+!pip install whisperx
+python transcribe.py --input audio.wav
+```
+
+Đoạn văn kết bài.
