@@ -148,6 +148,10 @@ article.post-body table {{ width: 100%; border-collapse: collapse; margin: 0 0 2
 article.post-body th, article.post-body td {{ text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }}
 article.post-body th {{ font-family: var(--mono); font-size: 12.5px; color: var(--ink-faint); font-weight: 500; }}
 article.post-body td {{ color: var(--ink-soft); }}
+article.post-body img {{ max-width: 100%; height: auto; display: block; margin: 8px auto 24px; border-radius: var(--radius); border: 1px solid var(--line); }}
+article.post-body figure {{ margin: 0 0 24px; }}
+article.post-body figure img {{ margin-bottom: 10px; }}
+article.post-body figcaption {{ font-family: var(--mono); font-size: 12.5px; color: var(--ink-faint); text-align: center; }}
 .back-link {{ font-family: var(--mono); font-size: 13px; color: var(--green-deep); text-decoration: none; }}
 .back-link:hover {{ text-decoration: underline; }}
 </style>

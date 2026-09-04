@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chuyển file Word (.docx) có hình và bảng thành bài viết trên web — Mạnh Phượng</title>
+<meta name="description" content="Dùng pandoc để chuyển file Word có hình và bảng sang Markdown, rồi qua script new_post.py để ra bài viết đúng style — không cần gõ lại tay.">
+<meta name="author" content="Đào Huy Mạnh">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.article-header { padding: 56px 0 32px; }
+.article-header .wrap { max-width: 760px; }
+.article-header h1 { font-family: var(--serif); font-size: clamp(28px, 4vw, 40px); line-height: 1.2; margin: 18px 0 20px; }
+.article-meta { font-family: var(--mono); font-size: 12.5px; color: var(--ink-faint); display: flex; flex-wrap: wrap; gap: 10px 16px; }
+.article-meta span:not(:last-child)::after { content: "·"; margin-left: 16px; color: var(--line); }
+.article-author { margin-top: 14px; font-size: 14px; color: var(--ink-soft); }
+.article-author strong { color: var(--ink); }
+.article-license { margin-top: 56px; padding: 22px 24px; background: var(--bg-panel); border-left: 3px solid var(--green-deep); border-radius: var(--radius); }
+.article-license p { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 8px; }
+.article-license p:last-child { margin-bottom: 0; }
+.article-license a { color: var(--green-deep); font-weight: 600; text-decoration: none; }
+.article-license a:hover { text-decoration: underline; }
+.article-license .license-title { font-family: var(--serif); font-size: 17px; color: var(--ink); font-weight: 600; }
+article.post-body { padding: 8px 0 72px; }
+article.post-body .wrap { max-width: 760px; }
+article.post-body h2 { font-family: var(--serif); font-size: 24px; margin: 44px 0 16px; }
+article.post-body h3 { font-family: var(--serif); font-size: 19px; margin: 32px 0 14px; }
+article.post-body p { font-size: 16.5px; color: var(--ink); margin: 0 0 20px; }
+article.post-body p.lead { font-size: 18px; color: var(--ink-soft); }
+article.post-body a { color: var(--green-deep); text-decoration: underline; }
+article.post-body ul, article.post-body ol { margin: 0 0 20px; padding-left: 1.3em; }
+article.post-body li { font-size: 16.5px; color: var(--ink); margin: 0 0 8px; }
+article.post-body blockquote { margin: 0 0 24px; padding: 14px 20px; background: var(--bg-panel); border-left: 3px solid var(--green-deep); border-radius: var(--radius); color: var(--ink-soft); font-size: 15px; }
+article.post-body blockquote p { margin: 0; font-size: inherit; color: inherit; }
+article.post-body pre { background: var(--navy); color: #dfeee6; font-family: var(--mono); font-size: 13.5px; line-height: 1.6; padding: 20px 22px; border-radius: var(--radius); overflow-x: auto; margin: 0 0 24px; }
+article.post-body code { font-family: var(--mono); background: var(--bg-panel); padding: 2px 6px; border-radius: 2px; font-size: 0.9em; }
+article.post-body pre code { background: none; padding: 0; }
+article.post-body hr { border: none; border-top: 1px solid var(--line); margin: 40px 0; }
+article.post-body table { width: 100%; border-collapse: collapse; margin: 0 0 24px; font-size: 14.5px; }
+article.post-body th, article.post-body td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+article.post-body th { font-family: var(--mono); font-size: 12.5px; color: var(--ink-faint); font-weight: 500; }
+article.post-body td { color: var(--ink-soft); }
+article.post-body img { max-width: 100%; height: auto; display: block; margin: 8px auto 24px; border-radius: var(--radius); border: 1px solid var(--line); }
+article.post-body figure { margin: 0 0 24px; }
+article.post-body figure img { margin-bottom: 10px; }
+article.post-body figcaption { font-family: var(--mono); font-size: 12.5px; color: var(--ink-faint); text-align: center; }
+.back-link { font-family: var(--mono); font-size: 13px; color: var(--green-deep); text-decoration: none; }
+.back-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="index.html" class="logo">
+      <img class="logo-mark" src="assets/logo-icon.png" alt="Logo Mạnh Phượng">
+      <span class="logo-text">
+        <span class="logo-name">Mạnh Phượng</span>
+        <span class="logo-tagline">Biomedicine &amp; Bioinformatics</span>
+      </span>
+    </a>
+    <nav class="primary-nav" id="primaryNav">
+      <a href="index.html">trang chủ</a>
+      <a href="index.html#bai-viet">bài viết</a>
+      <a href="index.html#chu-de">chủ đề</a>
+      <a href="index.html#gioi-thieu">giới thiệu</a>
+      <a href="index.html#lien-he">liên hệ</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Mở menu" aria-expanded="false" aria-controls="primaryNav"></button>
+  </div>
+</header>
+
+<div class="track"></div>
+
+<div class="wrap" style="padding-top:24px;">
+  <a href="index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
+</div>
+
+<header class="article-header">
+  <div class="wrap">
+    <span class="tag tag--tools">Công cụ phân tích</span>
+    <h1>Chuyển file Word (.docx) có hình và bảng thành bài viết trên web</h1>
+    <div class="article-meta">
+      <span>2026.09.04</span>
+      <span>7 phút đọc</span>
+    </div>
+    <div class="article-author">
+      <strong>Tác giả:</strong> Đào Huy Mạnh
+    </div>
+  </div>
+</header>
+
+<article class="post-body">
+  <div class="wrap">
+
+    <p class="lead">
+      Nếu bạn đã có sẵn nội dung trong file Word (<code>.docx</code>) — kể cả có hình ảnh và bảng — không cần gõ lại từ đầu bằng Markdown. Chỉ cần thêm một bước trung gian: dùng <code>pandoc</code> chuyển <code>.docx</code> sang <code>.md</code>, rồi vẫn chạy qua <code>new_post.py</code> như bình thường.
+    </p>
+
+<h2>Cài pandoc (chỉ 1 lần)</h2>
+<p>Trong Termux, chạy:</p>
+<pre><code>pkg install pandoc
+</code></pre>
+<p>Gói này khá nặng (khoảng 150–200MB) vì <code>pandoc</code> là chương trình chuyển đổi định dạng văn bản rất lớn, nên tải qua wifi cho nhanh. Sau khi cài xong, không cần cài lại cho những lần sau.</p>
+<h2>Đặt tên slug trước khi chuyển</h2>
+<p>Trước khi chạy lệnh, nghĩ sẵn tên <code>slug</code> cho bài viết (không dấu, không khoảng trắng) — ví dụ bài về xét nghiệm miễn dịch sẽ dùng <code>xet-nghiem-mien-dich</code>. Tên này sẽ dùng ở cả 2 chỗ: tên thư mục chứa ảnh và tên file <code>.html</code> cuối cùng.</p>
+<h2>Chuyển docx sang markdown, tách ảnh riêng</h2>
+<p>Đặt file <code>.docx</code> vào thư mục repo, rồi chạy:</p>
+<pre><code>pandoc bai.docx -t markdown --extract-media=assets/xet-nghiem-mien-dich -o noidung-tho.md
+</code></pre>
+<p>Lệnh này làm 2 việc cùng lúc:</p>
+<ul>
+<li>Chuyển toàn bộ nội dung sang Markdown, <strong>giữ nguyên bảng</strong> dưới dạng bảng chữ (pipe table)</li>
+<li><strong>Tách hết ảnh</strong> trong file Word ra thư mục <code>assets/xet-nghiem-mien-dich/media/</code></li>
+</ul>
+<blockquote>
+<p>Nhớ đổi <code>xet-nghiem-mien-dich</code> thành đúng slug bài của bạn ở cả tên thư mục <code>--extract-media</code> lẫn phần <code>slug</code> trong front matter ở bước sau — 2 chỗ này phải khớp nhau.</p>
+</blockquote>
+<h2>Thêm front matter vào đầu file</h2>
+<p><code>pandoc</code> chỉ xuất phần nội dung, không tự thêm phần thông tin bài viết. Mở <code>noidung-tho.md</code> bằng app soạn thảo bất kỳ, dán đoạn front matter quen thuộc vào đầu file:</p>
+<pre><code>title: Tiêu đề bài viết
+slug: xet-nghiem-mien-dich.html
+tag: tag--miendich
+tag_label: Miễn dịch học
+date: 2026.09.04
+reading_time: 7 phút đọc
+author: Đào Huy Mạnh
+excerpt: Mô tả ngắn hiện trên card.
+---
+</code></pre>
+<p>Phần nội dung <code>pandoc</code> sinh ra giữ nguyên bên dưới dòng <code>---</code>, không cần sửa gì thêm ở bước này.</p>
+<h2>Kiểm tra lại đường dẫn ảnh</h2>
+<p>Đường dẫn ảnh <code>pandoc</code> sinh ra thường có dạng <code>assets/xet-nghiem-mien-dich/media/image1.png</code> — đã đúng định dạng dùng thẳng trên web, miễn thư mục <code>assets/xet-nghiem-mien-dich/</code> nằm cùng cấp với <code>index.html</code> trong repo.</p>
+<p>Kiểm tra nhanh toàn bộ dòng ảnh bằng lệnh:</p>
+<pre><code>grep '!\[' noidung-tho.md
+</code></pre>
+<h2>Chạy script như bình thường</h2>
+<pre><code>python3 new_post.py noidung-tho.md
+</code></pre>
+<p>Script sẽ sinh file <code>.html</code> đúng tên <code>slug</code>, giữ nguyên bảng và ảnh, rồi tự chèn card vào đầu danh sách trong <code>index.html</code> — giống hệt quy trình dùng cho bài viết gõ tay bằng Markdown.</p>
+<h2>Kiểm tra kết quả rồi đẩy lên GitHub</h2>
+<p>Mở file <code>.html</code> vừa tạo lên xem thử (hoặc push lên rồi xem trên trình duyệt) để chắc ảnh hiển thị đúng, không vỡ bố cục. Nếu ổn:</p>
+<pre><code>git add .
+git commit -m &quot;thêm bài có hình và bảng&quot;
+git push
+</code></pre>
+<h2>Vài lưu ý</h2>
+<ul>
+<li>Bảng đơn giản (không ô gộp, không nhiều dòng trong 1 ô) thì <code>pandoc</code> xuất đúng định dạng ngay. Bảng phức tạp hơn đôi khi <code>pandoc</code> xuất ra dạng khác (grid table) — lúc đó cần mở file <code>.md</code> sửa lại bảng theo mẫu <code>| Cột 1 | Cột 2 |</code>.</li>
+<li>Nếu ảnh trong Word có độ phân giải rất lớn (ảnh chụp màn hình full HD, ảnh máy ảnh), file bài viết sẽ nặng và tải chậm — nên cân nhắc nén ảnh trước khi đưa lên.</li>
+<li>Nội dung dạng bảng/công thức được <strong>chụp màn hình</strong> dán vào Word sẽ chuyển thành ảnh bình thường khi qua <code>pandoc</code> — không thể chọn/copy chữ được, vì bản chất Word đã lưu nó như ảnh chứ không phải bảng thật.</li>
+</ul>
+
+    <div class="article-license">
+      <p class="license-title">Bản quyền &amp; giấy phép</p>
+      <p>© 2026 Đào Huy Mạnh.</p>
+      <p>
+        Bài viết này được cấp phép theo
+        <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="license noopener">
+          Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+        </a>.
+      </p>
+      <p>
+        Bạn được phép chia sẻ và điều chỉnh nội dung cho mục đích phi thương mại,
+        với điều kiện ghi công tác giả phù hợp và dẫn liên kết tới bài viết gốc.
+      </p>
+    </div>
+
+  </div>
+</article>
+
+<div class="track"></div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-brand">
+      <strong>© 2026 Mạnh Phượng</strong>
+      <span>· Ghi chép Y Sinh &amp; Bioinformatics</span>
+    </div>
+    <ul class="foot-links">
+      <li><a href="copyright.html">Copyright &amp; License</a></li>
+      <li><a href="https://github.com/daohuymanh" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://orcid.org/0000-0003-3874-5051" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="mailto:daohuymanh@gmail.com">daohuymanh@gmail.com</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+const navToggle = document.getElementById("navToggle");
+const primaryNav = document.getElementById("primaryNav");
+navToggle.addEventListener("click", () => {
+  const isOpen = primaryNav.classList.toggle("is-open");
+  navToggle.setAttribute("aria-expanded", isOpen);
+});
+</script>
+
+</body>
+</html>
