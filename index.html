@@ -212,6 +212,16 @@
       </a>
     </div>
 
+    <div class="search-bar">
+      <input
+        type="search"
+        id="siteSearch"
+        class="search-input"
+        placeholder="Tìm bài viết theo tiêu đề, nội dung, chủ đề..."
+        aria-label="Tìm bài viết"
+      >
+    </div>
+
     <div class="post-grid featured-grid">
 
       <!-- Viết bài mới cho blog bằng Markdown (.md) và script tự động -->
@@ -738,6 +748,7 @@ document.querySelectorAll(
     const tagClass = li.dataset.tag;
     const topicName =
       li.querySelector(".topic-name").textContent.trim();
+    if (searchInput) searchInput.value = "";
     filterPostsByTopic(tagClass, topicName);
     document
       .getElementById("bai-viet")
@@ -748,10 +759,50 @@ document.querySelectorAll(
 if (viewAllLink) {
   viewAllLink.addEventListener("click", (event) => {
     event.preventDefault();
+    if (searchInput) searchInput.value = "";
     filterPostsByTopic(null, null);
     document
       .getElementById("bai-viet")
       .scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
+
+// Ô tìm kiếm: lọc bài theo tiêu đề, nội dung tóm tắt,
+// và tên chủ đề — không phân biệt hoa/thường, không dấu.
+const searchInput = document.getElementById("siteSearch");
+
+function stripDiacritics(str) {
+  return str
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function normalizeText(str) {
+  return stripDiacritics(str).toLowerCase().trim();
+}
+
+function searchPosts(rawQuery) {
+  const query = normalizeText(rawQuery);
+  postGridCards.forEach((card) => {
+    if (!query) {
+      card.style.display = "";
+      return;
+    }
+    const haystack = normalizeText(card.textContent);
+    card.style.display = haystack.includes(query) ? "" : "none";
+  });
+  if (featuredHeading) {
+    featuredHeading.textContent = rawQuery.trim()
+      ? "Kết quả tìm kiếm: “" + rawQuery.trim() + "”"
+      : featuredHeadingDefault;
+  }
+}
+
+if (searchInput) {
+  searchInput.addEventListener("input", (event) => {
+    searchPosts(event.target.value);
   });
 }
 </script>

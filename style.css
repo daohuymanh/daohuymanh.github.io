@@ -323,6 +323,39 @@ section { padding: 64px 0; }
 .section-head a.view-all:hover { text-decoration: underline; }
 
 /* =========================================================
+   Search bar
+   ========================================================= */
+.search-bar {
+  margin-bottom: 28px;
+}
+
+.search-input {
+  width: 100%;
+  font-family: var(--sans);
+  font-size: 15px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 13px 16px;
+  box-sizing: border-box;
+}
+
+.search-input::placeholder {
+  color: var(--ink-faint);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--green-deep);
+}
+
+/* Ẩn nút "x" mặc định của Chrome/Safari, dùng chung style trên mọi trình duyệt */
+.search-input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+/* =========================================================
    Post cards
    ========================================================= */
 .post-grid {
