@@ -326,7 +326,8 @@ section { padding: 64px 0; }
    Search bar
    ========================================================= */
 .search-bar {
-  margin-bottom: 28px;
+  margin-top: 4px;
+  margin-bottom: 44px;
 }
 
 .search-input {
