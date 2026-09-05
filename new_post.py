@@ -12,6 +12,7 @@ Cách dùng (trong Termux, đứng tại thư mục repo daohuymanh.github.io):
 Sau khi chạy xong, dùng git add / commit / push như bình thường.
 """
 
+import random
 import re
 import sys
 import html
@@ -26,6 +27,12 @@ except ImportError:
     )
 
 REPO_DIR = Path(__file__).resolve().parent
+
+# Thư mục chứa các icon .svg tải từ https://bioicons.com (ưu tiên icon
+# giấy phép CC0, khỏi phải ghi công tác giả). Mỗi lần tạo bài mới,
+# script sẽ chọn ngẫu nhiên 1 icon trong thư mục này để thay cho
+# card thumbnail toàn màu xanh mặc định.
+ICONS_DIR = REPO_DIR / "assets" / "icons"
 
 VALID_TAGS = {
     "tag--congdong": "Sức khoẻ cộng đồng",
@@ -57,6 +64,25 @@ def strip_pandoc_attrs(text: str) -> str:
 
 def esc(s: str) -> str:
     return html.escape(s, quote=False)
+
+
+def pick_random_icon() -> str:
+    """Chọn ngẫu nhiên 1 file .svg trong assets/icons/ và trả về
+    đường dẫn tương đối để chèn vào thẻ <img>. Nếu thư mục chưa
+    tồn tại hoặc chưa có icon nào, trả về chuỗi rỗng — card sẽ
+    hiển thị nền gradient xanh như trước (không lỗi)."""
+    if not ICONS_DIR.exists():
+        return ""
+    icons = sorted(p.name for p in ICONS_DIR.glob("*.svg"))
+    if not icons:
+        return ""
+    return f"assets/icons/{random.choice(icons)}"
+
+
+def thumb_icon_html(icon_path: str) -> str:
+    if not icon_path:
+        return ""
+    return f'<div class="thumb-icon"><img src="{icon_path}" alt="" loading="lazy"></div>'
 
 
 # =========================================================
@@ -138,48 +164,6 @@ ARTICLE_TEMPLATE = """<!DOCTYPE html>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
-<style>
-.article-header {{ padding: 56px 0 32px; }}
-.article-header .wrap {{ max-width: 760px; }}
-.article-header h1 {{ font-family: var(--serif); font-size: clamp(28px, 4vw, 40px); line-height: 1.2; margin: 18px 0 20px; }}
-.article-meta {{ font-family: var(--mono); font-size: 12.5px; color: var(--ink-faint); display: flex; flex-wrap: wrap; gap: 10px 16px; }}
-.article-meta span:not(:last-child)::after {{ content: "·"; margin-left: 16px; color: var(--line); }}
-.article-author {{ margin-top: 14px; font-size: 14px; color: var(--ink-soft); }}
-.article-author strong {{ color: var(--ink); }}
-.article-license {{ margin-top: 56px; padding: 22px 24px; background: var(--bg-panel); border-left: 3px solid var(--green-deep); border-radius: var(--radius); }}
-.article-license p {{ font-size: 13.5px; color: var(--ink-soft); margin: 0 0 8px; }}
-.article-license p:last-child {{ margin-bottom: 0; }}
-.article-license a {{ color: var(--green-deep); font-weight: 600; text-decoration: none; }}
-.article-license a:hover {{ text-decoration: underline; }}
-.article-license .license-title {{ font-family: var(--serif); font-size: 17px; color: var(--ink); font-weight: 600; }}
-article.post-body {{ padding: 8px 0 72px; }}
-article.post-body .wrap {{ max-width: 760px; }}
-article.post-body h2 {{ font-family: var(--serif); font-size: 24px; margin: 44px 0 16px; }}
-article.post-body h3 {{ font-family: var(--serif); font-size: 19px; margin: 32px 0 14px; }}
-article.post-body p {{ font-size: 16.5px; color: var(--ink); margin: 0 0 20px; text-align: justify; }}
-article.post-body p.lead {{ font-size: 18px; color: var(--ink-soft); }}
-article.post-body a {{ color: var(--green-deep); text-decoration: underline; }}
-article.post-body ul, article.post-body ol {{ margin: 0 0 20px; padding-left: 1.3em; }}
-article.post-body li {{ font-size: 16.5px; color: var(--ink); margin: 0 0 8px; }}
-article.post-body blockquote {{ margin: 0 0 24px; padding: 14px 20px; background: var(--bg-panel); border-left: 3px solid var(--green-deep); border-radius: var(--radius); color: var(--ink-soft); font-size: 15px; }}
-article.post-body blockquote p {{ margin: 0; font-size: inherit; color: inherit; }}
-article.post-body pre {{ background: var(--navy); color: #dfeee6; font-family: var(--mono); font-size: 13.5px; line-height: 1.6; padding: 20px 22px; border-radius: var(--radius); overflow-x: auto; margin: 0 0 24px; }}
-article.post-body code {{ font-family: var(--mono); background: var(--bg-panel); padding: 2px 6px; border-radius: 2px; font-size: 0.9em; }}
-article.post-body pre code {{ background: none; padding: 0; }}
-article.post-body hr {{ border: none; border-top: 1px solid var(--line); margin: 40px 0; }}
-article.post-body table {{ width: 100%; border-collapse: collapse; margin: 0 0 24px; font-size: 14.5px; }}
-article.post-body th, article.post-body td {{ text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }}
-article.post-body th {{ font-family: var(--mono); font-size: 12.5px; color: var(--ink-faint); font-weight: 500; }}
-article.post-body td {{ color: var(--ink-soft); }}
-article.post-body img {{ max-width: 100%; height: auto; display: block; margin: 8px auto 24px; border-radius: var(--radius); border: 1px solid var(--line); }}
-article.post-body figure {{ margin: 0 0 24px; }}
-article.post-body figure img {{ margin-bottom: 10px; }}
-article.post-body figcaption {{ font-family: var(--mono); font-size: 12.5px; color: var(--ink-faint); text-align: center; }}
-article.post-body sup, article.post-body sub {{ font-size: 0.75em; }}
-article.post-body mark {{ background: #fdf1de; color: var(--ink); padding: 1px 3px; border-radius: 2px; }}
-.back-link {{ font-family: var(--mono); font-size: 13px; color: var(--green-deep); text-decoration: none; }}
-.back-link:hover {{ text-decoration: underline; }}
-</style>
 </head>
 <body>
 
@@ -282,7 +266,7 @@ navToggle.addEventListener("click", () => {{
 
 CARD_TEMPLATE = """      <!-- {title} -->
       <a href="{slug}" class="post-card">
-        <div class="thumb"></div>
+        <div class="thumb">{thumb_icon}</div>
         <div class="body">
           <span class="tag {tag}">
             {tag_label}
@@ -362,6 +346,7 @@ def main():
     out_path.write_text(article_html, encoding="utf-8")
     print(f"✔ Đã tạo bài viết: {out_path.name}")
 
+    icon_path = pick_random_icon()
     card_html = CARD_TEMPLATE.format(
         title=esc(meta["title"]),
         slug=meta["slug"],
@@ -370,6 +355,7 @@ def main():
         excerpt=esc(meta["excerpt"]),
         date=esc(meta["date"]),
         reading_time=esc(meta["reading_time"]),
+        thumb_icon=thumb_icon_html(icon_path),
     )
     insert_card_into_index(REPO_DIR / "index.html", card_html)
 

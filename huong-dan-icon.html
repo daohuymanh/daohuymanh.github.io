@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hướng dẫn: dùng icon ngẫu nhiên cho thumbnail bài viết — Mạnh Phượng</title>
+<meta name="description" content="Thêm một icon tròn đặt giữa nền gradient đó, được">
+<meta name="author" content="Đào Huy Mạnh">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="index.html" class="logo">
+      <img class="logo-mark" src="assets/logo-icon.png" alt="Logo Mạnh Phượng">
+      <span class="logo-text">
+        <span class="logo-name">Mạnh Phượng</span>
+        <span class="logo-tagline">Biomedicine &amp; Bioinformatics</span>
+      </span>
+    </a>
+    <nav class="primary-nav" id="primaryNav">
+      <a href="index.html">trang chủ</a>
+      <a href="index.html#bai-viet">bài viết</a>
+      <a href="index.html#chu-de">chủ đề</a>
+      <a href="index.html#gioi-thieu">giới thiệu</a>
+      <a href="index.html#lien-he">liên hệ</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Mở menu" aria-expanded="false" aria-controls="primaryNav"></button>
+  </div>
+</header>
+
+<div class="track"></div>
+
+<div class="wrap" style="padding-top:24px;">
+  <a href="index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
+</div>
+
+<header class="article-header">
+  <div class="wrap">
+    <span class="tag tag--tools">Công cụ phân tích</span>
+    <h1>Hướng dẫn: dùng icon ngẫu nhiên cho thumbnail bài viết</h1>
+    <div class="article-meta">
+      <span>2026.09.05</span>
+      <span>10 phút đọc</span>
+    </div>
+    <div class="article-author">
+      <strong>Tác giả:</strong> Đào Huy Mạnh
+    </div>
+  </div>
+</header>
+
+<article class="post-body">
+  <div class="wrap">
+
+    <p class="lead">
+      
+    </p>
+
+<h1>Hướng dẫn: dùng icon Bioicons ngẫu nhiên cho thumbnail bài viết</h1>
+<p>Mặc định, mỗi card bài viết trên trang chủ có ô ảnh đại diện (thumbnail)
+chỉ là nền gradient xanh (navy → xanh lá đậm). Với thiết lập dưới đây,
+mỗi bài sẽ có thêm một <strong>icon tròn</strong> đặt giữa nền gradient đó, được
+chọn <strong>ngẫu nhiên</strong> từ một kho icon khoa học miễn phí như (<a href="https://bioicons.com">bioicons.com</a>),
+để mỗi bài trông đỡ giống nhau hơn.</p>
+<p>Card nào đã có ảnh minh hoạ SVG riêng (kiểu vẽ tay, không phải icon
+đơn) thì không bị ảnh hưởng.</p>
+<hr />
+<h2>1. Tải icon từ Bioicons</h2>
+<ol>
+<li>Vào <strong>https://bioicons.com</strong></li>
+<li>Tìm icon phù hợp chủ đề của trang: virus, DNA, kính hiển vi, tế bào,
+   ống nghiệm, máy tính/tin sinh học, biểu đồ, v.v.</li>
+<li><strong>Ưu tiên lọc theo giấy phép <code>CC0</code></strong> (Public Domain) — dùng thoải
+   mái, không cần ghi công tác giả.
+   - Nếu thích một icon giấy phép <code>CC-BY</code>, vẫn dùng được, nhưng phải
+     ghi công tác giả + nguồn (xem mục 4 bên dưới).</li>
+<li>Bấm vào icon để tải file <code>.svg</code> về máy.</li>
+<li>Đặt tên file gọn, không dấu, không khoảng trắng — ví dụ:
+   <code>virus.svg</code>, <code>dna-helix.svg</code>, <code>microscope.svg</code>, <code>lab-flask.svg</code>.</li>
+</ol>
+<p>Nên tải khoảng <strong>10–20 icon</strong> trở lên để độ "ngẫu nhiên" rõ rệt (tải
+càng nhiều, xác suất trùng icon giữa 2 bài liền kề càng thấp).</p>
+<h2>2. Đặt icon vào đúng thư mục</h2>
+<p>Trong thư mục gốc của repo (cùng cấp với <code>index.html</code>), tạo thư mục:</p>
+<pre><code>assets/icons/
+</code></pre>
+<p>rồi copy toàn bộ các file <code>.svg</code> vừa tải vào đó. Cấu trúc cuối cùng
+sẽ giống:</p>
+<pre><code>daohuymanh.github.io/
+├── index.html
+├── style.css
+├── new_post.py
+├── retrofit_thumbs.py
+└── assets/
+    ├── logo-icon.png
+    └── icons/
+        ├── virus.svg
+        ├── dna-helix.svg
+        ├── microscope.svg
+        └── ...
+</code></pre>
+<h2>3. Cập nhật 2 file đã sửa sẵn</h2>
+<p>Ghi đè 2 file sau bằng bản đã chỉnh (đã gửi ở tin nhắn trước):</p>
+<ul>
+<li><code>style.css</code> — thêm style cho huy hiệu tròn <code>.thumb-icon</code> chứa icon.</li>
+<li><code>new_post.py</code> — thêm hàm <code>pick_random_icon()</code>, tự chọn icon ngẫu
+  nhiên mỗi khi tạo bài mới.</li>
+</ul>
+<blockquote>
+<p>Nếu <code>assets/icons/</code> chưa có icon nào, <code>new_post.py</code> vẫn chạy bình
+thường — thumbnail sẽ chỉ là gradient xanh như trước, không lỗi.</p>
+</blockquote>
+<h2>4. Gắn icon cho các bài viết ĐÃ CÓ SẴN (chạy 1 lần)</h2>
+<p>Các bài viết cũ trong <code>index.html</code> đang có thumb trống. Chạy script
+<code>retrofit_thumbs.py</code> (đứng tại thư mục gốc repo, sau khi đã có icon
+trong <code>assets/icons/</code>):</p>
+<pre><code class="language-bash">python retrofit_thumbs.py
+</code></pre>
+<p>Script sẽ:
+- Quét toàn bộ <code>index.html</code>, tìm các <code>&lt;div class="thumb"&gt;&lt;/div&gt;</code> đang
+  trống.
+- Gắn ngẫu nhiên 1 icon trong <code>assets/icons/</code> cho mỗi card.
+- Bỏ qua card đã có icon hoặc ảnh minh hoạ riêng.</p>
+<p>Chạy xong thì mở <code>index.html</code> bằng trình duyệt kiểm tra lại, rồi
+<code>git add / commit / push</code> như thường.</p>
+<blockquote>
+<p>Có thể chạy lại <code>retrofit_thumbs.py</code> nhiều lần nếu muốn xáo lại icon
+cho các bài — script chỉ động vào thumb đang trống nên không phá gì
+đã có.</p>
+</blockquote>
+<h2>5. Từ giờ mỗi bài mới tự có icon</h2>
+<p>Từ lúc này, quy trình tạo bài mới <strong>không đổi gì cả</strong> — vẫn gõ:</p>
+<pre><code class="language-bash">python new_post.py bai-moi.md
+</code></pre>
+<p><code>new_post.py</code> sẽ tự chọn 1 icon ngẫu nhiên trong <code>assets/icons/</code> và
+chèn vào card mới, không cần làm thêm bước nào.</p>
+<h2>6. Muốn thêm/bớt icon sau này</h2>
+<ul>
+<li>Muốn có thêm icon mới: tải thêm file <code>.svg</code> bỏ vào <code>assets/icons/</code>
+  — không cần sửa code, <code>new_post.py</code> tự nhận diện toàn bộ file trong
+  thư mục này mỗi lần chạy.</li>
+<li>Muốn bỏ 1 icon không ưng: xoá file <code>.svg</code> tương ứng khỏi
+  <code>assets/icons/</code>.</li>
+<li>Muốn tắt hẳn tính năng icon, quay lại gradient xanh thuần: xoá hết
+  file trong <code>assets/icons/</code> (hoặc xoá cả thư mục) — code tự rơi về
+  hành vi cũ, không cần sửa gì thêm.</li>
+</ul>
+<h2>7. Lưu ý bản quyền</h2>
+<ul>
+<li>Icon giấy phép <strong>CC0</strong>: dùng tự do, không bắt buộc ghi công.</li>
+<li>Icon giấy phép <strong>CC-BY</strong>: bắt buộc ghi công tác giả + nguồn ở đâu đó
+  công khai trên trang (ví dụ thêm vào trang <code>copyright.html</code>), theo
+  mẫu:</li>
+</ul>
+<p><code>Tên-icon icon by Tên-tác-giả (link tác giả), licensed under
+  CC BY 4.0 (link giấy phép)</code></p>
+<p>Cách đơn giản nhất để tránh việc này: chỉ tải icon <code>CC0</code>.</p>
+
+    <div class="article-license">
+      <p class="license-title">Bản quyền &amp; giấy phép</p>
+      <p>© 2026 Đào Huy Mạnh.</p>
+      <p>
+        Bài viết này được cấp phép theo
+        <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="license noopener">
+          Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+        </a>.
+      </p>
+      <p>
+        Bạn được phép chia sẻ và điều chỉnh nội dung cho mục đích phi thương mại,
+        với điều kiện ghi công tác giả phù hợp và dẫn liên kết tới bài viết gốc.
+      </p>
+    </div>
+
+  </div>
+</article>
+
+<div class="track"></div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-brand">
+      <strong>© 2026 Mạnh Phượng</strong>
+      <span>· Ghi chép Y Sinh &amp; Bioinformatics</span>
+    </div>
+    <ul class="foot-links">
+      <li><a href="copyright.html">Copyright &amp; License</a></li>
+      <li><a href="https://github.com/daohuymanh" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://orcid.org/0000-0003-3874-5051" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="mailto:daohuymanh@gmail.com">daohuymanh@gmail.com</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+const navToggle = document.getElementById("navToggle");
+const primaryNav = document.getElementById("primaryNav");
+navToggle.addEventListener("click", () => {
+  const isOpen = primaryNav.classList.toggle("is-open");
+  navToggle.setAttribute("aria-expanded", isOpen);
+});
+</script>
+
+</body>
+</html>
