@@ -386,47 +386,37 @@ section { padding: 64px 0; }
 
 .post-card .thumb {
   height: 150px;
-  background: linear-gradient(135deg, var(--navy) 0%, var(--green-deep) 130%);
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
   position: relative;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  padding: 18px;
 }
-.post-grid.featured-grid > a:first-child .thumb { height: 260px; }
+.post-grid.featured-grid > a:first-child .thumb { height: 260px; padding: 28px; }
 
 .post-card .thumb svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 
-/* Huy hiệu tròn chứa icon ngẫu nhiên từ Bioicons, đặt giữa nền gradient */
+/* Icon Bioicons ngẫu nhiên: co theo max-width/max-height để LUÔN vừa
+   khung, không tràn ra ngoài đè lên chữ, bất kể icon vuông/dọc/ngang */
 .thumb-icon {
   position: relative;
   z-index: 1;
-  width: 76px;
-  height: 76px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.94);
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 18px rgba(14, 34, 51, 0.35);
 }
 .thumb-icon img {
-  width: 42px;
-  height: 42px;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
-}
-.post-grid.featured-grid > a:first-child .thumb-icon {
-  width: 108px;
-  height: 108px;
-}
-.post-grid.featured-grid > a:first-child .thumb-icon img {
-  width: 60px;
-  height: 60px;
-}
-@media (max-width: 900px) {
-  .post-grid.featured-grid > a:first-child .thumb-icon { width: 76px; height: 76px; }
-  .post-grid.featured-grid > a:first-child .thumb-icon img { width: 42px; height: 42px; }
 }
 
 .post-card .body {
@@ -689,7 +679,7 @@ footer.site-footer .foot-links a:hover { color: var(--green); }
   .hero .wrap { grid-template-columns: 1fr; }
   .post-grid, .post-grid.featured-grid { grid-template-columns: 1fr 1fr; }
   .post-grid.featured-grid > a:first-child { grid-row: auto; }
-  .post-grid.featured-grid > a:first-child .thumb { height: 150px; }
+  .post-grid.featured-grid > a:first-child .thumb { height: 150px; padding: 18px; }
   .post-grid.featured-grid > a:first-child h3 { font-size: 19px; }
   .topic-list { grid-template-columns: repeat(3, 1fr); }
   .topic-list li:nth-child(3) { border-right: none; }
