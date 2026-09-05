@@ -37,6 +37,23 @@ VALID_TAGS = {
 
 MD_EXTENSIONS = ["fenced_code", "tables", "sane_lists"]
 
+# pandoc (khi xuất sang markdown) hay ghi kèm kích thước ảnh/bảng gốc
+# theo cú pháp riêng, ví dụ: {width="5.72in" height="4.27in"}
+# hoặc {#tbl:abc}, {.class}. Thư viện `markdown` không hiểu cú pháp
+# này nên để nguyên thành chữ hiển thị ra ngoài — regex dưới đây dọn
+# sạch các đoạn đó trước khi chèn vào bài viết.
+PANDOC_ATTR_RE = re.compile(
+    r'\{[^{}\n]{0,150}(?:width\s*=|height\s*=|#[\w:-]|\.[\w-])[^{}\n]{0,150}\}'
+)
+
+
+def strip_pandoc_attrs(text: str) -> str:
+    cleaned = PANDOC_ATTR_RE.sub("", text)
+    # dọn khoảng trắng thừa để lại sau khi xoá
+    cleaned = re.sub(r"[ \t]+\n", "\n", cleaned)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned
+
 
 def esc(s: str) -> str:
     return html.escape(s, quote=False)
@@ -81,9 +98,15 @@ def parse_input(text: str):
 # 2. Markdown -> HTML (dùng thư viện markdown chuẩn)
 # =========================================================
 
-def convert_body(body: str) -> tuple[str, str]:
-    """Trả về (lead_paragraph_html, rest_html)."""
-    rendered = md.markdown(body, extensions=MD_EXTENSIONS)
+def convert_body(body: str, is_html: bool) -> tuple[str, str]:
+    """Trả về (lead_paragraph_html, rest_html).
+
+    is_html=False: body là Markdown, chuyển bằng thư viện markdown.
+    is_html=True : body đã là HTML sẵn (ví dụ xuất từ
+                   `pandoc -t html`) — giữ nguyên, không qua markdown.
+    """
+    body = strip_pandoc_attrs(body)
+    rendered = body if is_html else md.markdown(body, extensions=MD_EXTENSIONS)
 
     # Tách đoạn <p> đầu tiên ra làm lead (câu mở đầu to hơn)
     m = re.match(r"\s*<p>(.*?)</p>\s*", rendered, re.S)
@@ -133,7 +156,7 @@ article.post-body {{ padding: 8px 0 72px; }}
 article.post-body .wrap {{ max-width: 760px; }}
 article.post-body h2 {{ font-family: var(--serif); font-size: 24px; margin: 44px 0 16px; }}
 article.post-body h3 {{ font-family: var(--serif); font-size: 19px; margin: 32px 0 14px; }}
-article.post-body p {{ font-size: 16.5px; color: var(--ink); margin: 0 0 20px; }}
+article.post-body p {{ font-size: 16.5px; color: var(--ink); margin: 0 0 20px; text-align: justify; }}
 article.post-body p.lead {{ font-size: 18px; color: var(--ink-soft); }}
 article.post-body a {{ color: var(--green-deep); text-decoration: underline; }}
 article.post-body ul, article.post-body ol {{ margin: 0 0 20px; padding-left: 1.3em; }}
@@ -152,6 +175,8 @@ article.post-body img {{ max-width: 100%; height: auto; display: block; margin: 
 article.post-body figure {{ margin: 0 0 24px; }}
 article.post-body figure img {{ margin-bottom: 10px; }}
 article.post-body figcaption {{ font-family: var(--mono); font-size: 12.5px; color: var(--ink-faint); text-align: center; }}
+article.post-body sup, article.post-body sub {{ font-size: 0.75em; }}
+article.post-body mark {{ background: #fdf1de; color: var(--ink); padding: 1px 3px; border-radius: 2px; }}
 .back-link {{ font-family: var(--mono); font-size: 13px; color: var(--green-deep); text-decoration: none; }}
 .back-link:hover {{ text-decoration: underline; }}
 </style>
@@ -310,14 +335,16 @@ def insert_card_into_index(index_path: Path, card_html: str):
 
 def main():
     if len(sys.argv) != 2:
-        sys.exit("Cách dùng: python new_post.py duong-dan-file.md")
+        sys.exit("Cách dùng: python new_post.py duong-dan-file.md  (hoặc .html)")
 
     input_path = Path(sys.argv[1])
     if not input_path.exists():
         sys.exit(f"Không tìm thấy file: {input_path}")
 
+    is_html = input_path.suffix.lower() in (".html", ".htm")
+
     meta, body = parse_input(input_path.read_text(encoding="utf-8"))
-    lead_html, rest_html = convert_body(body)
+    lead_html, rest_html = convert_body(body, is_html)
 
     article_html = ARTICLE_TEMPLATE.format(
         title=esc(meta["title"]),
