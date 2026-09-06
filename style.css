@@ -727,6 +727,22 @@ footer.site-footer .foot-links a:hover { color: var(--green); }
 .article-license a { color: var(--green-deep); font-weight: 600; text-decoration: none; }
 .article-license a:hover { text-decoration: underline; }
 .article-license .license-title { font-family: var(--serif); font-size: 17px; color: var(--ink); font-weight: 600; }
+
+/* Khối "tải file mẫu" — chỉ xuất hiện khi bài viết khai báo trường
+   scripts: trong front matter (xem new_post.py), hỗ trợ nhiều file */
+.script-download {
+  margin: 4px 0 28px;
+  padding: 14px 18px;
+  background: var(--bg-panel);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+}
+.script-download-title { font-size: 12.5px; color: var(--ink-faint); margin: 0 0 8px; }
+.script-download-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.script-download-list li { display: flex; align-items: center; gap: 10px; }
+.script-download-icon { font-size: 18px; line-height: 1; flex-shrink: 0; }
+.script-download a { font-weight: 600; text-decoration: none; }
+.script-download a:hover { text-decoration: underline; }
 article.post-body { padding: 8px 0 72px; }
 article.post-body .wrap { max-width: 760px; }
 article.post-body h2 { font-family: var(--serif); font-size: 24px; margin: 44px 0 16px; }

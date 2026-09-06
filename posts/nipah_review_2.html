@@ -8,7 +8,7 @@
 <meta name="author" content="Đào Huy Mạnh">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../style.css">
 <style>
 .article-header { padding: 56px 0 32px; }
 .article-header .wrap { max-width: 760px; }
@@ -54,19 +54,19 @@ article.post-body figcaption { font-family: var(--mono); font-size: 12.5px; colo
 
 <header class="site-header">
   <div class="wrap">
-    <a href="index.html" class="logo">
-      <img class="logo-mark" src="assets/logo-icon.png" alt="Logo Mạnh Phượng">
+    <a href="../index.html" class="logo">
+      <img class="logo-mark" src="../assets/logo-icon.png" alt="Logo Mạnh Phượng">
       <span class="logo-text">
         <span class="logo-name">Mạnh Phượng</span>
         <span class="logo-tagline">Biomedicine &amp; Bioinformatics</span>
       </span>
     </a>
     <nav class="primary-nav" id="primaryNav">
-      <a href="index.html">trang chủ</a>
-      <a href="index.html#bai-viet">bài viết</a>
-      <a href="index.html#chu-de">chủ đề</a>
-      <a href="index.html#gioi-thieu">giới thiệu</a>
-      <a href="index.html#lien-he">liên hệ</a>
+      <a href="../index.html">trang chủ</a>
+      <a href="../index.html#bai-viet">bài viết</a>
+      <a href="../index.html#chu-de">chủ đề</a>
+      <a href="../index.html#gioi-thieu">giới thiệu</a>
+      <a href="../index.html#lien-he">liên hệ</a>
     </nav>
     <button class="nav-toggle" id="navToggle" aria-label="Mở menu" aria-expanded="false" aria-controls="primaryNav"></button>
   </div>
@@ -75,7 +75,7 @@ article.post-body figcaption { font-family: var(--mono); font-size: 12.5px; colo
 <div class="track"></div>
 
 <div class="wrap" style="padding-top:24px;">
-  <a href="index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
+  <a href="../index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
 </div>
 
 <header class="article-header">
@@ -165,7 +165,7 @@ tế bào chủ và NiV glycoprotein (G) kích hoạt những thay đổi về h
 sau này, dẫn đến kích hoạt glycoprotein F và phản ứng tổng hợp màng.
 Nhiều protein phụ được mã hóa bởi Henipavirus hỗ trợ khả năng trốn tránh
 miễn dịch của vật chủ [2].</p>
-<p><img alt="" src="assets/suc-khoe-cong-dong/media/image1.jpeg" />{width="5.7214785651793525in"
+<p><img alt="" src="../assets/suc-khoe-cong-dong/media/image1.jpeg" />{width="5.7214785651793525in"
 height="4.272771216097988in"}</p>
 <p><strong>Hình 1</strong>: Cấu trúc virus Nipah [2].</p>
 <p>Virion NiV có kích thước lớn (đường kính 500 nm) so với các
@@ -635,7 +635,7 @@ chi tiết).</p>
                                          (NiV-M, NiV-N)                                                                                                                                                                                                             </p>
 <hr />
 <p><strong>Bảng S2: Alignment to WHO TPPs and heat map [1]</strong></p>
-<p><img alt="" src="assets/suc-khoe-cong-dong/media/image2.png" />{width="6.5in"
+<p><img alt="" src="../assets/suc-khoe-cong-dong/media/image2.png" />{width="6.5in"
 height="3.651388888888889in"}</p>
 <p>*Một số xét nghiệm NAAT có thể tùy theo vùng/chủng; có thể yêu cầu giải
 trình tự để duy trì khả năng sống sót của đầu dò và phát hiện pan-NiV
@@ -696,7 +696,7 @@ không phát hiện được các chủng hoặc biến thể chung</p>
       <span>· Ghi chép Y Sinh &amp; Bioinformatics</span>
     </div>
     <ul class="foot-links">
-      <li><a href="copyright.html">Copyright &amp; License</a></li>
+      <li><a href="../copyright.html">Copyright &amp; License</a></li>
       <li><a href="https://github.com/daohuymanh" target="_blank" rel="noopener">GitHub</a></li>
       <li><a href="https://orcid.org/0000-0003-3874-5051" target="_blank" rel="noopener">ORCID</a></li>
       <li><a href="mailto:daohuymanh@gmail.com">daohuymanh@gmail.com</a></li>
@@ -704,14 +704,7 @@ không phát hiện được các chủng hoặc biến thể chung</p>
   </div>
 </footer>
 
-<script>
-const navToggle = document.getElementById("navToggle");
-const primaryNav = document.getElementById("primaryNav");
-navToggle.addEventListener("click", () => {
-  const isOpen = primaryNav.classList.toggle("is-open");
-  navToggle.setAttribute("aria-expanded", isOpen);
-});
-</script>
+<script src="../js/main.js"></script>
 
 </body>
 </html>

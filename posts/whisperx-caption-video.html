@@ -34,7 +34,7 @@ rel="stylesheet"
 >
 <link
 rel="stylesheet"
-href="style.css"
+href="../style.css"
 >
 
 <style>
@@ -206,19 +206,19 @@ article.post-body .note {
      ========================================================= -->
 <header class="site-header">
   <div class="wrap">
-    <a href="index.html" class="logo">
-      <img class="logo-mark" src="assets/logo-icon.png" alt="Logo Mạnh Phượng">
+    <a href="../index.html" class="logo">
+      <img class="logo-mark" src="../assets/logo-icon.png" alt="Logo Mạnh Phượng">
       <span class="logo-text">
         <span class="logo-name">Mạnh Phượng</span>
         <span class="logo-tagline">Biomedicine &amp; Bioinformatics</span>
       </span>
     </a>
     <nav class="primary-nav" id="primaryNav">
-      <a href="index.html">trang chủ</a>
-      <a href="index.html#bai-viet">bài viết</a>
-      <a href="index.html#chu-de">chủ đề</a>
-      <a href="index.html#gioi-thieu">giới thiệu</a>
-      <a href="index.html#lien-he">liên hệ</a>
+      <a href="../index.html">trang chủ</a>
+      <a href="../index.html#bai-viet">bài viết</a>
+      <a href="../index.html#chu-de">chủ đề</a>
+      <a href="../index.html#gioi-thieu">giới thiệu</a>
+      <a href="../index.html#lien-he">liên hệ</a>
     </nav>
     <button
       class="nav-toggle"
@@ -236,7 +236,7 @@ article.post-body .note {
      BACK
      ========================================================= -->
 <div class="wrap" style="padding-top:24px;">
-  <a href="index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
+  <a href="../index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
 </div>
 
 <!-- =========================================================
@@ -644,7 +644,7 @@ python compare_with_script.py --script script.docx --transcript out/transcript.j
       <span>· Ghi chép Y Sinh &amp; Bioinformatics</span>
     </div>
     <ul class="foot-links">
-      <li><a href="copyright.html">Copyright &amp; License</a></li>
+      <li><a href="../copyright.html">Copyright &amp; License</a></li>
       <li><a href="https://github.com/daohuymanh" target="_blank" rel="noopener">GitHub</a></li>
       <li><a href="https://orcid.org/0000-0003-3874-5051" target="_blank" rel="noopener">ORCID</a></li>
       <li><a href="mailto:daohuymanh@gmail.com">daohuymanh@gmail.com</a></li>
@@ -652,14 +652,7 @@ python compare_with_script.py --script script.docx --transcript out/transcript.j
   </div>
 </footer>
 
-<script>
-const navToggle = document.getElementById("navToggle");
-const primaryNav = document.getElementById("primaryNav");
-navToggle.addEventListener("click", () => {
-  const isOpen = primaryNav.classList.toggle("is-open");
-  navToggle.setAttribute("aria-expanded", isOpen);
-});
-</script>
+<script src="../js/main.js"></script>
 
 </body>
 </html>

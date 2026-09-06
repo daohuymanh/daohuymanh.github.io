@@ -6,7 +6,7 @@
 <title>Vẽ biểu đồ cột số mẫu theo tỉnh với ggplot2 — Mạnh Phượng</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../style.css">
 <style>
   .article-header { padding: 56px 0 32px; }
   .article-header .wrap { max-width: 760px; }
@@ -120,19 +120,19 @@
 
 <header class="site-header">
   <div class="wrap">
-    <a href="index.html" class="logo">
-      <img class="logo-mark" src="assets/logo-icon.png" alt="Mạnh Phượng — Biomedicine & Bioinformatics">
+    <a href="../index.html" class="logo">
+      <img class="logo-mark" src="../assets/logo-icon.png" alt="Mạnh Phượng — Biomedicine & Bioinformatics">
       <span class="logo-text">
         <span class="logo-name">Mạnh Phượng</span>
         <span class="logo-tagline">Biomedicine &amp; Bioinformatics</span>
       </span>
     </a>
     <nav class="primary-nav" id="primaryNav">
-      <a href="index.html">trang chủ</a>
-      <a href="index.html#bai-viet">bài viết</a>
-      <a href="index.html#chu-de">chủ đề</a>
-      <a href="index.html#gioi-thieu">giới thiệu</a>
-      <a href="index.html#lien-he">liên hệ</a>
+      <a href="../index.html">trang chủ</a>
+      <a href="../index.html#bai-viet">bài viết</a>
+      <a href="../index.html#chu-de">chủ đề</a>
+      <a href="../index.html#gioi-thieu">giới thiệu</a>
+      <a href="../index.html#lien-he">liên hệ</a>
     </nav>
     <button class="nav-toggle" id="navToggle" aria-label="Mở menu" aria-expanded="false" aria-controls="primaryNav"></button>
   </div>
@@ -141,7 +141,7 @@
 <div class="track"></div>
 
 <div class="wrap" style="padding-top:24px;">
-  <a href="index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
+  <a href="../index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
 </div>
 
 <header class="article-header">
@@ -288,14 +288,7 @@ p_province</code></pre>
   </div>
 </footer>
 
-<script>
-  const navToggle = document.getElementById('navToggle');
-  const primaryNav = document.getElementById('primaryNav');
-  navToggle.addEventListener('click', () => {
-    const isOpen = primaryNav.classList.toggle('is-open');
-    navToggle.setAttribute('aria-expanded', isOpen);
-  });
-</script>
+<script src="../js/main.js"></script>
 
 </body>
 </html>

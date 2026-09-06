@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
 """
 new_post.py — chuyển 1 file .md (Markdown chuẩn, có front matter)
-thành bài viết .html đúng style trang, và tự chèn card vào index.html.
+thành bài viết .html đúng style trang, tự tạo trong posts/ và tự
+chèn card vào index.html.
 
 Cài thư viện cần thiết (1 lần duy nhất):
     pip install markdown
 
 Cách dùng (trong Termux, đứng tại thư mục repo daohuymanh.github.io):
     python new_post.py bai-moi.md
+
+Front matter hỗ trợ thêm 1 trường TUỲ CHỌN (không bắt buộc):
+    scripts: a.R|Script vẽ biểu đồ, b.csv|Dữ liệu mẫu
+        ← danh sách file trong thư mục scripts/ ở gốc repo, ngăn cách
+          bằng dấu phẩy. Mỗi file có thể kèm nhãn hiển thị sau dấu |
+          (không kèm thì hiện luôn tên file). Có khai báo thì bài
+          viết tự chèn khối "tải file mẫu" liệt kê từng file, không
+          khai báo thì bỏ qua, không có gì thay đổi.
 
 Sau khi chạy xong, dùng git add / commit / push như bình thường.
 """
@@ -28,10 +37,18 @@ except ImportError:
 
 REPO_DIR = Path(__file__).resolve().parent
 
+# Bài viết được tạo trực tiếp vào posts/ (phẳng, không thư mục con).
+# scripts/ là chỗ bạn tự bỏ file mẫu (.py/.R/.ipynb...) muốn cho tải
+# về trong các bài hướng dẫn công cụ — dùng trường "script" ở front
+# matter (xem READ ME) để tự chèn khối tải file vào bài.
+POSTS_DIR = REPO_DIR / "posts"
+SCRIPTS_DIR = REPO_DIR / "scripts"
+
 # Thư mục chứa các icon .svg tải từ https://bioicons.com (ưu tiên icon
 # giấy phép CC0, khỏi phải ghi công tác giả). Mỗi lần tạo bài mới,
 # script sẽ chọn ngẫu nhiên 1 icon trong thư mục này để thay cho
-# card thumbnail toàn màu xanh mặc định.
+# card thumbnail toàn màu xanh mặc định. Thư mục này nằm ở gốc repo
+# (không phải trong posts/) vì được index.html — cũng ở gốc — dùng.
 ICONS_DIR = REPO_DIR / "assets" / "icons"
 
 VALID_TAGS = {
@@ -83,6 +100,64 @@ def thumb_icon_html(icon_path: str) -> str:
     if not icon_path:
         return ""
     return f'<div class="thumb-icon"><img src="{icon_path}" alt="" loading="lazy"></div>'
+
+
+def parse_script_list(meta: dict) -> list[tuple[str, str]]:
+    """Đọc trường `scripts:` trong front matter — danh sách file mẫu
+    ngăn cách bằng dấu phẩy, mỗi file có thể kèm nhãn hiển thị riêng
+    bằng dấu `|`:
+
+        scripts: ns1_bar_plot.R|Script R vẽ biểu đồ, du-lieu-mau.csv
+
+    Không có nhãn thì dùng luôn tên file làm nhãn. Vẫn đọc được
+    trường `script:` (số ít, 1 file) từ các bài viết cũ để không bị
+    hỏng khi chạy lại trên bài đã viết trước đây."""
+    items: list[tuple[str, str]] = []
+
+    raw = meta.get("scripts", "").strip()
+    if raw:
+        for part in raw.split(","):
+            part = part.strip()
+            if not part:
+                continue
+            if "|" in part:
+                fname, label = part.split("|", 1)
+                fname, label = fname.strip(), label.strip() or fname.strip()
+            else:
+                fname, label = part, part
+            items.append((fname, label))
+        return items
+
+    # Tương thích ngược với trường script:/script_label: số ít cũ.
+    legacy = meta.get("script", "").strip()
+    if legacy:
+        label = meta.get("script_label", "").strip() or legacy
+        items.append((legacy, label))
+    return items
+
+
+def script_box_html(meta: dict) -> str:
+    """Nếu front matter có khai báo `scripts:` (1 hoặc nhiều file đã
+    bỏ sẵn trong thư mục scripts/ ở gốc repo), chèn 1 khối 'tải file
+    mẫu' ngay đầu bài viết, liệt kê từng file. Không khai báo thì bỏ
+    qua, không có gì thay đổi."""
+    items = parse_script_list(meta)
+    if not items:
+        return ""
+
+    rows = "\n".join(
+        '      <li><span class="script-download-icon">📎</span>'
+        f'<a href="../scripts/{esc(fname)}" download>{esc(label)}</a></li>'
+        for fname, label in items
+    )
+    return (
+        '\n    <div class="script-download">\n'
+        '      <p class="script-download-title">File mẫu dùng trong bài viết</p>\n'
+        '      <ul class="script-download-list">\n'
+        f"{rows}\n"
+        "      </ul>\n"
+        "    </div>\n"
+    )
 
 
 # =========================================================
@@ -163,25 +238,25 @@ ARTICLE_TEMPLATE = """<!DOCTYPE html>
 <meta name="author" content="{author}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../style.css">
 </head>
 <body>
 
 <header class="site-header">
   <div class="wrap">
-    <a href="index.html" class="logo">
-      <img class="logo-mark" src="assets/logo-icon.png" alt="Logo Mạnh Phượng">
+    <a href="../index.html" class="logo">
+      <img class="logo-mark" src="../assets/logo-icon.png" alt="Logo Mạnh Phượng">
       <span class="logo-text">
         <span class="logo-name">Mạnh Phượng</span>
         <span class="logo-tagline">Biomedicine &amp; Bioinformatics</span>
       </span>
     </a>
     <nav class="primary-nav" id="primaryNav">
-      <a href="index.html">trang chủ</a>
-      <a href="index.html#bai-viet">bài viết</a>
-      <a href="index.html#chu-de">chủ đề</a>
-      <a href="index.html#gioi-thieu">giới thiệu</a>
-      <a href="index.html#lien-he">liên hệ</a>
+      <a href="../index.html">trang chủ</a>
+      <a href="../index.html#bai-viet">bài viết</a>
+      <a href="../index.html#chu-de">chủ đề</a>
+      <a href="../index.html#gioi-thieu">giới thiệu</a>
+      <a href="../index.html#lien-he">liên hệ</a>
     </nav>
     <button class="nav-toggle" id="navToggle" aria-label="Mở menu" aria-expanded="false" aria-controls="primaryNav"></button>
   </div>
@@ -190,7 +265,7 @@ ARTICLE_TEMPLATE = """<!DOCTYPE html>
 <div class="track"></div>
 
 <div class="wrap" style="padding-top:24px;">
-  <a href="index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
+  <a href="../index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
 </div>
 
 <header class="article-header">
@@ -213,7 +288,7 @@ ARTICLE_TEMPLATE = """<!DOCTYPE html>
     <p class="lead">
       {lead}
     </p>
-
+{script_box}
 {body}
 
     <div class="article-license">
@@ -243,7 +318,7 @@ ARTICLE_TEMPLATE = """<!DOCTYPE html>
       <span>· Ghi chép Y Sinh &amp; Bioinformatics</span>
     </div>
     <ul class="foot-links">
-      <li><a href="copyright.html">Copyright &amp; License</a></li>
+      <li><a href="../copyright.html">Copyright &amp; License</a></li>
       <li><a href="https://github.com/daohuymanh" target="_blank" rel="noopener">GitHub</a></li>
       <li><a href="https://orcid.org/0000-0003-3874-5051" target="_blank" rel="noopener">ORCID</a></li>
       <li><a href="mailto:daohuymanh@gmail.com">daohuymanh@gmail.com</a></li>
@@ -251,14 +326,7 @@ ARTICLE_TEMPLATE = """<!DOCTYPE html>
   </div>
 </footer>
 
-<script>
-const navToggle = document.getElementById("navToggle");
-const primaryNav = document.getElementById("primaryNav");
-navToggle.addEventListener("click", () => {{
-  const isOpen = primaryNav.classList.toggle("is-open");
-  navToggle.setAttribute("aria-expanded", isOpen);
-}});
-</script>
+<script src="../js/main.js"></script>
 
 </body>
 </html>
@@ -330,6 +398,13 @@ def main():
     meta, body = parse_input(input_path.read_text(encoding="utf-8"))
     lead_html, rest_html = convert_body(body, is_html)
 
+    # Bài viết giờ nằm trong posts/, nên ảnh chèn trong nội dung
+    # (ví dụ ảnh trích từ file .docx qua pandoc, dạng assets/...) cũng
+    # phải lùi ra 1 cấp thư mục như các link khác trong khung trang.
+    asset_fix = lambda s: re.sub(r'(src|href)="assets/', r'\1="../assets/', s)
+    lead_html = asset_fix(lead_html)
+    rest_html = asset_fix(rest_html)
+
     article_html = ARTICLE_TEMPLATE.format(
         title=esc(meta["title"]),
         excerpt=esc(meta["excerpt"]),
@@ -339,17 +414,19 @@ def main():
         date=esc(meta["date"]),
         reading_time=esc(meta["reading_time"]),
         lead=lead_html,
+        script_box=script_box_html(meta),
         body=rest_html.rstrip("\n"),
     )
 
-    out_path = REPO_DIR / meta["slug"]
+    POSTS_DIR.mkdir(exist_ok=True)
+    out_path = POSTS_DIR / meta["slug"]
     out_path.write_text(article_html, encoding="utf-8")
-    print(f"✔ Đã tạo bài viết: {out_path.name}")
+    print(f"✔ Đã tạo bài viết: posts/{out_path.name}")
 
     icon_path = pick_random_icon()
     card_html = CARD_TEMPLATE.format(
         title=esc(meta["title"]),
-        slug=meta["slug"],
+        slug=f"posts/{meta['slug']}",
         tag=meta["tag"],
         tag_label=esc(meta["tag_label"]),
         excerpt=esc(meta["excerpt"]),
