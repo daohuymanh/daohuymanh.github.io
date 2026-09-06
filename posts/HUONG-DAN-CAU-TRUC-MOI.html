@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cấu trúc site mới (posts/, scripts/, js/) để dễ dàng mở rộng — Mạnh Phượng</title>
+<meta name="description" content="Tài liệu này thay đổi về cấu trúc thư mục của site như tách style.css và javascript ra các mục khác không bao gồm trong index. Các bài viết cho vào thư mục riêng không để ngang hàng với index">
+<meta name="author" content="Mạnh Phượng">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="../index.html" class="logo">
+      <img class="logo-mark" src="../assets/logo-icon.png" alt="Logo Mạnh Phượng">
+      <span class="logo-text">
+        <span class="logo-name">Mạnh Phượng</span>
+        <span class="logo-tagline">Biomedicine &amp; Bioinformatics</span>
+      </span>
+    </a>
+    <nav class="primary-nav" id="primaryNav">
+      <a href="../index.html">trang chủ</a>
+      <a href="../index.html#bai-viet">bài viết</a>
+      <a href="../index.html#chu-de">chủ đề</a>
+      <a href="../index.html#gioi-thieu">giới thiệu</a>
+      <a href="../index.html#lien-he">liên hệ</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Mở menu" aria-expanded="false" aria-controls="primaryNav"></button>
+  </div>
+</header>
+
+<div class="track"></div>
+
+<div class="wrap" style="padding-top:24px;">
+  <a href="../index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
+</div>
+
+<header class="article-header">
+  <div class="wrap">
+    <span class="tag tag--tools">Công cụ phân tích</span>
+    <h1>Cấu trúc site mới (posts/, scripts/, js/) để dễ dàng mở rộng</h1>
+    <div class="article-meta">
+      <span>2026.09.06</span>
+      <span>20 phút đọc</span>
+    </div>
+    <div class="article-author">
+      <strong>Tác giả:</strong> Mạnh Phượng
+    </div>
+  </div>
+</header>
+
+<article class="post-body">
+  <div class="wrap">
+
+    <p class="lead">
+      
+    </p>
+
+    <div class="script-download">
+      <p class="script-download-title">File mẫu dùng trong bài viết</p>
+      <ul class="script-download-list">
+      <li><span class="script-download-icon">📎</span><a href="../scripts/new_post.py" download>new_post.py</a></li>
+      <li><span class="script-download-icon">📎</span><a href="../scripts/migrate.py" download>migrate.py</a></li>
+      </ul>
+    </div>
+
+<h2>1. Cấu trúc thư mục mới</h2>
+<pre><code>daohuymanh.github.io/
+├── index.html            ← trang chủ, giữ nguyên vị trí gốc
+├── copyright.html        ← giữ nguyên vị trí gốc
+├── style.css              ← giữ nguyên vị trí gốc
+├── js/
+│   └── main.js             ← JS xử lý menu, dùng chung mọi trang
+├── assets/
+│   ├── logo-icon.png
+│   ├── icons/                ← icon Bioicons cho thumbnail ngẫu nhiên
+│   └── (ảnh khác chèn trong bài, ví dụ ảnh trích từ .docx)
+├── posts/
+│   └── *.html                ← TOÀN BỘ bài viết, phẳng (không thư mục con)
+├── scripts/
+│   └── *                     ← file mẫu/script ví dụ nhắc trong bài (.R, .py, .csv, .ipynb...)
+├── new_post.py             ← tạo bài mới (đã cập nhật cho cấu trúc này)
+├── retrofit_thumbs.py      ← gắn icon ngẫu nhiên cho bài cũ (không đổi)
+└── migrate.py              ← script dời file 1 LẦN DUY NHẤT sang cấu trúc mới
+</code></pre>
+<p><strong>Vì sao đổi:</strong> trước đây mọi bài viết nằm chung 1 cấp với
+<code>index.html</code>, càng viết nhiều càng rối. Giờ tách riêng:
+- <code>posts/</code> — nội dung bài viết.
+- <code>scripts/</code> — file dùng để minh hoạ/cho tải trong các bài hướng dẫn công cụ.
+- <code>js/main.js</code> — gộp đoạn <code>&lt;script&gt;</code> xử lý menu đang bị lặp lại ở mọi trang.</p>
+<h2>2. Chạy <code>migrate.py</code> (chỉ 1 lần)</h2>
+<p>Nếu bạn còn bài viết cũ đang nằm ở gốc repo (cùng cấp <code>index.html</code>),
+chạy 1 lần duy nhất để dời hết vào <code>posts/</code> và tự sửa link:</p>
+<pre><code class="language-bash">python migrate.py
+</code></pre>
+<p>Script sẽ tự động:
+- Tạo 3 thư mục <code>posts/</code>, <code>scripts/</code>, <code>js/</code> nếu chưa có.
+- Dời mọi file <code>.html</code> ở gốc (trừ <code>index.html</code>, <code>copyright.html</code>,
+  <code>bai-viet-mau.html</code>) vào <code>posts/</code>.
+- Tự sửa lại toàn bộ đường dẫn tương đối bên trong mỗi bài vừa dời
+  (<code>style.css</code> → <code>../style.css</code>, <code>index.html</code> → <code>../index.html</code>,
+  <code>assets/...</code> → <code>../assets/...</code>, kể cả ảnh chèn trong bài từ file
+  Word/docx).
+- Gộp đoạn <code>&lt;script&gt;</code> xử lý menu ở mọi trang thành 1 dòng
+  <code>&lt;script src="js/main.js"&gt;</code> (hoặc <code>../js/main.js</code> với bài trong
+  <code>posts/</code>).
+- Cập nhật link các card trong <code>index.html</code> để trỏ sang <code>posts/...</code>.</p>
+<p>An toàn khi chạy lại nhiều lần — bài nào đã dời rồi sẽ không bị sửa
+lần 2.</p>
+<p>Chạy xong, mở lại <code>index.html</code> và vài bài trong <code>posts/</code> để kiểm tra
+trước khi <code>git add / commit / push</code>.</p>
+<h2>3. Tạo bài viết mới — không đổi thao tác</h2>
+<p>Vẫn dùng đúng lệnh cũ:</p>
+<pre><code class="language-bash">python new_post.py bai-moi.md
+</code></pre>
+<p><code>new_post.py</code> giờ tự tạo file trong <code>posts/</code> và tự chèn card vào
+<code>index.html</code> với link đúng — không cần làm gì thêm.</p>
+<h2>4. Đính kèm file mẫu cho bài hướng dẫn công cụ</h2>
+<p>Nếu bài viết có nhắc tới 1 hoặc nhiều script/file mẫu (ví dụ file
+<code>.R</code> vẽ biểu đồ, file <code>.csv</code> dữ liệu mẫu, file <code>.py</code> xử lý dữ liệu),
+làm theo 2 bước:</p>
+<p><strong>Bước 1:</strong> bỏ file đó vào thư mục <code>scripts/</code> ở gốc repo (đặt tên
+gọn, không dấu, không khoảng trắng).</p>
+<p><strong>Bước 2:</strong> khai báo trong front matter của file <code>.md</code>, dùng trường
+<code>scripts:</code> — liệt kê tên file, ngăn cách bằng dấu phẩy. Muốn hiện
+nhãn riêng cho từng file (thay vì hiện luôn tên file) thì thêm dấu
+<code>|</code> sau tên file:</p>
+<pre><code>title: Vẽ biểu đồ cột số mẫu theo tỉnh với ggplot2
+slug: ns1-bar-plot-tinh.html
+tag: tag--tools
+tag_label: Công cụ phân tích
+date: 2026.09.10
+reading_time: 6 phút đọc
+author: Mạnh Phượng
+excerpt: Hướng dẫn vẽ biểu đồ cột bằng ggplot2 trong R
+scripts: ns1_bar_plot.R|Script R vẽ biểu đồ, du-lieu-mau.csv
+---
+Nội dung bài viết...
+</code></pre>
+<p>Kết quả: đầu bài viết tự hiện 1 khối liệt kê từng file kèm nút tải
+về (📎 icon + link <code>download</code>), không cần viết tay HTML.</p>
+<ul>
+<li>File nào không ghi nhãn sau dấu <code>|</code> (như <code>du-lieu-mau.csv</code> ở ví dụ
+  trên) sẽ hiển thị luôn tên file làm nhãn.</li>
+<li>Không khai báo <code>scripts:</code> thì bài viết không có gì thay đổi.</li>
+<li>Vẫn hỗ trợ cú pháp cũ (1 file) từ trước, không cần sửa lại bài đã
+  viết theo kiểu này:
+  <code>script: ten-file.py
+  script_label: Tải script</code></li>
+</ul>
+<p><strong>Muốn cho tải nhiều loại file khác ngoài khối này</strong> (ví dụ chèn
+link ngay giữa đoạn văn thay vì đầu bài), viết tay trong nội dung
+Markdown:</p>
+<pre><code class="language-markdown">[Tải dữ liệu mẫu (.csv)](../scripts/du-lieu-mau.csv)
+</code></pre>
+<p>Nhớ luôn có <code>../scripts/...</code> (lùi 1 cấp) vì bài viết nằm trong
+<code>posts/</code>.</p>
+<h2>5. Icon ngẫu nhiên cho thumbnail — không đổi</h2>
+<p>Phần này vẫn hoạt động y như trước (xem <code>HUONG-DAN-ICON.md</code>): thả
+icon <code>.svg</code> vào <code>assets/icons/</code>, <code>new_post.py</code> tự chọn ngẫu nhiên khi
+tạo bài mới; <code>retrofit_thumbs.py</code> gắn icon cho bài cũ đã có sẵn
+trong <code>index.html</code>.</p>
+<h2>6. Tóm tắt việc cần làm</h2>
+<ol>
+<li>Ghi đè <code>index.html</code>, <code>style.css</code>, <code>new_post.py</code> bằng bản mới.</li>
+<li>Tạo <code>js/main.js</code>.</li>
+<li>Copy <code>migrate.py</code> vào gốc repo, chạy <code>python migrate.py</code> một lần.</li>
+<li>Từ giờ viết bài như cũ; muốn đính kèm file mẫu thì bỏ vào
+   <code>scripts/</code> + khai báo <code>scripts:</code> trong front matter.</li>
+</ol>
+
+    <div class="article-license">
+      <p class="license-title">Bản quyền &amp; giấy phép</p>
+      <p>© 2026 Mạnh Phượng.</p>
+      <p>
+        Bài viết này được cấp phép theo
+        <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="license noopener">
+          Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+        </a>.
+      </p>
+      <p>
+        Bạn được phép chia sẻ và điều chỉnh nội dung cho mục đích phi thương mại,
+        với điều kiện ghi công tác giả phù hợp và dẫn liên kết tới bài viết gốc.
+      </p>
+    </div>
+
+  </div>
+</article>
+
+<div class="track"></div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-brand">
+      <strong>© 2026 Mạnh Phượng</strong>
+      <span>· Ghi chép Y Sinh &amp; Bioinformatics</span>
+    </div>
+    <ul class="foot-links">
+      <li><a href="../copyright.html">Copyright &amp; License</a></li>
+      <li><a href="https://github.com/daohuymanh" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://orcid.org/0000-0003-3874-5051" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="mailto:daohuymanh@gmail.com">daohuymanh@gmail.com</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+
+</body>
+</html>

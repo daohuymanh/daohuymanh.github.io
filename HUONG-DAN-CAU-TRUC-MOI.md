@@ -1,3 +1,12 @@
+title: Cấu trúc site mới (posts/, scripts/, js/) để dễ dàng mở rộng
+slug: HUONG-DAN-CAU-TRUC-MOI.html
+tag: tag--tools
+tag_label: Công cụ phân tích
+date: 2026.09.06
+reading_time: 20 phút đọc
+author: Mạnh Phượng
+excerpt: Tài liệu này thay đổi về cấu trúc thư mục của site như tách style.css và javascript ra các mục khác không bao gồm trong index. Các bài viết cho vào thư mục riêng không để ngang hàng với index
+scripts: new_post.py, migrate.py
 # Hướng dẫn: cấu trúc site mới (posts/, scripts/, js/) và file mẫu đính kèm bài viết
 
 Tài liệu này gộp lại toàn bộ thay đổi về cấu trúc thư mục của site và

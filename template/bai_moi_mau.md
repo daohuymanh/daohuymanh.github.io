@@ -1,13 +1,13 @@
-title: Tiêu đề bài viết của bạn
-slug: ten-file-khong-dau.html
+title: Vẽ biểu đồ cột số mẫu theo tỉnh với ggplot2
+slug: ns1-bar-plot-tinh.html
 tag: tag--tools
 tag_label: Công cụ phân tích
 date: 2026.09.10
-reading_time: 8 phút đọc
-author: Đào Huy Mạnh
-excerpt: Một câu mô tả ngắn (1-2 câu) sẽ hiện trên card ở trang chủ.
+reading_time: 6 phút đọc
+author: Mạnh Phượng
+excerpt: Hướng dẫn vẽ biểu đồ cột bằng ggplot2 trong R
+scripts: ns1_bar_plot.R|Script R vẽ biểu đồ, du-lieu-mau.csv, chuyen-doi.py|Script Python xử lý
 ---
-Đây là đoạn mở đầu (lead) của bài viết, hiện to hơn các đoạn khác.
 
 ## Bước 1 — Cài đặt
 
