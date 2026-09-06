@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hướng dẫn cấu trúc website — Mạnh Phượng</title>
+<meta name="description" content="Ghi chú việc xây dựng một website cơ bản lấy website Mạnh Phượng — Ghi chép Y Sinh &amp; Bioinformatics để minh họa.">
+<meta name="author" content="Đào Huy Mạnh">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="index.html" class="logo">
+      <img class="logo-mark" src="assets/logo-icon.png" alt="Logo Mạnh Phượng">
+      <span class="logo-text">
+        <span class="logo-name">Mạnh Phượng</span>
+        <span class="logo-tagline">Biomedicine &amp; Bioinformatics</span>
+      </span>
+    </a>
+    <nav class="primary-nav" id="primaryNav">
+      <a href="index.html">trang chủ</a>
+      <a href="index.html#bai-viet">bài viết</a>
+      <a href="index.html#chu-de">chủ đề</a>
+      <a href="index.html#gioi-thieu">giới thiệu</a>
+      <a href="index.html#lien-he">liên hệ</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Mở menu" aria-expanded="false" aria-controls="primaryNav"></button>
+  </div>
+</header>
+
+<div class="track"></div>
+
+<div class="wrap" style="padding-top:24px;">
+  <a href="index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
+</div>
+
+<header class="article-header">
+  <div class="wrap">
+    <span class="tag tag--tools">Công cụ phân tích</span>
+    <h1>Hướng dẫn cấu trúc website</h1>
+    <div class="article-meta">
+      <span>2026.09.10</span>
+      <span>20 phút đọc</span>
+    </div>
+    <div class="article-author">
+      <strong>Tác giả:</strong> Đào Huy Mạnh
+    </div>
+  </div>
+</header>
+
+<article class="post-body">
+  <div class="wrap">
+
+    <p class="lead">
+      
+    </p>
+
+<h1>Hướng dẫn cấu trúc website cơ bản</h1>
+<h2>1. Tổng quan</h2>
+<p>Website <strong>Mạnh Phượng — Ghi chép Y Sinh &amp; Bioinformatics</strong> hiện được xây dựng chủ yếu từ hai file:</p>
+<ul>
+<li><code>index.html</code>: nội dung, cấu trúc trang chủ và JavaScript.</li>
+<li><code>style.css</code>: giao diện, bố cục, màu sắc, typography và responsive.</li>
+</ul>
+<p>Có thể hình dung:</p>
+<pre><code class="language-text">index.html
+    │
+    ├── Nội dung + cấu trúc HTML
+    └── JavaScript
+          │
+          ▼
+      style.css
+          │
+          └── Quyết định cách website được hiển thị
+</code></pre>
+<p>Trong <code>index.html</code>, CSS được gọi bằng:</p>
+<pre><code class="language-html">&lt;link rel=&quot;stylesheet&quot; href=&quot;style.css&quot;&gt;
+</code></pre>
+<hr />
+<h2>2. Kiến trúc tổng thể của <code>index.html</code></h2>
+<pre><code class="language-text">index.html
+│
+├── &lt;head&gt;
+│   ├── charset
+│   ├── viewport
+│   ├── title
+│   ├── description
+│   ├── author
+│   ├── Google Fonts
+│   └── style.css
+│
+├── &lt;body&gt;
+│
+├── HEADER
+│   ├── Logo
+│   ├── Navigation
+│   └── Mobile menu button
+│
+├── HERO
+│   ├── Tiêu đề
+│   ├── Mô tả
+│   ├── Buttons
+│   └── SVG chromatogram
+│
+├── BÀI VIẾT
+│   ├── Search
+│   └── Post cards
+│
+├── CHỦ ĐỀ
+│   └── Categories
+│
+├── GIỚI THIỆU
+│   ├── Logo
+│   ├── Mô tả
+│   └── Links
+│
+├── NEWSLETTER
+│
+├── FOOTER
+│
+└── JAVASCRIPT
+    ├── Mobile menu
+    ├── Đếm bài theo topic
+    ├── Filter topic
+    └── Search
+</code></pre>
+<hr />
+<h1>3. Phần <code>&lt;head&gt;</code> của <code>index.html</code></h1>
+<h2>3.1 HTML5 và ngôn ngữ</h2>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;vi&quot;&gt;
+</code></pre>
+<p><code>&lt;!DOCTYPE html&gt;</code> khai báo tài liệu HTML5.</p>
+<p><code>lang="vi"</code> cho trình duyệt và công cụ hỗ trợ biết ngôn ngữ chính của trang là tiếng Việt.</p>
+<p>Điều này có lợi cho:</p>
+<ul>
+<li>SEO</li>
+<li>accessibility</li>
+<li>screen reader</li>
+<li>trình duyệt</li>
+<li>công cụ tìm kiếm.</li>
+</ul>
+<hr />
+<h2>3.2 UTF-8</h2>
+<pre><code class="language-html">&lt;meta charset=&quot;UTF-8&quot;&gt;
+</code></pre>
+<p>UTF-8 giúp website hiển thị đúng tiếng Việt, ví dụ:</p>
+<pre><code class="language-text">Mạnh Phượng
+Sức khoẻ cộng đồng
+Miễn dịch học
+Sinh học phân tử
+</code></pre>
+<hr />
+<h2>3.3 Responsive viewport</h2>
+<pre><code class="language-html">&lt;meta
+  name=&quot;viewport&quot;
+  content=&quot;width=device-width, initial-scale=1.0&quot;
+&gt;
+</code></pre>
+<p>Thiết lập chiều rộng website theo chiều rộng màn hình thiết bị.</p>
+<p>Đây là thành phần quan trọng để website hoạt động tốt trên:</p>
+<ul>
+<li>Desktop</li>
+<li>Laptop</li>
+<li>Tablet</li>
+<li>Smartphone.</li>
+</ul>
+<hr />
+<h1>4. SEO cơ bản</h1>
+<p>Website có:</p>
+<pre><code class="language-html">&lt;title&gt;
+  Mạnh Phượng — Ghi chép Y Sinh &amp; Bioinformatics
+&lt;/title&gt;
+</code></pre>
+<p><code>&lt;title&gt;</code> thường xuất hiện ở:</p>
+<ul>
+<li>tab trình duyệt</li>
+<li>bookmark</li>
+<li>kết quả tìm kiếm.</li>
+</ul>
+<p>Website cũng có:</p>
+<pre><code class="language-html">&lt;meta
+  name=&quot;description&quot;
+  content=&quot;Mạnh Phượng — không gian chia sẻ kiến thức về Y Sinh, Bioinformatics, Genomics và Data Science.&quot;
+&gt;
+</code></pre>
+<p>Đây là meta description, giúp mô tả ngắn gọn nội dung website cho công cụ tìm kiếm.</p>
+<p>Ngoài ra:</p>
+<pre><code class="language-html">&lt;meta
+  name=&quot;author&quot;
+  content=&quot;Đào Huy Mạnh và Nguyễn Thị Ngọc Phượng&quot;
+&gt;
+</code></pre>
+<p>dùng để khai báo tác giả.</p>
+<hr />
+<h1>5. Google Fonts</h1>
+<p>Website sử dụng ba nhóm font:</p>
+<pre><code class="language-text">IBM Plex Serif
+IBM Plex Sans
+IBM Plex Mono
+</code></pre>
+<p>Trong CSS:</p>
+<pre><code class="language-css">--serif: &quot;IBM Plex Serif&quot;, Georgia, serif;
+--sans: &quot;IBM Plex Sans&quot;, ...;
+--mono: &quot;IBM Plex Mono&quot;, ...;
+</code></pre>
+<p>Có thể hiểu:</p>
+<table>
+<thead>
+<tr>
+<th>Font</th>
+<th>Vai trò</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IBM Plex Serif</td>
+<td>Heading / tiêu đề</td>
+</tr>
+<tr>
+<td>IBM Plex Sans</td>
+<td>Nội dung thông thường</td>
+</tr>
+<tr>
+<td>IBM Plex Mono</td>
+<td>Navigation, metadata, thông tin kỹ thuật</td>
+</tr>
+</tbody>
+</table>
+<p><code>IBM Plex Mono</code> đặc biệt phù hợp với website có chủ đề Bioinformatics và công nghệ.</p>
+<hr />
+<h1>6. Design Tokens trong <code>style.css</code></h1>
+<p>Một phần rất quan trọng của <code>style.css</code> là:</p>
+<pre><code class="language-css">:root {
+  --bg: #f3f5f4;
+  --bg-panel: #e9ede9;
+  --ink: #12232b;
+  --ink-soft: #4b5d63;
+  --ink-faint: #7c8b8f;
+  --line: #d3dad6;
+  --navy: #0e2233;
+  --navy-soft: #16324a;
+  --green: #2e9e6b;
+  --green-deep: #227a54;
+  --amber: #d98f2b;
+  --coral: #cf5c48;
+}
+</code></pre>
+<p>Đây là <strong>CSS custom properties</strong>, thường gọi là CSS variables.</p>
+<p>Ví dụ:</p>
+<pre><code class="language-css">color: var(--ink);
+</code></pre>
+<p>sẽ lấy giá trị:</p>
+<pre><code class="language-css">color: #12232b;
+</code></pre>
+<h3>Lợi ích</h3>
+<p>Nếu muốn thay đổi màu chủ đạo của website, chỉ cần sửa biến ở <code>:root</code> thay vì phải tìm và sửa nhiều dòng CSS.</p>
+<hr />
+<h1>7. Ba hệ thống font trong CSS</h1>
+<pre><code class="language-css">--serif: &quot;IBM Plex Serif&quot;, Georgia, serif;
+--sans: &quot;IBM Plex Sans&quot;, system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;
+--mono: &quot;IBM Plex Mono&quot;, ui-monospace, SFMono-Regular, Menlo, Consolas, &quot;Liberation Mono&quot;, monospace;
+</code></pre>
+<p>Có thể xem hệ thống typography như sau:</p>
+<pre><code class="language-text">SERIF
+  ↓
+Tiêu đề
+
+SANS
+  ↓
+Nội dung
+
+MONO
+  ↓
+Navigation / metadata / technical information
+</code></pre>
+<hr />
+<h1>8. <code>.wrap</code> — giới hạn chiều rộng nội dung</h1>
+<p>CSS:</p>
+<pre><code class="language-css">.wrap {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 28px;
+}
+</code></pre>
+<p>Trong đó:</p>
+<pre><code class="language-css">--max: 1120px;
+</code></pre>
+<p>Ý nghĩa:</p>
+<ul>
+<li><code>max-width</code>: nội dung không vượt quá 1120 px.</li>
+<li><code>margin: 0 auto</code>: căn giữa.</li>
+<li><code>padding</code>: tạo khoảng trống hai bên.</li>
+</ul>
+<p>Trên màn hình lớn:</p>
+<pre><code class="language-text">┌─────────────────────────────────────────────────────────┐
+│                                                         │
+│             [      1120px content      ]                │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+</code></pre>
+<p>Cách làm này giúp website không bị trải dài quá mức trên màn hình lớn.</p>
+<hr />
+<h1>9. <code>.track</code> — dấu nhận diện của website</h1>
+<p>Website có một thành phần gọi là genome-track divider:</p>
+<pre><code class="language-css">.track {
+  height: 14px;
+  background-image: repeating-linear-gradient(...);
+}
+</code></pre>
+<p>Trong HTML:</p>
+<pre><code class="language-html">&lt;div class=&quot;track&quot;&gt;&lt;/div&gt;
+</code></pre>
+<p>Nó tạo một đường ngang có cảm giác giống <strong>genome coordinate track</strong>.</p>
+<p>Ví dụ:</p>
+<pre><code class="language-text">HEADER
+────────┬────────┬────────┬────────
+HERO
+────────┬────────┬────────┬────────
+ARTICLES
+────────┬────────┬────────┬────────
+TOPICS
+</code></pre>
+<p>Đây là một <strong>visual motif</strong> giúp website có bản sắc riêng và liên kết với chủ đề genomics.</p>
+<hr />
+<h1>10. Header</h1>
+<p>HTML:</p>
+<pre><code class="language-html">&lt;header class=&quot;site-header&quot;&gt;
+</code></pre>
+<p>Bên trong có <code>.wrap</code>, logo và navigation.</p>
+<p>Logo:</p>
+<pre><code class="language-html">&lt;a href=&quot;index.html&quot; class=&quot;logo&quot;&gt;
+</code></pre>
+<p>gồm:</p>
+<pre><code class="language-html">&lt;img
+  class=&quot;logo-mark&quot;
+  src=&quot;assets/logo-icon.png&quot;
+  alt=&quot;Logo Mạnh Phượng&quot;
+&gt;
+</code></pre>
+<p>và:</p>
+<pre><code class="language-html">&lt;span class=&quot;logo-name&quot;&gt;
+  Mạnh Phượng
+&lt;/span&gt;
+
+&lt;span class=&quot;logo-tagline&quot;&gt;
+  Biomedicine &amp; Bioinformatics
+&lt;/span&gt;
+</code></pre>
+<hr />
+<h1>11. Header sticky</h1>
+<p>CSS:</p>
+<pre><code class="language-css">.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+</code></pre>
+<p>Khi người dùng cuộn trang, header vẫn giữ vị trí ở phía trên.</p>
+<p><code>z-index: 50</code> giúp header nằm phía trên các thành phần khác.</p>
+<p>Website còn dùng:</p>
+<pre><code class="language-css">background: rgba(243, 245, 244, 0.92);
+backdrop-filter: blur(6px);
+</code></pre>
+<p>để tạo hiệu ứng nền hơi trong và mờ phía sau header.</p>
+<hr />
+<h1>12. Navigation và anchor links</h1>
+<p>Navigation chứa các link như:</p>
+<pre><code class="language-html">&lt;a href=&quot;#bai-viet&quot;&gt;Bài viết&lt;/a&gt;
+&lt;a href=&quot;#chu-de&quot;&gt;Chủ đề&lt;/a&gt;
+&lt;a href=&quot;#gioi-thieu&quot;&gt;Giới thiệu&lt;/a&gt;
+&lt;a href=&quot;#lien-he&quot;&gt;Liên hệ&lt;/a&gt;
+</code></pre>
+<p>Ví dụ:</p>
+<pre><code class="language-html">&lt;a href=&quot;#bai-viet&quot;&gt;
+</code></pre>
+<p>sẽ đưa trình duyệt tới:</p>
+<pre><code class="language-html">&lt;section id=&quot;bai-viet&quot;&gt;
+</code></pre>
+<p>Đây gọi là <strong>anchor navigation</strong>.</p>
+<hr />
+<h1>13. Menu trên thiết bị di động</h1>
+<p>HTML có:</p>
+<pre><code class="language-html">&lt;button
+  class=&quot;nav-toggle&quot;
+  id=&quot;navToggle&quot;
+  aria-label=&quot;Mở menu&quot;
+  aria-expanded=&quot;false&quot;
+  aria-controls=&quot;primaryNav&quot;
+&gt;&lt;/button&gt;
+</code></pre>
+<p>CSS mặc định:</p>
+<pre><code class="language-css">.nav-toggle {
+  display: none;
+}
+</code></pre>
+<p>Ở màn hình nhỏ:</p>
+<pre><code class="language-css">@media (max-width: 640px) {
+  .nav-toggle {
+    display: block;
+  }
+}
+</code></pre>
+<p>Vì vậy:</p>
+<pre><code class="language-text">Desktop
+→ Navigation hiện trực tiếp
+
+Mobile
+→ Navigation ẩn
+→ Button menu xuất hiện
+</code></pre>
+<hr />
+<h1>14. Hero section</h1>
+<p>Hero là phần đầu tiên người dùng nhìn thấy.</p>
+<p>Nó chứa:</p>
+<ul>
+<li>mô tả ngắn về website</li>
+<li>tiêu đề chính</li>
+<li>đoạn giới thiệu</li>
+<li>nút đọc bài</li>
+<li>nút giới thiệu</li>
+<li>hình SVG chromatogram.</li>
+</ul>
+<p>Ví dụ nội dung:</p>
+<pre><code class="language-text">Ghi chép về Y Sinh &amp; Sức khoẻ cộng đồng
+
+Mạnh Phượng là nơi lưu lại...
+</code></pre>
+<hr />
+<h1>15. Hero sử dụng CSS Grid</h1>
+<pre><code class="language-css">.hero .wrap {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 56px;
+}
+</code></pre>
+<p>Bố cục desktop có thể hình dung:</p>
+<pre><code class="language-text">┌──────────────────────┬──────────────────┐
+│                      │                  │
+│ Text                 │ Chromatogram     │
+│                      │                  │
+│                      │                  │
+└──────────────────────┴──────────────────┘
+       1.1fr                 0.9fr
+</code></pre>
+<p>Phần text rộng hơn hình minh họa.</p>
+<hr />
+<h1>16. <code>clamp()</code> cho tiêu đề</h1>
+<p>CSS sử dụng:</p>
+<pre><code class="language-css">font-size: clamp(34px, 4.2vw, 52px);
+</code></pre>
+<p>Điều này có nghĩa:</p>
+<pre><code class="language-text">Không nhỏ hơn 34px
+        ↓
+Co giãn theo kích thước màn hình
+        ↓
+Không lớn hơn 52px
+</code></pre>
+<p>Nhờ đó font tiêu đề thích ứng với nhiều kích thước màn hình mà không cần quá nhiều media query.</p>
+<hr />
+<h1>17. SVG chromatogram</h1>
+<p>Trong HTML có SVG:</p>
+<pre><code class="language-html">&lt;svg
+  class=&quot;chromatogram&quot;
+  viewBox=&quot;0 0 460 220&quot;
+  xmlns=&quot;http://www.w3.org/2000/svg&quot;
+&gt;
+</code></pre>
+<p>Hình được tạo bằng các phần tử SVG như:</p>
+<pre><code class="language-html">&lt;polyline ...&gt;
+&lt;line ...&gt;
+&lt;text ...&gt;
+</code></pre>
+<p>Phần minh họa mô phỏng một <strong>Sanger sequencing chromatogram</strong> với các peak và ký tự nucleotide:</p>
+<pre><code class="language-text">A T G C A A T C G T A C
+</code></pre>
+<p>SVG có các ưu điểm:</p>
+<ul>
+<li>không cần file ảnh raster lớn</li>
+<li>sắc nét ở mọi độ phân giải</li>
+<li>có thể chỉnh bằng code</li>
+<li>phù hợp với website khoa học.</li>
+</ul>
+<hr />
+<h1>18. Phần Bài viết</h1>
+<p>HTML:</p>
+<pre><code class="language-html">&lt;section id=&quot;bai-viet&quot;&gt;
+</code></pre>
+<p>Phần này gồm:</p>
+<pre><code class="language-text">Search
++
+Post cards
+</code></pre>
+<p>Ô tìm kiếm:</p>
+<pre><code class="language-html">&lt;input
+  type=&quot;search&quot;
+  id=&quot;siteSearch&quot;
+  class=&quot;search-input&quot;
+  placeholder=&quot;Tìm bài viết theo tiêu đề, nội dung, chủ đề...&quot;
+&gt;
+</code></pre>
+<p><code>id="siteSearch"</code> được JavaScript sử dụng để xử lý tìm kiếm.</p>
+<hr />
+<h1>19. Cấu trúc một post card</h1>
+<p>Mỗi bài viết có dạng:</p>
+<pre><code class="language-html">&lt;a href=&quot;article.html&quot; class=&quot;post-card&quot;&gt;
+
+  &lt;div class=&quot;thumb&quot;&gt;
+    ...
+  &lt;/div&gt;
+
+  &lt;div class=&quot;body&quot;&gt;
+
+    &lt;span class=&quot;tag tag--tools&quot;&gt;
+      Công cụ phân tích
+    &lt;/span&gt;
+
+    &lt;h3&gt;
+      Tiêu đề bài
+    &lt;/h3&gt;
+
+    &lt;p class=&quot;excerpt&quot;&gt;
+      Mô tả ngắn...
+    &lt;/p&gt;
+
+    &lt;div class=&quot;post-meta&quot;&gt;
+      ...
+    &lt;/div&gt;
+
+  &lt;/div&gt;
+
+&lt;/a&gt;
+</code></pre>
+<p>Có thể hình dung:</p>
+<pre><code class="language-text">┌─────────────────────────────┐
+│          THUMBNAIL          │
+├─────────────────────────────┤
+│ CÔNG CỤ PHÂN TÍCH           │
+│                             │
+│ Tiêu đề bài viết            │
+│                             │
+│ Mô tả ngắn...               │
+│                             │
+│ 2026.09.04     10 phút đọc  │
+└─────────────────────────────┘
+</code></pre>
+<hr />
+<h1>20. Grid của các bài viết</h1>
+<p>CSS:</p>
+<pre><code class="language-css">.post-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+</code></pre>
+<p>Trên desktop:</p>
+<pre><code class="language-text">┌────────┐ ┌────────┐ ┌────────┐
+│ Post 1 │ │ Post 2 │ │ Post 3 │
+└────────┘ └────────┘ └────────┘
+
+┌────────┐ ┌────────┐ ┌────────┐
+│ Post 4 │ │ Post 5 │ │ Post 6 │
+└────────┘ └────────┘ └────────┘
+</code></pre>
+<hr />
+<h1>21. Featured grid</h1>
+<p>Website có biến thể:</p>
+<pre><code class="language-css">.post-grid.featured-grid {
+  grid-template-columns: 1.3fr 1fr 1fr;
+}
+</code></pre>
+<p>và:</p>
+<pre><code class="language-css">.post-grid.featured-grid &gt; a:first-child {
+  grid-row: span 2;
+}
+</code></pre>
+<p>Do đó bài đầu tiên có thể nổi bật hơn:</p>
+<pre><code class="language-text">┌────────────────┐ ┌───────────┐
+│                │ │ Post 2    │
+│     Post 1     │ ├───────────┤
+│    FEATURED    │ │ Post 3    │
+│                │ └───────────┘
+│                │
+└────────────────┘
+</code></pre>
+<hr />
+<h1>22. Thumbnail và SVG icons</h1>
+<p>Thumbnail sử dụng các file trong:</p>
+<pre><code class="language-text">assets/icons/
+</code></pre>
+<p>Ví dụ:</p>
+<pre><code class="language-html">&lt;img
+  src=&quot;assets/icons/protein-backbone-schematic.svg&quot;
+&gt;
+</code></pre>
+<p>CSS:</p>
+<pre><code class="language-css">.thumb-icon img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+</code></pre>
+<p>Mục đích là giữ hình nằm gọn trong thumbnail và tránh bị méo hoặc tràn.</p>
+<hr />
+<h1>23. Hệ thống category/tag</h1>
+<p>Ví dụ:</p>
+<pre><code class="language-html">&lt;span class=&quot;tag tag--tools&quot;&gt;
+  Công cụ phân tích
+&lt;/span&gt;
+</code></pre>
+<p>Các category được thể hiện bằng class như:</p>
+<pre><code class="language-text">tag--congdong
+tag--tools
+tag--miendich
+tag--phantu
+tag--thongtin
+</code></pre>
+<p>CSS có thể dùng các class này để tạo kiểu khác nhau.</p>
+<p>Quan trọng hơn, JavaScript cũng sử dụng chúng để lọc bài viết.</p>
+<p>Có thể hiểu:</p>
+<pre><code class="language-text">HTML
+  ↓
+tag--tools
+  ↓
+CSS → màu sắc / giao diện
+  ↓
+JavaScript → filter bài viết
+</code></pre>
+<hr />
+<h1>24. Phần Chủ đề</h1>
+<p>HTML:</p>
+<pre><code class="language-html">&lt;ul class=&quot;topic-list&quot;&gt;
+</code></pre>
+<p>chứa các chủ đề như:</p>
+<pre><code class="language-text">Sức khoẻ cộng đồng
+Công cụ phân tích
+Miễn dịch học
+Sinh học phân tử
+Thông tin y sinh
+</code></pre>
+<p>Mỗi topic có:</p>
+<pre><code class="language-html">&lt;li data-tag=&quot;tag--tools&quot;&gt;
+</code></pre>
+<p><code>data-tag</code> là một <strong>data attribute</strong>.</p>
+<p>JavaScript có thể đọc nó bằng:</p>
+<pre><code class="language-javascript">li.dataset.tag
+</code></pre>
+<hr />
+<h1>25. Tự động đếm số bài theo topic</h1>
+<p>HTML ban đầu có thể chứa:</p>
+<pre><code class="language-html">&lt;span class=&quot;topic-count&quot;&gt;
+  0 bài
+&lt;/span&gt;
+</code></pre>
+<p>JavaScript tính số bài thực tế bằng:</p>
+<pre><code class="language-javascript">const count = document.querySelectorAll(
+  &quot;.post-card .tag.&quot; + tagClass
+).length;
+</code></pre>
+<p>Ví dụ nếu có 7 bài thuộc <code>tag--tools</code>, giao diện sẽ hiển thị:</p>
+<pre><code class="language-text">7 bài
+</code></pre>
+<p>thay vì phải sửa thủ công.</p>
+<hr />
+<h1>26. Filter bài viết theo chủ đề</h1>
+<p>Khi click một topic, JavaScript lấy:</p>
+<pre><code class="language-javascript">const tagClass = li.dataset.tag;
+</code></pre>
+<p>sau đó gọi hàm lọc.</p>
+<p>Với mỗi card:</p>
+<pre><code class="language-javascript">card.style.display =
+  matches ? &quot;&quot; : &quot;none&quot;;
+</code></pre>
+<p>Nếu bài phù hợp:</p>
+<pre><code class="language-text">display = &quot;&quot;
+</code></pre>
+<p>Nếu không:</p>
+<pre><code class="language-text">display = &quot;none&quot;
+</code></pre>
+<p>Do đó người dùng có thể lọc bài viết ngay trên trang mà không cần tải lại trang.</p>
+<hr />
+<h1>27. Search phía client</h1>
+<p>Website có hàm:</p>
+<pre><code class="language-javascript">function stripDiacritics(str) {
+  return str
+    .replace(/đ/g, &quot;d&quot;)
+    .replace(/Đ/g, &quot;D&quot;)
+    .normalize(&quot;NFD&quot;)
+    .replace(/[\u0300-\u036f]/g, &quot;&quot;);
+}
+</code></pre>
+<p>Mục đích là chuẩn hóa tiếng Việt, giúp tìm kiếm ít phụ thuộc vào dấu.</p>
+<p>Ví dụ:</p>
+<pre><code class="language-text">&quot;sức khoẻ&quot;
+</code></pre>
+<p>có thể được chuẩn hóa gần thành:</p>
+<pre><code class="language-text">&quot;suc khoe&quot;
+</code></pre>
+<p>Sau đó chuỗi được:</p>
+<pre><code class="language-javascript">.toLowerCase().trim();
+</code></pre>
+<p>để giảm khác biệt giữa chữ hoa và chữ thường.</p>
+<hr />
+<h1>28. Cách search hoạt động</h1>
+<p>JavaScript lấy toàn bộ nội dung của card:</p>
+<pre><code class="language-javascript">const haystack =
+  normalizeText(card.textContent);
+</code></pre>
+<p>Sau đó kiểm tra:</p>
+<pre><code class="language-javascript">haystack.includes(query)
+</code></pre>
+<p>Nếu có từ khóa:</p>
+<pre><code class="language-javascript">card.style.display = &quot;&quot;;
+</code></pre>
+<p>Nếu không:</p>
+<pre><code class="language-javascript">card.style.display = &quot;none&quot;;
+</code></pre>
+<p>Đây là <strong>client-side search</strong>.</p>
+<p>Không cần:</p>
+<ul>
+<li>database</li>
+<li>PHP</li>
+<li>Node.js</li>
+<li>API</li>
+<li>server riêng.</li>
+</ul>
+<hr />
+<h1>29. Responsive design</h1>
+<p>CSS có hai breakpoint chính:</p>
+<pre><code class="language-css">@media (max-width: 900px)
+</code></pre>
+<p>và:</p>
+<pre><code class="language-css">@media (max-width: 640px)
+</code></pre>
+<p>Có thể hiểu:</p>
+<h2>Desktop</h2>
+<pre><code class="language-text">3 cột bài viết
+5 cột topic
+2 cột hero
+</code></pre>
+<h2>Tablet</h2>
+<pre><code class="language-text">2 cột bài viết
+3 cột topic
+1 cột hero
+</code></pre>
+<h2>Mobile</h2>
+<pre><code class="language-text">1 cột bài viết
+2 cột topic
+1 cột hero
+mobile navigation
+</code></pre>
+<p>Đây là cấu trúc responsive hợp lý cho blog cá nhân.</p>
+<hr />
+<h1>30. About section</h1>
+<p>Phần giới thiệu:</p>
+<pre><code class="language-html">&lt;section class=&quot;about-section&quot; id=&quot;gioi-thieu&quot;&gt;
+</code></pre>
+<p>gồm:</p>
+<ul>
+<li>logo</li>
+<li>giới thiệu website</li>
+<li>thông tin tác giả</li>
+<li>liên kết</li>
+<li>thông tin license.</li>
+</ul>
+<p>Nội dung giới thiệu xác định website là không gian chia sẻ kiến thức về:</p>
+<pre><code class="language-text">Y Sinh
+Bioinformatics
+Genomics
+Data Science
+</code></pre>
+<hr />
+<h1>31. Copyright và license</h1>
+<p>Website hiện phân biệt hai nhóm:</p>
+<pre><code class="language-text">CONTENT
+↓
+CC BY-NC 4.0
+
+NAME / LOGO / BRAND
+↓
+không thuộc CC license
+</code></pre>
+<p>Điều này giúp phân biệt nội dung được cấp phép Creative Commons với tên thương hiệu và logo.</p>
+<hr />
+<h1>32. Newsletter</h1>
+<p>HTML có form:</p>
+<pre><code class="language-html">&lt;form&gt;
+  &lt;input type=&quot;email&quot;&gt;
+  &lt;button type=&quot;submit&quot;&gt;
+    Đăng ký
+  &lt;/button&gt;
+&lt;/form&gt;
+</code></pre>
+<p>Tuy nhiên, nếu chỉ xét hai file hiện tại, form này mới là <strong>giao diện</strong>.</p>
+<p>Để newsletter hoạt động thực tế cần có thêm cơ chế xử lý đăng ký, chẳng hạn một dịch vụ newsletter hoặc backend.</p>
+<p>Không nên coi form HTML hiện tại là một hệ thống lưu email hoàn chỉnh.</p>
+<hr />
+<h1>33. Footer</h1>
+<p>Footer có dạng:</p>
+<pre><code class="language-html">&lt;footer class=&quot;site-footer&quot;&gt;
+</code></pre>
+<p>Nội dung gồm:</p>
+<pre><code class="language-text">© 2026 Mạnh Phượng
+Ghi chép Y Sinh &amp; Bioinformatics
+</code></pre>
+<p>và các liên kết như:</p>
+<pre><code class="language-text">Copyright &amp; License
+GitHub
+ORCID
+Email
+</code></pre>
+<p>CSS sử dụng màu navy làm nền để tạo sự tương phản với phần nội dung chính.</p>
+<hr />
+<h1>34. JavaScript và mobile menu</h1>
+<p>JavaScript lấy các phần tử:</p>
+<pre><code class="language-javascript">const navToggle =
+  document.getElementById(&quot;navToggle&quot;);
+
+const primaryNav =
+  document.getElementById(&quot;primaryNav&quot;);
+</code></pre>
+<p>Khi click:</p>
+<pre><code class="language-javascript">primaryNav.classList.toggle(&quot;is-open&quot;);
+</code></pre>
+<p>Nếu chưa có <code>is-open</code>:</p>
+<pre><code class="language-text">→ thêm is-open
+→ menu hiện
+</code></pre>
+<p>Nếu đang có <code>is-open</code>:</p>
+<pre><code class="language-text">→ xóa is-open
+→ menu ẩn
+</code></pre>
+<p>CSS quyết định trạng thái hiển thị của <code>.is-open</code>.</p>
+<hr />
+<h1>35. Quan hệ giữa HTML, CSS và JavaScript</h1>
+<p>Đây là khái niệm quan trọng khi phát triển website.</p>
+<p>Ví dụ Search:</p>
+<h3>HTML</h3>
+<pre><code class="language-html">&lt;input id=&quot;siteSearch&quot;&gt;
+</code></pre>
+<h3>JavaScript</h3>
+<pre><code class="language-javascript">document.getElementById(&quot;siteSearch&quot;)
+</code></pre>
+<h3>CSS</h3>
+<pre><code class="language-css">.search-input { ... }
+</code></pre>
+<p>Ba thành phần liên kết với nhau thông qua:</p>
+<pre><code class="language-text">id
+class
+data-attribute
+</code></pre>
+<hr />
+<h2>Ví dụ category</h2>
+<h3>HTML</h3>
+<pre><code class="language-html">&lt;li data-tag=&quot;tag--tools&quot;&gt;
+</code></pre>
+<h3>CSS</h3>
+<pre><code class="language-css">.tag--tools {
+  ...
+}
+</code></pre>
+<h3>JavaScript</h3>
+<pre><code class="language-javascript">li.dataset.tag
+</code></pre>
+<p>và:</p>
+<pre><code class="language-javascript">card.querySelector(&quot;.tag.&quot; + tagClass)
+</code></pre>
+<p>Luồng hoạt động:</p>
+<pre><code class="language-text">data-tag
+   ↓
+JavaScript
+   ↓
+tìm tag tương ứng
+   ↓
+lọc post card
+</code></pre>
+<hr />
+<h1>36. Một số bài viết vẫn là placeholder</h1>
+<p>Nếu một bài có:</p>
+<pre><code class="language-html">&lt;a href=&quot;#&quot; class=&quot;post-card&quot;&gt;
+</code></pre>
+<p>thì bài đó chưa có trang riêng.</p>
+<p>Khi hoàn thiện, nên đổi thành ví dụ:</p>
+<pre><code class="language-html">&lt;a href=&quot;crispr-cas9.html&quot; class=&quot;post-card&quot;&gt;
+</code></pre>
+<p><code>href="#"</code> thường chỉ có ý nghĩa placeholder hoặc đưa người dùng lên đầu trang.</p>
+<hr />
+<h1>37. "Xem tất cả bài viết"</h1>
+<p>Nếu link có:</p>
+<pre><code class="language-html">&lt;a href=&quot;#&quot; class=&quot;view-all&quot;&gt;
+  xem tất cả bài viết →
+&lt;/a&gt;
+</code></pre>
+<p>nhưng JavaScript chỉ gọi hàm bỏ filter, thì chức năng thực tế là:</p>
+<pre><code class="language-text">Hiện lại tất cả post card đang có trên index.html
+</code></pre>
+<p>chứ chưa phải:</p>
+<pre><code class="language-text">Mở một trang archive chứa toàn bộ bài viết
+</code></pre>
+<p>Nếu website sau này có nhiều bài, nên tạo một trang riêng như:</p>
+<pre><code class="language-text">archive.html
+</code></pre>
+<p>hoặc:</p>
+<pre><code class="language-text">bai-viet.html
+</code></pre>
+<hr />
+<h1>38. <code>style.css</code> còn hỗ trợ trang bài viết</h1>
+<p>Cuối <code>style.css</code> có các selector như:</p>
+<pre><code class="language-css">.article-header
+.article-meta
+.article-author
+.article-license
+article.post-body
+article.post-body p
+article.post-body h2
+article.post-body h3
+article.post-body ul
+article.post-body ol
+article.post-body blockquote
+article.post-body pre
+article.post-body code
+article.post-body table
+article.post-body figure
+article.post-body figcaption
+</code></pre>
+<p>Điều này cho thấy <code>style.css</code> không chỉ dành cho <code>index.html</code>.</p>
+<p>Nó còn được thiết kế để dùng chung cho các trang bài viết.</p>
+<p>Ví dụ:</p>
+<pre><code class="language-text">index.html
+      │
+      └── style.css
+             │
+             ├── Homepage styles
+             └── Article styles
+</code></pre>
+<p>Đây là một cách tổ chức tốt vì tránh phải tạo một stylesheet riêng cho từng bài.</p>
+<hr />
+<h1>39. Website phù hợp với workflow Markdown</h1>
+<p>Cấu trúc hiện tại phù hợp để phát triển workflow:</p>
+<pre><code class="language-text">Markdown
+   │
+   ▼
+Python script
+   │
+   ├── tạo HTML article
+   ├── áp dụng article CSS
+   └── cập nhật index.html
+              │
+              ▼
+          Website
+</code></pre>
+<p>Ví dụ:</p>
+<pre><code class="language-text">article.md
+    ↓
+article.html
+    ↓
+post card
+    ↓
+index.html
+</code></pre>
+<p><code>style.css</code> đóng vai trò lớp giao diện dùng chung.</p>
+<hr />
+<h1>40. Đánh giá cấu trúc hiện tại</h1>
+<h2>Điểm mạnh</h2>
+<h3>1. Tách HTML và CSS</h3>
+<pre><code class="language-text">index.html
+style.css
+</code></pre>
+<p>rõ ràng và dễ bảo trì.</p>
+<h3>2. Có design tokens</h3>
+<pre><code class="language-text">--bg
+--ink
+--green
+--navy
+--serif
+--sans
+--mono
+</code></pre>
+<p>giúp thay đổi giao diện nhanh.</p>
+<h3>3. Responsive</h3>
+<p>Có breakpoint cho tablet và mobile.</p>
+<h3>4. Có accessibility cơ bản</h3>
+<p>Ví dụ:</p>
+<pre><code class="language-html">aria-label
+aria-expanded
+aria-controls
+</code></pre>
+<p>và CSS:</p>
+<pre><code class="language-css">:focus-visible
+</code></pre>
+<h3>5. Không phụ thuộc framework</h3>
+<p>Website không cần Bootstrap, React, Vue hoặc Tailwind.</p>
+<p>Điều này giúp website nhẹ và phù hợp với GitHub Pages.</p>
+<h3>6. CSS dùng chung cho article</h3>
+<p>Đây là nền tảng tốt cho một blog tĩnh phát triển bằng Markdown.</p>
+<hr />
+<h1>41. Năm điểm nên cải thiện</h1>
+<h2>41.1. Tách JavaScript khỏi <code>index.html</code></h2>
+<p>Hiện JavaScript nằm trực tiếp cuối HTML:</p>
+<pre><code class="language-html">&lt;script&gt;
+  ...
+&lt;/script&gt;
+</code></pre>
+<p>Khi website lớn hơn, nên chuyển thành:</p>
+<pre><code class="language-text">assets/
+├── css/
+│   └── style.css
+└── js/
+    └── main.js
+</code></pre>
+<p>và trong HTML:</p>
+<pre><code class="language-html">&lt;script src=&quot;assets/js/main.js&quot;&gt;&lt;/script&gt;
+</code></pre>
+<hr />
+<h2>41.2. Tách dữ liệu bài viết</h2>
+<p>Hiện tại từng post card được viết trực tiếp trong HTML.</p>
+<p>Nếu có 100 bài, <code>index.html</code> sẽ rất dài.</p>
+<p>Nên hướng tới:</p>
+<pre><code class="language-text">posts/
+├── article1.md
+├── article2.md
+├── article3.md
+└── ...
+</code></pre>
+<p>Sau đó dùng Python để tạo HTML.</p>
+<hr />
+<h2>41.3. Dùng metadata thống nhất</h2>
+<p>Mỗi bài Markdown có thể dùng front matter:</p>
+<pre><code class="language-yaml">---
+title: &quot;Tên bài viết&quot;
+date: &quot;2026-09-06&quot;
+category: &quot;tools&quot;
+author: &quot;Đào Huy Mạnh&quot;
+description: &quot;Mô tả ngắn&quot;
+icon: &quot;assets/icons/example.svg&quot;
+---
+</code></pre>
+<p>Python có thể tự chuyển metadata thành:</p>
+<pre><code class="language-html">&lt;span class=&quot;tag tag--tools&quot;&gt;Công cụ phân tích&lt;/span&gt;
+</code></pre>
+<hr />
+<h2>41.4. Newsletter cần hệ thống xử lý thực tế</h2>
+<p>Form HTML hiện tại chỉ cung cấp giao diện.</p>
+<p>Nếu muốn lưu email và gửi newsletter thực tế, cần tích hợp một dịch vụ newsletter hoặc backend.</p>
+<hr />
+<h2>41.5. Giảm trách nhiệm của <code>index.html</code></h2>
+<p>Hiện <code>index.html</code> chứa:</p>
+<pre><code class="language-text">HTML
++
+content
++
+navigation
++
+post data
++
+JavaScript
+</code></pre>
+<p>Khi website phát triển, nên hướng tới:</p>
+<pre><code class="language-text">index.html
+style.css
+main.js
+posts/
+scripts/
+assets/
+</code></pre>
+<hr />
+<h1>42. Kiến trúc đề xuất cho website lâu dài</h1>
+<p>Một cấu trúc có thể phát triển tốt:</p>
+<pre><code class="language-text">daohuymanh.github.io/
+│
+├── index.html
+├── copyright.html
+│
+├── assets/
+│   ├── logo-icon.png
+│   ├── icons/
+│   ├── css/
+│   │   └── style.css
+│   └── js/
+│       └── main.js
+│
+├── posts/
+│   ├── nipah-review.md
+│   ├── whisperx.md
+│   ├── pandoc.md
+│   └── ...
+│
+├── articles/
+│   ├── nipah-review.html
+│   ├── whisperx.html
+│   └── ...
+│
+└── scripts/
+    └── new_post.py
+</code></pre>
+<hr />
+<h1>43. Workflow phát triển đề xuất</h1>
+<pre><code class="language-text">Bạn viết
+article.md
+     │
+     ▼
+new_post.py
+     │
+     ├──────────────┐
+     ▼              ▼
+article.html     index.html
+     │              │
+     └──────┬───────┘
+            ▼
+       style.css
+            │
+            ▼
+       GitHub Pages
+</code></pre>
+<p>Mục tiêu là:</p>
+<blockquote>
+<p>Viết bài một lần trong Markdown, sau đó tự động tạo trang bài viết và cập nhật danh sách bài viết.</p>
+</blockquote>
+<p>Khi đạt được workflow này, không cần chỉnh sửa thủ công từng post card trong <code>index.html</code>.</p>
+<hr />
+<h1>44. Tóm tắt nhanh</h1>
+<p>Hai file hiện tại có vai trò:</p>
+<pre><code class="language-text">                  WEBSITE
+                     │
+         ┌───────────┴───────────┐
+         │                       │
+    index.html              style.css
+         │                       │
+         │                  giao diện
+         │                  màu sắc
+         │                  font
+         │                  responsive
+         │
+         ├── Header
+         ├── Hero
+         ├── Posts
+         ├── Topics
+         ├── About
+         ├── Newsletter
+         ├── Footer
+         │
+         └── JavaScript
+              ├── menu
+              ├── search
+              ├── filter
+              └── count
+</code></pre>
+<p>Điểm quan trọng nhất:</p>
+<ul>
+<li><code>index.html</code> hiện là <strong>trang chủ + danh sách bài viết + bộ lọc/search phía client</strong>.</li>
+<li><code>style.css</code> là <strong>hệ thống giao diện dùng chung</strong>, bao gồm cả homepage và article pages.</li>
+<li>Hệ thống <code>class</code>, <code>id</code> và <code>data-*</code> là cầu nối giữa HTML, CSS và JavaScript.</li>
+<li>Cấu trúc hiện tại đã đủ tốt để chuyển sang workflow <strong>Markdown → HTML → cập nhật index → GitHub Pages</strong>.</li>
+<li>Bước phát triển tự nhiên tiếp theo là tách JavaScript, quản lý bài viết bằng Markdown/front matter và dùng Python để tự động build website.</li>
+</ul>
+
+    <div class="article-license">
+      <p class="license-title">Bản quyền &amp; giấy phép</p>
+      <p>© 2026 Đào Huy Mạnh.</p>
+      <p>
+        Bài viết này được cấp phép theo
+        <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="license noopener">
+          Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+        </a>.
+      </p>
+      <p>
+        Bạn được phép chia sẻ và điều chỉnh nội dung cho mục đích phi thương mại,
+        với điều kiện ghi công tác giả phù hợp và dẫn liên kết tới bài viết gốc.
+      </p>
+    </div>
+
+  </div>
+</article>
+
+<div class="track"></div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-brand">
+      <strong>© 2026 Mạnh Phượng</strong>
+      <span>· Ghi chép Y Sinh &amp; Bioinformatics</span>
+    </div>
+    <ul class="foot-links">
+      <li><a href="copyright.html">Copyright &amp; License</a></li>
+      <li><a href="https://github.com/daohuymanh" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://orcid.org/0000-0003-3874-5051" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="mailto:daohuymanh@gmail.com">daohuymanh@gmail.com</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+const navToggle = document.getElementById("navToggle");
+const primaryNav = document.getElementById("primaryNav");
+navToggle.addEventListener("click", () => {
+  const isOpen = primaryNav.classList.toggle("is-open");
+  navToggle.setAttribute("aria-expanded", isOpen);
+});
+</script>
+
+</body>
+</html>
