@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Huong dan tao caption chinh xac cho video bang WhisperX</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Huong dan tao caption chinh xac cho video bang
+WhisperX</h1>
+</header>
+<h1 id="hướng-dẫn-tạo-caption-chính-xác-cho-video-bằng-whisperx">Hướng
+dẫn tạo caption chính xác cho video bằng WhisperX</h1>
+<blockquote>
+<p>Bài viết này hướng dẫn cách dùng <strong>WhisperX</strong> để tự động
+tạo phụ đề (caption/subtitle) bám sát <strong>chính xác theo giọng đọc
+thực tế</strong> trong file video — kể cả khi người đọc lệch khỏi kịch
+bản (script) gốc. Kèm theo là bộ code sẵn dùng, chạy được trên cả
+<strong>Windows</strong> và <strong>macOS/Linux</strong>.</p>
+</blockquote>
+<h2 id="vì-sao-dùng-whisperx-thay-vì-whisper-thường">Vì sao dùng
+WhisperX thay vì Whisper thường?</h2>
+<p>Whisper (OpenAI) cho timestamp theo <strong>từng câu/đoạn</strong>,
+đôi khi bị lệch vài trăm mili-giây đến vài giây so với giọng nói thật —
+không đủ chính xác để làm phụ đề khớp khẩu hình hay caption karaoke.
+<strong>WhisperX</strong> thêm một bước <strong>forced
+alignment</strong> (dùng model wav2vec2) để tính lại timestamp ở
+<strong>mức từng từ</strong>, cho kết quả khớp âm thanh gần như tuyệt
+đối. Đây cũng là lựa chọn phù hợp khi bạn có sẵn kịch bản đọc (script)
+nhưng người đọc <strong>ứng khẩu / đọc lệch script</strong> — vì lúc này
+bạn cần transcript bám theo audio thật, không phải ép theo văn bản
+gốc.</p>
+<h2 id="tổng-quan-pipeline">Tổng quan pipeline</h2>
+<ol type="1">
+<li><strong>Tách audio</strong> từ video (ffmpeg).</li>
+<li><strong>Transcribe</strong> audio bằng Whisper (qua WhisperX) — lấy
+đúng lời đọc thật.</li>
+<li><strong>Align mức từ</strong> (word-level alignment) — tính
+timestamp chính xác cho từng từ.</li>
+<li><strong>Xuất phụ đề</strong>: <code>.srt</code>, <code>.vtt</code>,
+và bản karaoke từng từ.</li>
+<li><em>(Tùy chọn)</em> Đối chiếu với script gốc (nếu có) để phát hiện
+chỗ đọc lệch hoặc lỗi nhận dạng thuật ngữ.</li>
+<li><em>(Tùy chọn)</em> Gắn phụ đề trực tiếp vào video bằng ffmpeg.</li>
+</ol>
+<hr />
+<h2 id="cài-đặt">1. Cài đặt</h2>
+<h3 id="macos-linux">macOS / Linux</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> venv venv</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> venv/bin/activate</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install whisperx python-docx</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install ffmpeg      <span class="co"># Ubuntu/Debian</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># brew install ffmpeg        # macOS (Homebrew)</span></span></code></pre></div>
+<h3 id="windows-cmd">Windows (CMD)</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bat"><code class="sourceCode dosbat"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">:: 1</span><span class="er">)</span><span class="co"> Cài Python 3.10/3.11 tại python.org — nhớ tick &quot;Add python.exe to PATH&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">:: 2</span><span class="er">)</span><span class="co"> Cài ffmpeg</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>winget install ffmpeg</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">:: 3</span><span class="er">)</span><span class="co"> Cài thư viện Python</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>pip install whisperx python<span class="at">-docx</span></span></code></pre></div>
+<blockquote>
+<p><strong>Có GPU NVIDIA?</strong> Cài thêm PyTorch bản CUDA trước để
+chạy nhanh hơn nhiều lần:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install torch <span class="at">--index-url</span> https://download.pytorch.org/whl/cu121</span></code></pre></div>
+<p>Không có GPU vẫn chạy được bằng CPU, chỉ chậm hơn — xem cờ
+<code>--device cpu</code> bên dưới.</p>
+</blockquote>
+<hr />
+<h2 id="code-chính-transcribe-align-theo-giọng-đọc-thật">2. Code chính:
+transcribe + align theo giọng đọc thật</h2>
+<p>Lưu đoạn code dưới thành file
+<strong><code>transcribe_align.py</code></strong>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">&quot;&quot;&quot;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">Transcribe video/audio bang WhisperX + align o muc TU (word-level),</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">de caption bam sat CHINH XAC theo giong doc thuc te trong file video.</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">Cach chay:</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">    python transcribe_align.py video.mp4 --out ./out</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">    python transcribe_align.py video.mp4 --out ./out --language vi</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">    python transcribe_align.py video.mp4 --out ./out --device cpu --compute_type int8</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">&quot;&quot;&quot;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> argparse</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> subprocess</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> whisperx</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> extract_audio(video_path: <span class="bu">str</span>, out_wav: <span class="bu">str</span>):</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Tach audio 16kHz mono tu video bang ffmpeg (whisperx yeu cau).&quot;&quot;&quot;</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    cmd <span class="op">=</span> [<span class="st">&quot;ffmpeg&quot;</span>, <span class="st">&quot;-y&quot;</span>, <span class="st">&quot;-i&quot;</span>, video_path, <span class="st">&quot;-ar&quot;</span>, <span class="st">&quot;16000&quot;</span>, <span class="st">&quot;-ac&quot;</span>, <span class="st">&quot;1&quot;</span>, out_wav]</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    subprocess.run(cmd, check<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> build_initial_prompt(glossary_path: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span>) <span class="op">-&gt;</span> <span class="bu">str</span>:</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="co">    Doc danh sach thuat ngu / ten rieng tu file glossary (moi dong 1 muc),</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="co">    ghep thanh 1 cau &quot;goi y&quot; giup Whisper nhan dung chinh ta cac tu chuyen</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="co">    nganh / ten rieng hay bi nghe nham.</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="co">    &quot;&quot;&quot;</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> glossary_path <span class="kw">or</span> <span class="kw">not</span> os.path.exists(glossary_path):</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">&quot;&quot;</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(glossary_path, encoding<span class="op">=</span><span class="st">&quot;utf-8&quot;</span>) <span class="im">as</span> f:</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>        terms <span class="op">=</span> [line.strip() <span class="cf">for</span> line <span class="kw">in</span> f <span class="cf">if</span> line.strip()]</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&quot;, &quot;</span>.join(terms)</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> format_timestamp_srt(seconds: <span class="bu">float</span>) <span class="op">-&gt;</span> <span class="bu">str</span>:</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    ms <span class="op">=</span> <span class="bu">int</span>(<span class="bu">round</span>(seconds <span class="op">*</span> <span class="dv">1000</span>))</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>    h, ms <span class="op">=</span> <span class="bu">divmod</span>(ms, <span class="dv">3600000</span>)</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>    m, ms <span class="op">=</span> <span class="bu">divmod</span>(ms, <span class="dv">60000</span>)</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>    s, ms <span class="op">=</span> <span class="bu">divmod</span>(ms, <span class="dv">1000</span>)</span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ss">f&quot;</span><span class="sc">{</span>h<span class="sc">:02d}</span><span class="ss">:</span><span class="sc">{</span>m<span class="sc">:02d}</span><span class="ss">:</span><span class="sc">{</span>s<span class="sc">:02d}</span><span class="ss">,</span><span class="sc">{</span>ms<span class="sc">:03d}</span><span class="ss">&quot;</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> write_srt(segments, path, word_level<span class="op">=</span><span class="va">False</span>):</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>    lines, idx <span class="op">=</span> [], <span class="dv">1</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> word_level:</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> seg <span class="kw">in</span> segments:</span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> w <span class="kw">in</span> seg.get(<span class="st">&quot;words&quot;</span>, []):</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="st">&quot;start&quot;</span> <span class="kw">not</span> <span class="kw">in</span> w <span class="kw">or</span> <span class="st">&quot;end&quot;</span> <span class="kw">not</span> <span class="kw">in</span> w:</span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">continue</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>                lines <span class="op">+=</span> [<span class="bu">str</span>(idx),</span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>                          <span class="ss">f&quot;</span><span class="sc">{</span>format_timestamp_srt(w[<span class="st">&#39;start&#39;</span>])<span class="sc">}</span><span class="ss"> --&gt; </span><span class="sc">{</span>format_timestamp_srt(w[<span class="st">&#39;end&#39;</span>])<span class="sc">}</span><span class="ss">&quot;</span>,</span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>                          w[<span class="st">&quot;word&quot;</span>], <span class="st">&quot;&quot;</span>]</span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>                idx <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> seg <span class="kw">in</span> segments:</span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>            lines <span class="op">+=</span> [<span class="bu">str</span>(idx),</span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>                      <span class="ss">f&quot;</span><span class="sc">{</span>format_timestamp_srt(seg[<span class="st">&#39;start&#39;</span>])<span class="sc">}</span><span class="ss"> --&gt; </span><span class="sc">{</span>format_timestamp_srt(seg[<span class="st">&#39;end&#39;</span>])<span class="sc">}</span><span class="ss">&quot;</span>,</span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>                      seg[<span class="st">&quot;text&quot;</span>].strip(), <span class="st">&quot;&quot;</span>]</span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>            idx <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(path, <span class="st">&quot;w&quot;</span>, encoding<span class="op">=</span><span class="st">&quot;utf-8&quot;</span>) <span class="im">as</span> f:</span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>        f.write(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>.join(lines))</span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> write_vtt(segments, path):</span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>    lines <span class="op">=</span> [<span class="st">&quot;WEBVTT&quot;</span>, <span class="st">&quot;&quot;</span>]</span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> seg <span class="kw">in</span> segments:</span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>        start <span class="op">=</span> format_timestamp_srt(seg[<span class="st">&quot;start&quot;</span>]).replace(<span class="st">&quot;,&quot;</span>, <span class="st">&quot;.&quot;</span>)</span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>        end <span class="op">=</span> format_timestamp_srt(seg[<span class="st">&quot;end&quot;</span>]).replace(<span class="st">&quot;,&quot;</span>, <span class="st">&quot;.&quot;</span>)</span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>        lines <span class="op">+=</span> [<span class="ss">f&quot;</span><span class="sc">{</span>start<span class="sc">}</span><span class="ss"> --&gt; </span><span class="sc">{</span>end<span class="sc">}</span><span class="ss">&quot;</span>, seg[<span class="st">&quot;text&quot;</span>].strip(), <span class="st">&quot;&quot;</span>]</span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(path, <span class="st">&quot;w&quot;</span>, encoding<span class="op">=</span><span class="st">&quot;utf-8&quot;</span>) <span class="im">as</span> f:</span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>        f.write(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>.join(lines))</span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> main():</span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a>    ap <span class="op">=</span> argparse.ArgumentParser()</span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>    ap.add_argument(<span class="st">&quot;video&quot;</span>, <span class="bu">help</span><span class="op">=</span><span class="st">&quot;Duong dan file video (hoac audio .wav/.mp3)&quot;</span>)</span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a>    ap.add_argument(<span class="st">&quot;--out&quot;</span>, default<span class="op">=</span><span class="st">&quot;./out&quot;</span>, <span class="bu">help</span><span class="op">=</span><span class="st">&quot;Thu muc ket qua&quot;</span>)</span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a>    ap.add_argument(<span class="st">&quot;--model&quot;</span>, default<span class="op">=</span><span class="st">&quot;large-v3&quot;</span>, <span class="bu">help</span><span class="op">=</span><span class="st">&quot;Whisper model: large-v3 / medium / small&quot;</span>)</span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a>    ap.add_argument(<span class="st">&quot;--language&quot;</span>, default<span class="op">=</span><span class="st">&quot;en&quot;</span>, <span class="bu">help</span><span class="op">=</span><span class="st">&quot;Ma ngon ngu: en, vi, ...&quot;</span>)</span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>    ap.add_argument(<span class="st">&quot;--device&quot;</span>, default<span class="op">=</span><span class="st">&quot;cuda&quot;</span>, <span class="bu">help</span><span class="op">=</span><span class="st">&quot;cuda hoac cpu&quot;</span>)</span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a>    ap.add_argument(<span class="st">&quot;--compute_type&quot;</span>, default<span class="op">=</span><span class="st">&quot;float16&quot;</span>, <span class="bu">help</span><span class="op">=</span><span class="st">&quot;float16 (GPU) / int8 (CPU)&quot;</span>)</span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a>    ap.add_argument(<span class="st">&quot;--glossary&quot;</span>, default<span class="op">=</span><span class="va">None</span>, <span class="bu">help</span><span class="op">=</span><span class="st">&quot;File .txt liet ke thuat ngu/ten rieng, moi dong 1 muc&quot;</span>)</span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a>    ap.add_argument(<span class="st">&quot;--hf_token&quot;</span>, default<span class="op">=</span><span class="va">None</span>, <span class="bu">help</span><span class="op">=</span><span class="st">&quot;HuggingFace token, chi can khi dung --diarize&quot;</span>)</span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>    ap.add_argument(<span class="st">&quot;--diarize&quot;</span>, action<span class="op">=</span><span class="st">&quot;store_true&quot;</span>, <span class="bu">help</span><span class="op">=</span><span class="st">&quot;Phan biet nguoi noi (video co nhieu nguoi)&quot;</span>)</span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a>    args <span class="op">=</span> ap.parse_args()</span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a>    os.makedirs(args.out, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a>    audio_path <span class="op">=</span> args.video</span>
+<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> audio_path.lower().endswith(<span class="st">&quot;.wav&quot;</span>):</span>
+<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a>        audio_path <span class="op">=</span> os.path.join(args.out, <span class="st">&quot;audio.wav&quot;</span>)</span>
+<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f&quot;[1/4] Tach audio -&gt; </span><span class="sc">{</span>audio_path<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a>        extract_audio(args.video, audio_path)</span>
+<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f&quot;[2/4] Load model </span><span class="sc">{</span>args<span class="sc">.</span>model<span class="sc">}</span><span class="ss"> ...&quot;</span>)</span>
+<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a>    asr_options <span class="op">=</span> {}</span>
+<span id="cb4-100"><a href="#cb4-100" aria-hidden="true" tabindex="-1"></a>    prompt <span class="op">=</span> build_initial_prompt(args.glossary)</span>
+<span id="cb4-101"><a href="#cb4-101" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> prompt:</span>
+<span id="cb4-102"><a href="#cb4-102" aria-hidden="true" tabindex="-1"></a>        asr_options[<span class="st">&quot;initial_prompt&quot;</span>] <span class="op">=</span> prompt</span>
+<span id="cb4-103"><a href="#cb4-103" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> whisperx.load_model(</span>
+<span id="cb4-104"><a href="#cb4-104" aria-hidden="true" tabindex="-1"></a>        args.model, args.device, compute_type<span class="op">=</span>args.compute_type,</span>
+<span id="cb4-105"><a href="#cb4-105" aria-hidden="true" tabindex="-1"></a>        language<span class="op">=</span>args.language, asr_options<span class="op">=</span>asr_options <span class="kw">or</span> <span class="va">None</span>,</span>
+<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a>    audio <span class="op">=</span> whisperx.load_audio(audio_path)</span>
+<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">&quot;[2/4] Transcribing ...&quot;</span>)</span>
+<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> model.transcribe(audio, language<span class="op">=</span>args.language, batch_size<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">&quot;[3/4] Word-level alignment ...&quot;</span>)</span>
+<span id="cb4-112"><a href="#cb4-112" aria-hidden="true" tabindex="-1"></a>    align_model, metadata <span class="op">=</span> whisperx.load_align_model(language_code<span class="op">=</span>args.language, device<span class="op">=</span>args.device)</span>
+<span id="cb4-113"><a href="#cb4-113" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> whisperx.align(</span>
+<span id="cb4-114"><a href="#cb4-114" aria-hidden="true" tabindex="-1"></a>        result[<span class="st">&quot;segments&quot;</span>], align_model, metadata, audio, args.device,</span>
+<span id="cb4-115"><a href="#cb4-115" aria-hidden="true" tabindex="-1"></a>        return_char_alignments<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb4-116"><a href="#cb4-116" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-117"><a href="#cb4-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-118"><a href="#cb4-118" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> args.diarize:</span>
+<span id="cb4-119"><a href="#cb4-119" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">&quot;[3b] Diarization ...&quot;</span>)</span>
+<span id="cb4-120"><a href="#cb4-120" aria-hidden="true" tabindex="-1"></a>        diarize_model <span class="op">=</span> whisperx.diarize.DiarizationPipeline(use_auth_token<span class="op">=</span>args.hf_token, device<span class="op">=</span>args.device)</span>
+<span id="cb4-121"><a href="#cb4-121" aria-hidden="true" tabindex="-1"></a>        diarize_segments <span class="op">=</span> diarize_model(audio)</span>
+<span id="cb4-122"><a href="#cb4-122" aria-hidden="true" tabindex="-1"></a>        result <span class="op">=</span> whisperx.assign_word_speakers(diarize_segments, result)</span>
+<span id="cb4-123"><a href="#cb4-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-124"><a href="#cb4-124" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">&quot;[4/4] Xuat file ket qua ...&quot;</span>)</span>
+<span id="cb4-125"><a href="#cb4-125" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(os.path.join(args.out, <span class="st">&quot;transcript.json&quot;</span>), <span class="st">&quot;w&quot;</span>, encoding<span class="op">=</span><span class="st">&quot;utf-8&quot;</span>) <span class="im">as</span> f:</span>
+<span id="cb4-126"><a href="#cb4-126" aria-hidden="true" tabindex="-1"></a>        json.dump(result, f, ensure_ascii<span class="op">=</span><span class="va">False</span>, indent<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb4-127"><a href="#cb4-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-128"><a href="#cb4-128" aria-hidden="true" tabindex="-1"></a>    write_srt(result[<span class="st">&quot;segments&quot;</span>], os.path.join(args.out, <span class="st">&quot;transcript.srt&quot;</span>), word_level<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb4-129"><a href="#cb4-129" aria-hidden="true" tabindex="-1"></a>    write_srt(result[<span class="st">&quot;segments&quot;</span>], os.path.join(args.out, <span class="st">&quot;transcript_words.srt&quot;</span>), word_level<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-130"><a href="#cb4-130" aria-hidden="true" tabindex="-1"></a>    write_vtt(result[<span class="st">&quot;segments&quot;</span>], os.path.join(args.out, <span class="st">&quot;transcript.vtt&quot;</span>))</span>
+<span id="cb4-131"><a href="#cb4-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-132"><a href="#cb4-132" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Xong! Ket qua trong:&quot;</span>, args.out)</span>
+<span id="cb4-133"><a href="#cb4-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-134"><a href="#cb4-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-135"><a href="#cb4-135" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&quot;__main__&quot;</span>:</span>
+<span id="cb4-136"><a href="#cb4-136" aria-hidden="true" tabindex="-1"></a>    main()</span></code></pre></div>
+<h3 id="chạy">Chạy</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> transcribe_align.py video.mp4 <span class="at">--out</span> ./out</span></code></pre></div>
+<p>Kết quả trong thư mục <code>out/</code>:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Nội dung</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>transcript.srt</code></td>
+<td>Caption theo câu — dùng gắn phụ đề thông thường</td>
+</tr>
+<tr class="even">
+<td><code>transcript_words.srt</code></td>
+<td>Caption từng từ — kiểu karaoke, highlight theo từ</td>
+</tr>
+<tr class="odd">
+<td><code>transcript.vtt</code></td>
+<td>Định dạng WebVTT (dùng cho web/HTML5 video)</td>
+</tr>
+<tr class="even">
+<td><code>transcript.json</code></td>
+<td>Timestamp đầy đủ mức từ, dùng để xử lý/đối chiếu thêm</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Các cờ hữu ích:</strong> - <code>--language vi</code> — nếu
+video tiếng Việt (đổi theo ngôn ngữ audio) -
+<code>--device cpu --compute_type int8</code> — nếu máy không có GPU
+NVIDIA - <code>--model medium</code> — model nhẹ hơn, nhanh hơn nếu máy
+yếu (đánh đổi độ chính xác) - <code>--glossary terms.txt</code> — file
+<code>.txt</code> liệt kê tên riêng/thuật ngữ chuyên ngành (mỗi dòng 1
+mục), giúp Whisper nhận dạng đúng chính tả các từ hay bị nghe nhầm -
+<code>--diarize --hf_token &lt;token&gt;</code> — nếu video có nhiều
+người nói và cần phân biệt ai nói câu nào (cần token HuggingFace, xin
+miễn phí tại huggingface.co)</p>
+<hr />
+<h2 id="tùy-chọn-đối-chiếu-với-kịch-bản-gốc">3. (Tùy chọn) Đối chiếu với
+kịch bản gốc</h2>
+<p>Nếu bạn có sẵn <strong>script gốc</strong> (Word <code>.docx</code>)
+và người đọc <strong>đọc lệch</strong> so với script, dùng đoạn code sau
+để so sánh transcript thực tế (từ WhisperX) với script — giúp phát hiện
+nhanh chỗ đọc khác kịch bản và chỗ nghi ngờ Whisper nghe nhầm thuật
+ngữ.</p>
+<p>Lưu thành <strong><code>compare_with_script.py</code></strong>:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">&quot;&quot;&quot;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">So sanh transcript.json (WhisperX) voi script.docx goc.</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">Cach chay:</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">    python compare_with_script.py --script script.docx --transcript out/transcript.json --out out/compare_report.html</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">&quot;&quot;&quot;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> argparse</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> difflib</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> re</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> docx <span class="im">import</span> Document</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> read_script_text(docx_path: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">str</span>:</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    doc <span class="op">=</span> Document(docx_path)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&quot; &quot;</span>.join(p.text <span class="cf">for</span> p <span class="kw">in</span> doc.paragraphs <span class="cf">if</span> p.text.strip())</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> normalize_words(text: <span class="bu">str</span>):</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    text <span class="op">=</span> text.lower()</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    text <span class="op">=</span> re.sub(<span class="vs">r&quot;[^a-z0-9&#39;\s-]&quot;</span>, <span class="st">&quot; &quot;</span>, text)</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> [w <span class="cf">for</span> w <span class="kw">in</span> text.split() <span class="cf">if</span> w]</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> main():</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    ap <span class="op">=</span> argparse.ArgumentParser()</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    ap.add_argument(<span class="st">&quot;--script&quot;</span>, required<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    ap.add_argument(<span class="st">&quot;--transcript&quot;</span>, required<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    ap.add_argument(<span class="st">&quot;--out&quot;</span>, default<span class="op">=</span><span class="st">&quot;compare_report.html&quot;</span>)</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    args <span class="op">=</span> ap.parse_args()</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>    script_words <span class="op">=</span> normalize_words(read_script_text(args.script))</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(args.transcript, encoding<span class="op">=</span><span class="st">&quot;utf-8&quot;</span>) <span class="im">as</span> f:</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>        result <span class="op">=</span> json.load(f)</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>    audio_text <span class="op">=</span> <span class="st">&quot; &quot;</span>.join(</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>        w.get(<span class="st">&quot;word&quot;</span>, <span class="st">&quot;&quot;</span>) <span class="cf">for</span> seg <span class="kw">in</span> result[<span class="st">&quot;segments&quot;</span>] <span class="cf">for</span> w <span class="kw">in</span> seg.get(<span class="st">&quot;words&quot;</span>, [])</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>    audio_words <span class="op">=</span> normalize_words(audio_text)</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>    sm <span class="op">=</span> difflib.SequenceMatcher(a<span class="op">=</span>script_words, b<span class="op">=</span>audio_words, autojunk<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>    rows <span class="op">=</span> [</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>        (tag, <span class="st">&quot; &quot;</span>.join(script_words[i1:i2]), <span class="st">&quot; &quot;</span>.join(audio_words[j1:j2]))</span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> tag, i1, i2, j1, j2 <span class="kw">in</span> sm.get_opcodes() <span class="cf">if</span> tag <span class="op">!=</span> <span class="st">&quot;equal&quot;</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>    html <span class="op">=</span> [</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;&lt;html&gt;&lt;head&gt;&lt;meta charset=&#39;utf-8&#39;&gt;&lt;style&gt;&quot;</span>,</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;body{font-family:sans-serif;max-width:900px;margin:30px auto}&quot;</span>,</span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;table{border-collapse:collapse;width:100%}&quot;</span>,</span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;td,th{border:1px solid #ccc;padding:8px;text-align:left}&quot;</span>,</span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;.replace{background:#fff3cd}.delete{background:#f8d7da}.insert{background:#d4edda}&quot;</span>,</span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&quot;</span>,</span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;&lt;h2&gt;Doi chieu Script vs Giong doc thuc te&lt;/h2&gt;&quot;</span>,</span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;&lt;table&gt;&lt;tr&gt;&lt;th&gt;Loai&lt;/th&gt;&lt;th&gt;Script&lt;/th&gt;&lt;th&gt;Audio (WhisperX)&lt;/th&gt;&lt;/tr&gt;&quot;</span>,</span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> tag, s, a <span class="kw">in</span> rows:</span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>        html.append(<span class="ss">f&quot;&lt;tr class=&#39;</span><span class="sc">{</span>tag<span class="sc">}</span><span class="ss">&#39;&gt;&lt;td&gt;</span><span class="sc">{</span>tag<span class="sc">}</span><span class="ss">&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>s<span class="sc">}</span><span class="ss">&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>a<span class="sc">}</span><span class="ss">&lt;/td&gt;&lt;/tr&gt;&quot;</span>)</span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>    html.append(<span class="st">&quot;&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;&quot;</span>)</span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(args.out, <span class="st">&quot;w&quot;</span>, encoding<span class="op">=</span><span class="st">&quot;utf-8&quot;</span>) <span class="im">as</span> f:</span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>        f.write(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>.join(html))</span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f&quot;Da tao bao cao: </span><span class="sc">{</span>args<span class="sc">.</span>out<span class="sc">}</span><span class="ss"> (</span><span class="sc">{</span><span class="bu">len</span>(rows)<span class="sc">}</span><span class="ss"> cho khac biet)&quot;</span>)</span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&quot;__main__&quot;</span>:</span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>    main()</span></code></pre></div>
+<p>Chạy:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install python-docx</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> compare_with_script.py <span class="at">--script</span> script.docx <span class="at">--transcript</span> out/transcript.json <span class="at">--out</span> out/compare_report.html</span></code></pre></div>
+<p>Mở <code>compare_report.html</code> bằng trình duyệt: dòng
+<strong>replace/delete</strong> = chỗ script và audio khác nhau (ưu tiên
+giữ theo audio cho caption); dòng có nội dung vô nghĩa ở cột audio
+thường là Whisper nghe nhầm thuật ngữ — nên nghe lại và sửa tay trong
+file <code>.srt</code>.</p>
+<hr />
+<h2 id="gắn-caption-vào-video">4. Gắn caption vào video</h2>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> video.mp4 <span class="at">-vf</span> subtitles=out/transcript.srt output_with_subs.mp4</span></code></pre></div>
+<blockquote>
+<p>Trên Windows, nếu đường dẫn chứa ký tự <code>:</code> (ổ đĩa) hãy
+dùng dấu <code>/</code> thay vì <code>\</code> sau
+<code>subtitles=</code> để tránh lỗi escape của ffmpeg.</p>
+</blockquote>
+<hr />
+<h2 id="câu-hỏi-thường-gặp">Câu hỏi thường gặp</h2>
+<p><strong>Không có GPU thì có chạy được không?</strong> Có — thêm
+<code>--device cpu --compute_type int8</code>. Sẽ chậm hơn đáng kể, nên
+cân nhắc dùng <code>--model medium</code> hoặc <code>small</code> để bù
+tốc độ.</p>
+<p><strong>Video tiếng Việt thì sao?</strong> Thêm
+<code>--language vi</code>. Độ chính xác alignment tiếng Việt hiện chưa
+tốt bằng tiếng Anh do model align công khai còn hạn chế, nhưng
+transcribe vẫn dùng được.</p>
+<p><strong>Video có nhiều người đọc, làm sao tách theo từng
+người?</strong> Dùng cờ <code>--diarize</code> kèm
+<code>--hf_token &lt;HuggingFace access token&gt;</code> (đăng ký miễn
+phí tại huggingface.co và chấp nhận điều khoản model
+pyannote/speaker-diarization).</p>
+<p><strong>Lần chạy đầu rất chậm?</strong> Bình thường — lần đầu
+WhisperX tải model (vài GB) từ Hugging Face về máy, các lần sau sẽ nhanh
+hơn nhiều vì đã có cache.</p>
+</body>
+</html>

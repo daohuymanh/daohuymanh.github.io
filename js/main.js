@@ -39,18 +39,40 @@ if (siteSearchInput && searchGrid) {
   noResultsEl.style.color = "var(--ink-faint)";
   searchGrid.after(noResultsEl);
 
-  siteSearchInput.addEventListener("input", () => {
-    const query = boChoTiengViet(siteSearchInput.value.trim());
+  // Lọc danh sách card theo 1 hàm điều kiện (predicate) — dùng chung
+  // cho cả gõ tìm kiếm lẫn bấm chọn chủ đề bên dưới.
+  function filterCards(predicate) {
     let visibleCount = 0;
     cards.forEach((card) => {
-      const title = card.querySelector("h3")?.textContent || "";
-      const excerpt = card.querySelector(".excerpt")?.textContent || "";
-      const tag = card.querySelector(".tag")?.textContent || "";
-      const haystack = boChoTiengViet(`${title} ${excerpt} ${tag}`);
-      const isMatch = haystack.includes(query);
+      const isMatch = predicate(card);
       card.style.display = isMatch ? "" : "none";
       if (isMatch) visibleCount += 1;
     });
     noResultsEl.style.display = visibleCount === 0 ? "" : "none";
+  }
+
+  siteSearchInput.addEventListener("input", () => {
+    const query = boChoTiengViet(siteSearchInput.value.trim());
+    filterCards((card) => {
+      const title = card.querySelector("h3")?.textContent || "";
+      const excerpt = card.querySelector(".excerpt")?.textContent || "";
+      const tag = card.querySelector(".tag")?.textContent || "";
+      const haystack = boChoTiengViet(`${title} ${excerpt} ${tag}`);
+      return haystack.includes(query);
+    });
+  });
+
+  // --- Bấm vào 1 chủ đề: lọc đúng bài thuộc chủ đề đó ---
+  topicItems.forEach((li) => {
+    const link = li.querySelector("a");
+    if (!link) return;
+    link.addEventListener("click", () => {
+      const tagClass = li.dataset.tag;
+      const topicName = li.querySelector(".topic-name")?.textContent.trim() || "";
+      // Hiện tên chủ đề trong ô tìm kiếm để người dùng biết đang lọc
+      // theo gì, và có thể gõ đè để quay lại tìm kiếm tự do.
+      siteSearchInput.value = topicName;
+      filterCards((card) => !!card.querySelector(`.tag.${tagClass}`));
+    });
   });
 }
