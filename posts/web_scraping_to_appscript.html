@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hướng dẫn trích xuất dữ liệu từ website và tổng hợp — Mạnh Phượng</title>
+<meta name="description" content="Tài liệu này tổng hợp toàn bộ quy trình lấy dữ liệu từ một website, tổng hợp thành file csv sau đó tạo appscript để truy xuất từ csv đó">
+<meta name="author" content="Mạnh Phượng">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="../index.html" class="logo">
+      <img class="logo-mark" src="../assets/logo-icon.png" alt="Logo Mạnh Phượng">
+      <span class="logo-text">
+        <span class="logo-name">Mạnh Phượng</span>
+        <span class="logo-tagline">Biomedicine &amp; Bioinformatics</span>
+      </span>
+    </a>
+    <nav class="primary-nav" id="primaryNav">
+      <a href="../index.html">trang chủ</a>
+      <a href="../index.html#bai-viet">bài viết</a>
+      <a href="../index.html#chu-de">chủ đề</a>
+      <a href="../index.html#gioi-thieu">giới thiệu</a>
+      <a href="../index.html#lien-he">liên hệ</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Mở menu" aria-expanded="false" aria-controls="primaryNav"></button>
+  </div>
+</header>
+
+<div class="track"></div>
+
+<div class="wrap" style="padding-top:24px;">
+  <a href="../index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
+</div>
+
+<header class="article-header">
+  <div class="wrap">
+    <span class="tag tag--tools">Công cụ phân tích</span>
+    <h1>Hướng dẫn trích xuất dữ liệu từ website và tổng hợp</h1>
+    <div class="article-meta">
+      <span>2026.09.11</span>
+      <span>10 phút đọc</span>
+    </div>
+    <div class="article-author">
+      <strong>Tác giả:</strong> Mạnh Phượng
+    </div>
+  </div>
+</header>
+
+<article class="post-body">
+  <div class="wrap">
+
+    <p class="lead">
+      
+    </p>
+
+    <div class="script-download">
+      <p class="script-download-title">File mẫu dùng trong bài viết</p>
+      <ul class="script-download-list">
+      <li><span class="script-download-icon">📎</span><a href="../scripts/08_extract_all_pathogens.py" download>08_extract_all_pathogens.py</a></li>
+      <li><span class="script-download-icon">📎</span><a href="../scripts/09_list_sections.py" download>09_list_sections.py</a></li>
+      <li><span class="script-download-icon">📎</span><a href="../scripts/10_crawl_diseases.py" download>10_crawl_diseases.py</a></li>
+      <li><span class="script-download-icon">📎</span><a href="../scripts/Code.gs" download>Code.gs</a></li>
+      <li><span class="script-download-icon">📎</span><a href="../scripts/Index.html" download>Index.html</a></li>
+      </ul>
+    </div>
+
+<h1>Hướng dẫn tổng hợp: Web Scraping → Google Sheet → Web App tra cứu</h1>
+<p>Tài liệu này tổng hợp toàn bộ quy trình trích xuất dữ liệu từ website. Bài viết này lấy dữ liệu cụ thể Pathogen Safety Data
+Sheets (PSDS) và trang "Diseases and conditions" từ canada.ca, lưu thành file
+để tìm kiếm, và dựng một web app tra cứu bằng Google Apps Script.</p>
+<hr />
+<h2>Tổng quan các file</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Vai trò</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>08_extract_all_pathogens.py</code></td>
+<td><strong>Crawl toàn bộ PSDS</strong> → <code>psds_data.json</code>, <code>psds_search.csv</code></td>
+</tr>
+<tr>
+<td><code>09_list_sections.py</code></td>
+<td>Thống kê mỗi pathogen có những mục nào</td>
+</tr>
+<tr>
+<td><code>10_crawl_diseases.py</code></td>
+<td><strong>Crawl phần "Diseases and conditions"</strong> (Causes/Symptoms/Risks/...) → <code>diseases_data.json</code>, <code>diseases_search.csv</code></td>
+</tr>
+<tr>
+<td><code>Code.gs</code> + <code>Index.html</code></td>
+<td>Web app Google Apps Script để tra cứu theo tên tác nhân</td>
+</tr>
+</tbody>
+</table>
+<p>Chỉ cần 2 thư viện Python:</p>
+<pre><code class="language-bash">pip install requests beautifulsoup4
+</code></pre>
+<hr />
+<h2>Phần 1 — Crawl dữ liệu PSDS</h2>
+<h3>1.1. Chạy script chính</h3>
+<pre><code class="language-bash">python3 08_extract_all_pathogens.py
+</code></pre>
+<p>Script sẽ:
+1. Vào trang index PSDS, lấy danh sách link tất cả các pathogen (bỏ qua trang
+   template không phải pathogen thật).
+2. Với mỗi trang, <strong>xóa phần menu/header/footer</strong> của khung web (banner, menu
+   phụ, footer chuẩn của canada.ca) trước khi tìm nội dung — tránh bị lẫn chữ
+   "Menu", "Language selection"... vào dữ liệu.
+3. Tách nội dung theo cấu trúc heading (<code>h2</code> → <code>h5</code>), tạo đường dẫn dạng
+   <code>Section I – Infectious agent &gt; Characteristics &gt; Brief description</code>.
+4. <strong>Loại bỏ chú thích "Footnote N"</strong> — canada.ca gắn số tham khảo bằng chữ ẩn
+   (<code>&lt;span class="wb-inv"&gt;Footnote&lt;/span&gt;</code>) ngay trong đoạn văn, nếu không xử
+   lý sẽ bị lẫn chữ "Footnote 1", "Footnote 2"... vào text.
+5. Lưu ra 2 file:
+   - <strong><code>psds_data.json</code></strong> — dữ liệu đầy đủ, giữ cấu trúc cây theo heading.
+   - <strong><code>psds_search.csv</code></strong> — dạng phẳng: <code>pathogen, url, section_path, text</code>
+     — 1 dòng = 1 mục nội dung, dễ lọc/tìm kiếm.</p>
+<p>Có ~230 pathogen, script chờ 1 giây giữa mỗi request nên mất vài phút. Muốn
+test nhanh, sửa tạm trong file:</p>
+<pre><code class="language-python">psds_links = psds_links[:5]   # chỉ lấy 5 trang đầu để test
+</code></pre>
+<h3>1.2. Xem mỗi pathogen có những mục nào</h3>
+<pre><code class="language-bash">python3 09_list_sections.py
+</code></pre>
+<p>Xuất thêm 2 file:
+- <code>sections_by_pathogen.csv</code> — liệt kê mục theo từng pathogen.
+- <code>section_inventory.csv</code> — thống kê mục nào phổ biến (xuất hiện ở bao nhiêu %
+  pathogen), giúp biết nên lọc theo tên mục nào khi tìm kiếm.</p>
+<h3>1.3. Lọc/tìm kiếm nhanh bằng pandas hoặc grep</h3>
+<pre><code class="language-python">import pandas as pd
+df = pd.read_csv(&quot;psds_search.csv&quot;)
+
+# Theo tên pathogen
+df[df[&quot;pathogen&quot;].str.contains(&quot;Zika&quot;, case=False, na=False)]
+
+# Theo tên mục
+df[df[&quot;section_path&quot;].str.contains(&quot;Pathogenicity&quot;, case=False, na=False)]
+
+# Theo từ khóa trong nội dung
+df[df[&quot;text&quot;].str.contains(&quot;Guillain&quot;, case=False, na=False)]
+</code></pre>
+<pre><code class="language-bash">grep -i &quot;malaria&quot; psds_search.csv | grep -i &quot;pathogenicity&quot;
+</code></pre>
+<hr />
+<h2>Phần 2 — Crawl phần "Diseases and conditions" (Causes/Symptoms/Risks...)</h2>
+<p>Lưu ý: đây là <strong>phần khác</strong> với PSDS — PSDS thiên về an toàn sinh học
+(<code>pathogen-safety-data-sheets-risk-assessment/...</code>), còn phần này là trang
+thông tin bệnh cho công chúng (<code>diseases/...</code>), ví dụ trang
+<code>symptoms-malaria.html</code>. PSDS <strong>không có</strong> mục "Symptoms" riêng; thông tin
+triệu chứng trong PSDS nằm lồng trong mục <code>Pathogenicity and toxicity</code>.</p>
+<pre><code class="language-bash">python3 10_crawl_diseases.py
+</code></pre>
+<p>Script sẽ:
+1. Đọc bảng danh sách bệnh ở trang index, <strong>chỉ giữ link thuộc canada.ca</strong>
+   (bỏ link ra ngoài như veterans.gc.ca, camh.ca...).
+2. Với mỗi bệnh, tự phát hiện xem đó là <strong>trang hub</strong> (có heading "Services
+   and information" dẫn tới các trang con Causes/Symptoms/Risks/Treatment/
+   Prevention/...) hay <strong>trang đơn</strong>. Nếu là hub, crawl luôn từng trang con.
+3. Áp dụng cùng cách xử lý sạch dữ liệu như Phần 1 (xóa menu/footer, xóa
+   "Footnote N").
+4. Lưu ra <code>diseases_data.json</code> và <code>diseases_search.csv</code> (thêm cột
+   <code>page_title</code> để biết dòng đó thuộc trang con nào, ví dụ "Symptoms").</p>
+<p>Tra cứu tương tự:</p>
+<pre><code class="language-python">df = pd.read_csv(&quot;diseases_search.csv&quot;)
+df[(df[&quot;disease&quot;].str.contains(&quot;Malaria&quot;, case=False))
+   &amp; (df[&quot;page_title&quot;].str.contains(&quot;Symptoms&quot;, case=False))]
+</code></pre>
+<hr />
+<h2>Phần 3 — Đưa dữ liệu lên Google Sheet</h2>
+<ol>
+<li>Mở <strong>Google Sheets</strong> → tạo sheet mới.</li>
+<li><strong>File &gt; Import</strong> → <strong>Upload</strong> → chọn <code>psds_search.csv</code>.</li>
+<li>Ở bước import, chọn <strong>"Replace current sheet"</strong> (hoặc "Insert new sheet"
+   nếu muốn giữ nhiều bộ dữ liệu trong cùng file, ví dụ thêm cả
+   <code>diseases_search.csv</code> vào 1 sheet khác).</li>
+<li>Kiểm tra dòng đầu tiên là header đúng 4 cột: <code>pathogen, url, section_path, text</code>.</li>
+</ol>
+<blockquote>
+<p>Nếu bạn đặt tên sheet khác <code>Sheet1</code>, nhớ sửa lại ở bước 4.2 bên dưới.</p>
+</blockquote>
+<hr />
+<h2>Phần 4 — Dựng web app tra cứu bằng Google Apps Script</h2>
+<h3>4.1. Mở Apps Script</h3>
+<p>Trong Google Sheet vừa tạo: <strong>Extensions &gt; Apps Script</strong>.</p>
+<h3>4.2. Dán code backend</h3>
+<p>Xóa nội dung <code>Code.gs</code> mặc định, dán toàn bộ nội dung file <strong><code>Code.gs</code></strong> đã
+cung cấp. File này gồm:
+- <code>doGet()</code> — phục vụ trang web.
+- <code>getPathogenList()</code> — trả về danh sách tên tác nhân (không trùng, A-Z).
+- <code>getPathogenData(pathogenName)</code> — trả về toàn bộ mục PSDS của 1 tác nhân.</p>
+<p>Nếu sheet của bạn không tên <code>Sheet1</code>, sửa dòng:</p>
+<pre><code class="language-javascript">const SHEET_NAME = &quot;Sheet1&quot;;
+</code></pre>
+<h3>4.3. Dán giao diện web</h3>
+<p><strong>File &gt; New &gt; HTML</strong>, đặt tên chính xác là <strong><code>Index</code></strong>, dán nội dung file
+<strong><code>Index.html</code></strong> đã cung cấp. Giao diện này có:
+- Ô nhập liệu với gợi ý tự động (<code>&lt;datalist&gt;</code>) — gõ vài chữ là hiện gợi ý tên
+  tác nhân.
+- Tự khớp gần đúng nếu gõ không chính xác 100%.
+- Hiển thị từng mục PSDS kèm link về trang gốc trên canada.ca.</p>
+<h3>4.4. Deploy</h3>
+<p><strong>Deploy &gt; New deployment</strong>:
+- Chọn loại: <strong>Web app</strong>
+- Execute as: <strong>Me</strong>
+- Who has access: <strong>Anyone</strong> (hoặc giới hạn trong tổ chức nếu muốn riêng tư)</p>
+<p>Bấm <strong>Deploy</strong>, copy URL được cấp — đó là địa chỉ web app tra cứu.</p>
+<h3>4.5. Sử dụng</h3>
+<p>Mở URL → gõ hoặc chọn tên tác nhân → toàn bộ mục PSDS (Characteristics,
+Pathogenicity and toxicity, Epidemiology...) hiện ra ngay, kèm link gốc.</p>
+<hr />
+<h2>Tổng kết luồng xử lý</h2>
+<pre><code>canada.ca (PSDS + Diseases)
+        │  (08_extract_all_pathogens.py / 10_crawl_diseases.py)
+        ▼
+psds_data.json / psds_search.csv
+diseases_data.json / diseases_search.csv
+        │  (Google Sheets &gt; File &gt; Import)
+        ▼
+Google Sheet
+        │  (Code.gs + Index.html qua Apps Script)
+        ▼
+Web app tra cứu theo tên tác nhân
+</code></pre>
+<h2>Ghi chú chung</h2>
+<ul>
+<li>Luôn tôn trọng server: giữ nguyên <code>time.sleep(1)</code> giữa các request khi crawl.</li>
+<li>Nếu chạy lại script crawl, file cũ sẽ bị ghi đè — đổi tên bản cũ nếu muốn
+  giữ lịch sử.</li>
+<li>Cấu trúc heading giữa các trang không hoàn toàn giống nhau 100% (trang cũ
+  vs mới), nên khi lọc theo <code>section_path</code> nên dùng khớp một phần
+  (<code>str.contains</code>) thay vì so khớp tuyệt đối.</li>
+<li>Dữ liệu ~5.000 dòng nên Apps Script đọc Sheet vẫn đủ nhanh; nếu sau này dữ
+  liệu lớn hơn nhiều, có thể cần thêm <code>CacheService</code> trong <code>Code.gs</code>.</li>
+</ul>
+
+    <div class="article-license">
+      <p class="license-title">Bản quyền &amp; giấy phép</p>
+      <p>© 2026 Mạnh Phượng.</p>
+      <p>
+        Bài viết này được cấp phép theo
+        <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="license noopener">
+          Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+        </a>.
+      </p>
+      <p>
+        Bạn được phép chia sẻ và điều chỉnh nội dung cho mục đích phi thương mại,
+        với điều kiện ghi công tác giả phù hợp và dẫn liên kết tới bài viết gốc.
+      </p>
+    </div>
+
+  </div>
+</article>
+
+<div class="track"></div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-brand">
+      <strong>© 2026 Mạnh Phượng</strong>
+      <span>· Ghi chép Y Sinh &amp; Bioinformatics</span>
+    </div>
+    <ul class="foot-links">
+      <li><a href="../copyright.html">Copyright &amp; License</a></li>
+      <li><a href="https://github.com/daohuymanh" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://orcid.org/0000-0003-3874-5051" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="mailto:daohuymanh@gmail.com">daohuymanh@gmail.com</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+
+</body>
+</html>

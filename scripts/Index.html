@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <meta charset="utf-8" />
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        max-width: 900px;
+        margin: 24px auto;
+        padding: 0 16px;
+        color: #202124;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      #searchBox {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+      }
+      #status {
+        color: #666;
+        font-size: 13px;
+        margin-top: 6px;
+      }
+      #sourceLink {
+        margin: 12px 0;
+        font-size: 14px;
+      }
+      .section {
+        border-left: 3px solid #1a73e8;
+        padding: 4px 14px;
+        margin-bottom: 18px;
+      }
+      .section h3 {
+        margin: 0 0 6px 0;
+        font-size: 15px;
+        color: #1a73e8;
+      }
+      .section p {
+        white-space: pre-wrap;
+        line-height: 1.5;
+        margin: 0;
+        font-size: 14px;
+      }
+      #results {
+        margin-top: 20px;
+      }
+      #empty {
+        color: #888;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Tra cứu Pathogen Safety Data Sheet (PSDS)</h1>
+
+    <input
+      id="searchBox"
+      list="pathogenList"
+      placeholder="Gõ hoặc chọn tên tác nhân..."
+      autocomplete="off"
+    />
+    <datalist id="pathogenList"></datalist>
+    <div id="status">Đang tải danh sách tác nhân...</div>
+
+    <div id="sourceLink"></div>
+    <div id="results"><div id="empty"></div></div>
+
+    <script>
+      var allPathogens = [];
+
+      // 1) Tai danh sach ten tac nhan de dien vao datalist
+      google.script.run
+        .withSuccessHandler(function (list) {
+          allPathogens = list;
+          var datalist = document.getElementById("pathogenList");
+          list.forEach(function (name) {
+            var opt = document.createElement("option");
+            opt.value = name;
+            datalist.appendChild(opt);
+          });
+          document.getElementById("status").textContent =
+            "Đã tải " + list.length + " tác nhân. Gõ tên hoặc chọn từ danh sách.";
+        })
+        .withFailureHandler(function (err) {
+          document.getElementById("status").textContent = "Lỗi tải danh sách: " + err.message;
+        })
+        .getPathogenList();
+
+      // 2) Khi nguoi dung go/chon xong (Enter hoac chon tu danh sach) -> tra cuu
+      var searchBox = document.getElementById("searchBox");
+
+      function doSearch() {
+        var name = searchBox.value.trim();
+        if (!name) return;
+
+        // Neu go khong khop chinh xac ten nao, thu tim gan dung (khong phan biet hoa/thuong)
+        var matched = allPathogens.find(function (p) {
+          return p.toLowerCase() === name.toLowerCase();
+        });
+        if (!matched) {
+          matched = allPathogens.find(function (p) {
+            return p.toLowerCase().indexOf(name.toLowerCase()) !== -1;
+          });
+        }
+        if (!matched) {
+          document.getElementById("results").innerHTML =
+            '<div id="empty">Không tìm thấy tác nhân khớp với "' + name + '".</div>';
+          document.getElementById("sourceLink").innerHTML = "";
+          return;
+        }
+
+        document.getElementById("status").textContent = "Đang tải PSDS của: " + matched + " ...";
+
+        google.script.run
+          .withSuccessHandler(function (data) {
+            renderResults(matched, data);
+          })
+          .withFailureHandler(function (err) {
+            document.getElementById("status").textContent = "Lỗi: " + err.message;
+          })
+          .getPathogenData(matched);
+      }
+
+      searchBox.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") doSearch();
+      });
+      searchBox.addEventListener("change", doSearch); // khi chon tu datalist
+
+      function renderResults(name, data) {
+        document.getElementById("status").textContent = "Kết quả cho: " + name;
+
+        var sourceDiv = document.getElementById("sourceLink");
+        sourceDiv.innerHTML = data.url
+          ? '<a href="' + data.url + '" target="_blank">Xem trang gốc trên canada.ca ↗</a>'
+          : "";
+
+        var resultsDiv = document.getElementById("results");
+        if (!data.sections || data.sections.length === 0) {
+          resultsDiv.innerHTML = '<div id="empty">Không có dữ liệu cho tác nhân này.</div>';
+          return;
+        }
+
+        var html = "";
+        data.sections.forEach(function (s) {
+          html +=
+            '<div class="section"><h3>' +
+            escapeHtml(s.path) +
+            "</h3><p>" +
+            escapeHtml(s.text) +
+            "</p></div>";
+        });
+        resultsDiv.innerHTML = html;
+      }
+
+      function escapeHtml(str) {
+        var div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+      }
+    </script>
+  </body>
+</html>

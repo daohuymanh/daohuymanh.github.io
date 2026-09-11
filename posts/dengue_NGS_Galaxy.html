@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hướng dẫn phân tích giải trình tự với Galaxy — Mạnh Phượng</title>
+<meta name="description" content="Phân tích dữ liệu giải trình tự gen thế hệ mới từ Illumina và ONT trên nền tảng Galaxy">
+<meta name="author" content="Mạnh Phượng">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="../index.html" class="logo">
+      <img class="logo-mark" src="../assets/logo-icon.png" alt="Logo Mạnh Phượng">
+      <span class="logo-text">
+        <span class="logo-name">Mạnh Phượng</span>
+        <span class="logo-tagline">Biomedicine &amp; Bioinformatics</span>
+      </span>
+    </a>
+    <nav class="primary-nav" id="primaryNav">
+      <a href="../index.html">trang chủ</a>
+      <a href="../index.html#bai-viet">bài viết</a>
+      <a href="../index.html#chu-de">chủ đề</a>
+      <a href="../index.html#gioi-thieu">giới thiệu</a>
+      <a href="../index.html#lien-he">liên hệ</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Mở menu" aria-expanded="false" aria-controls="primaryNav"></button>
+  </div>
+</header>
+
+<div class="track"></div>
+
+<div class="wrap" style="padding-top:24px;">
+  <a href="../index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
+</div>
+
+<header class="article-header">
+  <div class="wrap">
+    <span class="tag tag--tools">Công cụ phân tích</span>
+    <h1>Hướng dẫn phân tích giải trình tự với Galaxy</h1>
+    <div class="article-meta">
+      <span>2026.09.11</span>
+      <span>20 phút đọc</span>
+    </div>
+    <div class="article-author">
+      <strong>Tác giả:</strong> Mạnh Phượng
+    </div>
+  </div>
+</header>
+
+<article class="post-body">
+  <div class="wrap">
+
+    <p class="lead">
+      
+    </p>
+
+<h1>Galaxy workflows for whole-genome Dengue virus sequencing from tiled amplicons</h1>
+<h2>Mục tiêu</h2>
+<p>Tài liệu này đề xuất <strong>hai workflow Galaxy độc lập</strong> để phân tích dữ liệu FASTQ từ giải trình tự toàn bộ genome virus Dengue (DENV) bằng phương pháp <strong>tiled amplicon sequencing</strong>:</p>
+<ol>
+<li><strong>Illumina workflow</strong> — short, high-accuracy reads.</li>
+<li><strong>Oxford Nanopore (ONT) workflow</strong> — long reads, thường cho phép nối các vùng amplicon dài và có thể phát hiện biến thể, nhưng cần kiểm soát chất lượng và primer rất chặt.</li>
+</ol>
+<p>Mục tiêu đầu ra là một bộ dữ liệu có thể sử dụng cho nghiên cứu genomics/phylogenetics và chuẩn bị cho công bố quốc tế:</p>
+<ul>
+<li>QC trước và sau trimming.</li>
+<li>FASTQ đã loại adapter/primer và reads chất lượng thấp.</li>
+<li>BAM alignment với reference DENV phù hợp.</li>
+<li>Coverage theo genome và theo amplicon.</li>
+<li>Consensus genome FASTA.</li>
+<li>VCF/BCF và bảng biến thể.</li>
+<li>Kiểm tra biến thể ở các vị trí có coverage đủ.</li>
+<li>QC consensus: % genome được phủ, depth, Ns, chiều dài.</li>
+<li>Phylogenetic dataset và cây phát sinh chủng loại.</li>
+<li>Metadata và workflow version để đảm bảo reproducibility.</li>
+</ul>
+<blockquote>
+<p><strong>Quan trọng:</strong> Đây là workflow phân tích dữ liệu đã được giải trình tự. Thiết kế/điều kiện PCR và tối ưu mồi cần được xác định, thẩm định và kiểm soát trong phòng xét nghiệm trước khi chạy sequencing.</p>
+</blockquote>
+<hr />
+<h1>1. Nguyên tắc chung</h1>
+<p>Với tiled amplicon sequencing, không nên coi dữ liệu như shotgun sequencing thông thường. Mỗi mẫu cần được theo dõi:</p>
+<p><strong>FASTQ → QC → primer/adapter trimming → mapping → primer-aware variant calling → consensus → QC → phylogenetics</strong></p>
+<p>Galaxy có sẵn nhiều workflow pathogen/amplicon tương tự cho Illumina và ONT; các workflow của Galaxy cũng nhấn mạnh việc kết hợp variant calling, consensus construction và reporting. Có thể dùng các workflow này làm khung rồi thay reference, primer scheme và thông số phù hợp với DENV.</p>
+<hr />
+<h1>2. Chuẩn bị dữ liệu</h1>
+<h2>2.1. FASTQ Illumina</h2>
+<p>Nếu paired-end:</p>
+<pre><code class="language-text">Sample01_R1.fastq.gz
+Sample01_R2.fastq.gz
+</code></pre>
+<p>Nếu single-end:</p>
+<pre><code class="language-text">Sample01.fastq.gz
+</code></pre>
+<p>Cần giữ metadata:</p>
+<pre><code class="language-text">sample_id
+collection_date
+province
+patient/sample type
+DENV_serotype
+sequencing_platform
+library/preparation method
+run_id
+</code></pre>
+<h2>2.2. FASTQ Nanopore</h2>
+<p>Thông thường:</p>
+<pre><code class="language-text">Sample01.fastq.gz
+</code></pre>
+<p>Nếu chạy multiplex/barcoding, phải demultiplex trước hoặc sử dụng FASTQ đã được phân tách theo sample.</p>
+<p>Nên lưu thêm:</p>
+<pre><code class="language-text">basecaller
+basecalling_model
+flow_cell
+kit
+barcode kit
+sequencing date
+primer scheme/version
+</code></pre>
+<hr />
+<h1>3. Reference genome và primer scheme</h1>
+<p>Đây là phần rất quan trọng đối với nghiên cứu DENV.</p>
+<h2>3.1. Reference</h2>
+<p>Không nên dùng một reference DENV tùy ý.</p>
+<p>Nên:</p>
+<ol>
+<li>xác định serotype;</li>
+<li>chọn reference gần với serotype/genotype đang nghiên cứu;</li>
+<li>ghi rõ accession number và version;</li>
+<li>lưu FASTA trong project;</li>
+<li>lưu annotation nếu có.</li>
+</ol>
+<p>Ví dụ cấu trúc:</p>
+<pre><code class="language-text">reference/
+├── DENV1_reference.fasta
+├── DENV2_reference.fasta
+├── DENV3_reference.fasta
+└── DENV4_reference.fasta
+</code></pre>
+<p>Nếu nghiên cứu nhiều serotype, nên xây dựng workflow có bước chọn reference theo serotype hoặc chạy từng nhóm serotype.</p>
+<h2>3.2. Primer scheme</h2>
+<p>Cần lưu primer scheme ở dạng BED hoặc định dạng tương thích với tool được sử dụng.</p>
+<p>Ví dụ:</p>
+<pre><code class="language-text">DENV_tiled_amplicon_v1.bed
+</code></pre>
+<p>Các thông tin tối thiểu:</p>
+<pre><code class="language-text">chromosome/reference
+amplicon_start
+amplicon_end
+amplicon_id
+primer_name
+</code></pre>
+<p>Primer scheme phải được version hóa:</p>
+<pre><code class="language-text">DENV_tiled_amplicon_v1.0
+DENV_tiled_amplicon_v1.1
+</code></pre>
+<p>Không nên thay đổi primer scheme giữa các batch mà không ghi lại version.</p>
+<h2>3.3. Hướng dẫn chi tiết: tạo file .bed cho primer scheme DENV</h2>
+<p>File BED (Browser Extensible Data) là định dạng toạ độ dạng bảng, tab-separated, dùng để khai báo vị trí mồi (primer) hoặc amplicon trên trục toạ độ của reference genome. Đây là input bắt buộc cho các bước primer trimming (iVar trim, ARTIC, Cutadapt theo toạ độ) và tính coverage theo amplicon.</p>
+<h3>3.3.1. Nguyên tắc toạ độ BED</h3>
+<ul>
+<li>File BED dùng hệ toạ độ <strong>0-based, half-open</strong>: vị trí đầu tiên của reference là <code>0</code> (không phải <code>1</code> như FASTA/VCF), và <code>end</code> là vị trí <strong>không bao gồm</strong>.</li>
+<li>Ví dụ: mồi bắt đầu ở base 1 và kết thúc ở base 22 theo FASTA (1-based) → trong BED ghi là <code>start=0</code>, <code>end=22</code>.</li>
+<li>Sai lệch 1 vị trí (off-by-one) là lỗi rất phổ biến khi tự tạo BED thủ công — cần kiểm tra kỹ trước khi dùng cho trimming.</li>
+</ul>
+<h3>3.3.2. Hai kiểu file BED thường gặp trong pipeline tiled amplicon</h3>
+<p><strong>(a) Amplicon BED (mô tả từng amplicon)</strong> — dùng để tính coverage theo amplicon, phát hiện amplicon dropout:</p>
+<pre><code class="language-text">#chrom       start   end     name          score   strand
+DENV2_ref    0       420     Amplicon_01   .       +
+DENV2_ref    380     810     Amplicon_02   .       +
+DENV2_ref    770     1205    Amplicon_03   .       +
+</code></pre>
+<p><strong>(b) Primer BED (mô tả từng mồi riêng lẻ)</strong> — dùng cho các tool primer-aware trimming như iVar/ARTIC. Đây là định dạng 6 cột, mỗi mồi (forward và reverse) là một dòng riêng:</p>
+<pre><code class="language-text">#chrom       start   end   name                     score   strand
+DENV2_ref    30      52    DENV2_1_LEFT             60      +
+DENV2_ref    398     420   DENV2_1_RIGHT            60      -
+DENV2_ref    380     402   DENV2_2_LEFT             60      +
+DENV2_ref    788     810   DENV2_2_RIGHT            60      -
+</code></pre>
+<p>Quy ước đặt tên (theo chuẩn ARTIC, được iVar và nhiều tool Galaxy hỗ trợ):</p>
+<pre><code class="language-text">&lt;scheme_name&gt;_&lt;amplicon_number&gt;_LEFT
+&lt;scheme_name&gt;_&lt;amplicon_number&gt;_RIGHT
+</code></pre>
+<p>Nếu primer scheme có primer pool (2 pool xen kẽ để tránh amplicon liền kề chồng nhau), một số định dạng mở rộng (ARTIC "primer.tsv"/"alt-BED") thêm cột <code>pool</code>:</p>
+<pre><code class="language-text">chrom        start  end   name              pool
+DENV2_ref    30     52    DENV2_1_LEFT      1
+DENV2_ref    398    420   DENV2_1_RIGHT     1
+DENV2_ref    380    402   DENV2_2_LEFT      2
+DENV2_ref    788    810   DENV2_2_RIGHT     2
+</code></pre>
+<p>Cần xác định trước tool nào sẽ dùng BED này (iVar, ARTIC field bioinformatics, hay tool khác trong Galaxy) vì mỗi tool có thể yêu cầu số cột và quy ước tên hơi khác nhau — đọc kỹ tài liệu tool trước khi trimming hàng loạt mẫu.</p>
+<h3>3.3.3. Các bước tạo file BED cho DENV (từ danh sách mồi có sẵn)</h3>
+<ol>
+<li><strong>Chuẩn bị danh sách mồi</strong>: mỗi mồi cần có <code>primer_name</code>, <code>sequence (5'→3')</code>, <code>pool</code> (nếu có), và biết mồi là forward (LEFT) hay reverse (RIGHT).</li>
+<li><strong>Xác định vị trí mồi trên reference</strong> bằng in-silico mapping/alignment thay vì đếm tay:
+   - Trong Galaxy: dùng tool <strong>BLAST+ blastn-short</strong> hoặc <strong>map with BWA-MEM/minimap2</strong> để align từng chuỗi mồi vào <code>reference.fasta</code>, lấy toạ độ bắt đầu/kết thúc từ kết quả alignment (SAM/BAM hoặc BLAST tabular).
+   - Với mồi reverse, chuỗi mồi thường được thiết kế là reverse-complement của reference; toạ độ trên BED vẫn lấy theo chiều của reference (start &lt; end), cột <code>strand</code> đánh dấu <code>-</code>.</li>
+<li><strong>Chuyển kết quả alignment sang BED</strong>:
+   - Nếu dùng BLAST tabular output (outfmt 6), có thể dùng tool <strong>Text manipulation / Cut / awk</strong> trong Galaxy để trích cột <code>qseqid, sstart, send, strand</code> rồi tính lại <code>start = min(sstart,send) - 1</code> (đổi sang 0-based), <code>end = max(sstart,send)</code>.
+   - Nếu dùng BAM alignment của mồi, dùng tool <strong>bedtools bamtobed</strong> để xuất trực tiếp ra BED, sau đó đổi lại <code>name</code> cho đúng quy ước <code>_LEFT/_RIGHT</code>.</li>
+<li><strong>Sắp xếp và kiểm tra file</strong> bằng <strong>bedtools sort</strong> (sort theo <code>chrom</code>, <code>start</code>), đảm bảo không có toạ độ âm, không vượt quá chiều dài reference.</li>
+<li><strong>Kiểm tra trực quan</strong>: nạp <code>reference.fasta</code> + <code>primer.bed</code> vào <strong>IGV</strong> (hoặc Trackster/JBrowse trong Galaxy) để xác nhận từng cặp LEFT/RIGHT nằm đúng vị trí, các amplicon có phần chồng lấn (overlap) hợp lý giữa 2 pool.</li>
+<li><strong>Version hoá và lưu</strong>: đặt tên file theo quy ước version (<code>DENV_tiled_amplicon_v1.0.bed</code>), lưu kèm bảng nguồn gốc mồi (sequence, pool, ngày thiết kế, người thiết kế/tài liệu tham khảo) trong <code>metadata/</code>.</li>
+</ol>
+<h3>3.3.4. Nếu dùng thiết kế mồi kiểu PrimalScheme/ARTIC</h3>
+<p>Nếu primer scheme DENV được thiết kế bằng công cụ dạng PrimalScheme (phổ biến cho ARTIC-style tiled amplicon), công cụ này thường xuất sẵn:</p>
+<pre><code class="language-text">*.primer.bed
+*.reference.fasta
+*.scheme.bed (amplicon-level)
+</code></pre>
+<p>Trong trường hợp này chỉ cần kiểm tra lại: (a) toạ độ có khớp với <code>reference.fasta</code> đang dùng trong workflow Galaxy hay không (rất dễ lệch nếu reference version khác), (b) tên chromosome trong cột 1 của BED phải <strong>khớp chính xác</strong> với tên sequence trong file FASTA reference đã import vào Galaxy (kể cả chữ hoa/thường, khoảng trắng).</p>
+<h3>3.3.5. Lỗi thường gặp khi tạo/sử dụng BED</h3>
+<ul>
+<li>Tên <code>chrom</code> trong BED không khớp tên header FASTA reference → tool trimming sẽ không tìm thấy overlap, primer không bị cắt, gây false variant tại đầu amplicon.</li>
+<li>Toạ độ 1-based bị chép nhầm vào BED (thiếu bước trừ 1) → lệch 1 base ở mọi mồi.</li>
+<li>Thiếu phân biệt LEFT/RIGHT hoặc thiếu cột <code>strand</code> → tool không xác định đúng chiều trimming.</li>
+<li>Trộn nhiều version primer scheme trong cùng một file BED mà không ghi chú → gây khó khăn khi truy vết lỗi hàng loạt.</li>
+<li>Không sort file trước khi dùng với <code>bedtools</code>/<code>samtools</code> → một số tool yêu cầu BED đã sort mới chạy đúng.</li>
+</ul>
+<hr />
+<h1>4. Workflow A — Illumina</h1>
+<h2>Tổng quan</h2>
+<pre><code class="language-text">FASTQ R1/R2
+   │
+   ▼
+FastQC
+   │
+   ▼
+MultiQC
+   │
+   ▼
+Adapter + primer trimming
+   │
+   ▼
+FastQC
+   │
+   ▼
+MultiQC
+   │
+   ▼
+BWA-MEM/BWA-MEM2
+   │
+   ▼
+SAM/BAM
+   │
+   ▼
+Sort + Index
+   │
+   ├──────────────► Mapping QC
+   │
+   ▼
+Primer-aware variant calling
+   │
+   ▼
+VCF
+   │
+   ▼
+Consensus FASTA
+   │
+   ▼
+Consensus QC
+   │
+   ▼
+Coverage + depth
+   │
+   ▼
+IGV/manual inspection
+   │
+   ▼
+Phylogenetic analysis
+</code></pre>
+<p>Galaxy có các workflow amplicon Illumina sử dụng chiến lược tương tự cho virus surveillance; workflow SARS-CoV-2 của Galaxy là ví dụ tham khảo về cách tổ chức variant calling + consensus + reporting.</p>
+<hr />
+<h1>5. Illumina — Step 1: FastQC</h1>
+<p>Tool:</p>
+<pre><code class="language-text">FastQC
+</code></pre>
+<p>Input:</p>
+<pre><code class="language-text">R1
+R2
+</code></pre>
+<p>Kiểm tra:</p>
+<ul>
+<li>Per-base sequence quality</li>
+<li>Per-sequence quality</li>
+<li>Adapter content</li>
+<li>Sequence duplication</li>
+<li>Overrepresented sequences</li>
+<li>N content</li>
+</ul>
+<p>Sau đó:</p>
+<pre><code class="language-text">MultiQC
+</code></pre>
+<p>Mục tiêu là tạo một báo cáo QC cho toàn bộ batch.</p>
+<hr />
+<h1>6. Illumina — Step 2: Adapter và primer trimming</h1>
+<p>Không chỉ loại adapter.</p>
+<p>Đối với tiled amplicon sequencing phải loại <strong>primer sequence</strong> trước khi gọi biến thể, nếu không primer-derived bases có thể tạo false variants.</p>
+<p>Có thể sử dụng:</p>
+<ul>
+<li>Cutadapt</li>
+<li>fastp</li>
+<li>iVar trim</li>
+<li>công cụ primer trimming tương thích với primer BED</li>
+</ul>
+<p>Nếu primer scheme được sử dụng cho variant calling, cần đảm bảo tool trimming và tool variant calling sử dụng cùng hệ tọa độ/reference.</p>
+<h3>Nguyên tắc</h3>
+<pre><code class="language-text">Raw reads
+     ↓
+adapter trimming
+     ↓
+primer trimming
+     ↓
+quality filtering
+     ↓
+clean reads
+</code></pre>
+<p>Không nên chỉ chạy:</p>
+<pre><code class="language-text">FastQC → BWA → variant calling
+</code></pre>
+<p>cho tiled amplicon data.</p>
+<hr />
+<h1>7. Illumina — Step 3: QC sau trimming</h1>
+<p>Chạy lại:</p>
+<pre><code class="language-text">FastQC
+MultiQC
+</code></pre>
+<p>So sánh:</p>
+<pre><code class="language-text">Raw QC
+vs
+Post-trimming QC
+</code></pre>
+<p>Các chỉ số nên lưu:</p>
+<ul>
+<li>số reads trước/sau trimming;</li>
+<li>% reads retained;</li>
+<li>mean/median read quality;</li>
+<li>adapter content;</li>
+<li>read length distribution.</li>
+</ul>
+<hr />
+<h1>8. Illumina — Step 4: Mapping</h1>
+<p>Reference:</p>
+<pre><code class="language-text">DENV_reference.fasta
+</code></pre>
+<p>Mapper:</p>
+<pre><code class="language-text">BWA-MEM
+</code></pre>
+<p>hoặc:</p>
+<pre><code class="language-text">BWA-MEM2
+</code></pre>
+<p>Input:</p>
+<pre><code class="language-text">clean_R1.fastq.gz
+clean_R2.fastq.gz
+</code></pre>
+<p>Output:</p>
+<pre><code class="language-text">sample.bam
+</code></pre>
+<p>Sau đó:</p>
+<pre><code class="language-text">Sort BAM
+Index BAM
+</code></pre>
+<p>Output:</p>
+<pre><code class="language-text">sample.sorted.bam
+sample.sorted.bam.bai
+</code></pre>
+<hr />
+<h1>9. Illumina — Step 5: Mapping QC</h1>
+<p>Nên tạo:</p>
+<pre><code class="language-text">samtools flagstat
+samtools idxstats
+samtools depth
+</code></pre>
+<p>Các chỉ số:</p>
+<ul>
+<li>total reads;</li>
+<li>mapped reads;</li>
+<li>mapping percentage;</li>
+<li>properly paired reads;</li>
+<li>mean depth;</li>
+<li>median depth;</li>
+<li>genome breadth;</li>
+<li>positions with zero coverage.</li>
+</ul>
+<p>Đặc biệt cần báo cáo:</p>
+<pre><code class="language-text">Genome coverage ≥ 10×
+Genome coverage ≥ 20×
+Genome coverage ≥ 50×
+</code></pre>
+<p>Ngưỡng cuối cùng nên được định nghĩa <strong>trước khi phân tích</strong> và giữ cố định trong toàn bộ dataset.</p>
+<hr />
+<h1>10. Illumina — Step 6: Primer-aware variant calling</h1>
+<p>Đây là bước quan trọng nhất.</p>
+<p>Có thể xây dựng pipeline dựa trên:</p>
+<pre><code class="language-text">iVar
+</code></pre>
+<p>hoặc một caller phù hợp khác.</p>
+<p>Workflow:</p>
+<pre><code class="language-text">BAM
+ +
+primer BED
+      ↓
+primer-aware trimming
+      ↓
+variant calling
+      ↓
+VCF
+</code></pre>
+<p>Cần ghi lại:</p>
+<ul>
+<li>minimum allele frequency;</li>
+<li>minimum depth;</li>
+<li>base quality;</li>
+<li>mapping quality;</li>
+<li>strand support;</li>
+<li>primer overlap handling.</li>
+</ul>
+<p>Không nên chỉ báo cáo tất cả các SNP được caller tạo ra.</p>
+<hr />
+<h1>11. Illumina — Step 7: Consensus genome</h1>
+<p>Consensus có thể tạo từ:</p>
+<pre><code class="language-text">reference + VCF
+</code></pre>
+<p>hoặc bằng tool consensus phù hợp với workflow.</p>
+<p>Output:</p>
+<pre><code class="language-text">Sample01_consensus.fasta
+</code></pre>
+<p>Nên đặt quy tắc rõ ràng:</p>
+<pre><code class="language-text">High-confidence position → gọi base
+Insufficient coverage → N
+Ambiguous position → IUPAC hoặc N tùy protocol
+</code></pre>
+<p>Không nên tự động biến mọi vị trí coverage thấp thành reference base.</p>
+<hr />
+<h1>12. Illumina — Step 8: Consensus QC</h1>
+<p>Tạo bảng:</p>
+<table>
+<thead>
+<tr>
+<th>Sample</th>
+<th style="text-align: right;">Length</th>
+<th style="text-align: right;">%N</th>
+<th style="text-align: right;">Mean depth</th>
+<th style="text-align: right;">Median depth</th>
+<th style="text-align: right;">Genome ≥10×</th>
+<th style="text-align: right;">Genome ≥20×</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S01</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+</tr>
+<tr>
+<td>S02</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+</tr>
+</tbody>
+</table>
+<p>Nên bổ sung:</p>
+<pre><code class="language-text">number of variants
+number of SNPs
+number of indels
+transition/transversion nếu phù hợp
+</code></pre>
+<hr />
+<h1>13. Illumina — Step 9: IGV validation</h1>
+<p>Đây là bước rất nên có trước khi công bố.</p>
+<p>Mở:</p>
+<pre><code class="language-text">reference.fasta
+sample.sorted.bam
+VCF
+</code></pre>
+<p>trong:</p>
+<pre><code class="language-text">IGV
+</code></pre>
+<p>Kiểm tra các biến thể quan trọng:</p>
+<ul>
+<li>SNP có depth đủ không?</li>
+<li>có strand bias không?</li>
+<li>có nằm tại vị trí primer không?</li>
+<li>có chỉ xuất hiện ở một vài reads không?</li>
+<li>có soft clipping bất thường không?</li>
+<li>có pattern cho thấy contamination/index hopping không?</li>
+</ul>
+<p>Các biến thể quan trọng nên được kiểm tra thủ công.</p>
+<hr />
+<h1>14. Workflow B — Oxford Nanopore</h1>
+<h2>Tổng quan</h2>
+<pre><code class="language-text">FASTQ
+  │
+  ▼
+NanoPlot / NanoQC
+  │
+  ▼
+Quality filtering
+  │
+  ▼
+Primer trimming
+  │
+  ▼
+Minimap2
+  │
+  ▼
+BAM
+  │
+  ▼
+Sort + Index
+  │
+  ▼
+Mapping QC
+  │
+  ▼
+Primer-aware variant calling
+  │
+  ▼
+Medaka / appropriate consensus
+  │
+  ▼
+Consensus FASTA
+  │
+  ▼
+Consensus QC
+  │
+  ▼
+IGV
+  │
+  ▼
+Phylogenetics
+</code></pre>
+<p>Galaxy có các workflow và training materials cho Nanopore pathogen analysis; Galaxy cũng sử dụng minimap2 cho long-read mapping và Medaka trong các workflow Nanopore consensus/polishing.</p>
+<hr />
+<h1>15. ONT — Step 1: Read QC</h1>
+<p>Tool:</p>
+<pre><code class="language-text">NanoPlot
+</code></pre>
+<p>Kiểm tra:</p>
+<ul>
+<li>read length;</li>
+<li>mean read quality;</li>
+<li>N50;</li>
+<li>total bases;</li>
+<li>number of reads;</li>
+<li>quality distribution.</li>
+</ul>
+<p>Output:</p>
+<pre><code class="language-text">NanoPlot_report.html
+</code></pre>
+<hr />
+<h1>16. ONT — Step 2: Quality filtering</h1>
+<p>Có thể sử dụng:</p>
+<pre><code class="language-text">Filtlong
+</code></pre>
+<p>hoặc công cụ tương đương trong Galaxy.</p>
+<p>Mục tiêu:</p>
+<pre><code class="language-text">raw ONT reads
+      ↓
+quality filtering
+      ↓
+high-quality reads
+</code></pre>
+<p>Không nên đặt ngưỡng quá cao một cách máy móc vì viral amplicon data thường có read length phụ thuộc thiết kế amplicon.</p>
+<p>Quan trọng hơn là đánh giá:</p>
+<ul>
+<li>coverage;</li>
+<li>uniformity;</li>
+<li>read quality;</li>
+<li>amplicon dropout.</li>
+</ul>
+<hr />
+<h1>17. ONT — Step 3: Primer trimming</h1>
+<p>Primer trimming đặc biệt quan trọng đối với ONT tiled amplicon data.</p>
+<p>Sử dụng:</p>
+<pre><code class="language-text">primer BED
+</code></pre>
+<p>và tool tương thích với workflow.</p>
+<p>Mục tiêu:</p>
+<pre><code class="language-text">ONT reads
+     ↓
+primer removal
+     ↓
+clean reads
+</code></pre>
+<p>Phải kiểm tra xem primer sequence có còn ở đầu reads hay không.</p>
+<hr />
+<h1>18. ONT — Step 4: Mapping bằng minimap2</h1>
+<p>Tool:</p>
+<pre><code class="language-text">minimap2
+</code></pre>
+<p>Reference:</p>
+<pre><code class="language-text">DENV_reference.fasta
+</code></pre>
+<p>Input:</p>
+<pre><code class="language-text">clean_ONT.fastq.gz
+</code></pre>
+<p>Output:</p>
+<pre><code class="language-text">sample.sorted.bam
+sample.sorted.bam.bai
+</code></pre>
+<p>Sau đó dùng:</p>
+<pre><code class="language-text">samtools flagstat
+samtools depth
+</code></pre>
+<p>để đánh giá mapping.</p>
+<hr />
+<h1>19. ONT — Step 5: Coverage analysis</h1>
+<p>Tạo coverage plot theo genome.</p>
+<p>Nên đánh giá:</p>
+<pre><code class="language-text">mean depth
+median depth
+breadth ≥10×
+breadth ≥20×
+breadth ≥50×
+minimum depth
+maximum depth
+</code></pre>
+<p>Ngoài genome-wide coverage, nên kiểm tra từng amplicon.</p>
+<p>Ví dụ:</p>
+<pre><code class="language-text">Amplicon 01 → 1250×
+Amplicon 02 → 1100×
+Amplicon 03 → 15×
+Amplicon 04 → 980×
+</code></pre>
+<p>Amplicon dropout phải được báo cáo, không nên chỉ nhìn mean coverage.</p>
+<hr />
+<h1>20. ONT — Step 6: Variant calling</h1>
+<p>Có thể sử dụng caller phù hợp với ONT, ví dụ workflow dựa trên:</p>
+<pre><code class="language-text">Medaka
+</code></pre>
+<p>hoặc một caller đã được validation cho ONT viral sequencing.</p>
+<p>Nguyên tắc:</p>
+<pre><code class="language-text">ONT BAM
+   ↓
+variant calling
+   ↓
+VCF
+   ↓
+consensus
+</code></pre>
+<p>Không nên áp dụng trực tiếp các ngưỡng allele frequency của Illumina cho ONT mà không validation.</p>
+<hr />
+<h1>21. ONT — Step 7: Consensus</h1>
+<p>Có thể sử dụng:</p>
+<pre><code class="language-text">Medaka
+</code></pre>
+<p>để tạo/polish consensus.</p>
+<p>Galaxy Training Network có workflow polishing sử dụng Medaka cho Nanopore và nhấn mạnh việc chọn model phù hợp với dữ liệu; model phải tương ứng với chemistry/basecaller của dataset.</p>
+<p>Output:</p>
+<pre><code class="language-text">Sample01_ONT_consensus.fasta
+</code></pre>
+<hr />
+<h1>22. So sánh Illumina và ONT</h1>
+<p>Nên phân tích song song:</p>
+<pre><code class="language-text">                    Illumina              ONT
+-------------------------------------------------------
+Read                 Short                 Long
+Accuracy             Cao                   Thấp hơn
+Mapping               BWA-MEM              minimap2
+QC                     FastQC/MultiQC       NanoPlot
+Primer handling       iVar/Cutadapt/...     primer-aware tool
+Variant calling       iVar/...              Medaka/validated caller
+Consensus              VCF + reference      Medaka/validated consensus
+Main strength         SNP accuracy          long reads
+Main concern           PCR/amplicon bias     sequencing error
+</code></pre>
+<p>Nếu có điều kiện, <strong>hybrid validation</strong> rất mạnh:</p>
+<pre><code class="language-text">ONT consensus
+       +
+Illumina reads
+       ↓
+independent validation
+       ↓
+high-confidence consensus
+</code></pre>
+<p>Tuy nhiên, nếu Illumina và ONT được tạo từ các mẫu khác nhau thì không nên gọi đây là technical validation trực tiếp.</p>
+<hr />
+<h1>23. Phylogenetic workflow</h1>
+<p>Sau khi có consensus:</p>
+<pre><code class="language-text">*.fasta
+</code></pre>
+<p>lọc các sequence không đạt QC.</p>
+<h2>23.1. Multiple sequence alignment</h2>
+<p>Có thể sử dụng:</p>
+<pre><code class="language-text">MAFFT
+</code></pre>
+<p>Input:</p>
+<pre><code class="language-text">DENV_consensus_sequences.fasta
+</code></pre>
+<p>Output:</p>
+<pre><code class="language-text">DENV_alignment.fasta
+</code></pre>
+<p>Nên bao gồm:</p>
+<ul>
+<li>sequence của nghiên cứu;</li>
+<li>reference sequences;</li>
+<li>representative sequences từ các quốc gia;</li>
+<li>sequences gần về thời gian/địa lý;</li>
+<li>sequences phù hợp với câu hỏi nghiên cứu.</li>
+</ul>
+<hr />
+<h1>24. Kiểm tra alignment</h1>
+<p>Dùng:</p>
+<pre><code class="language-text">AliView
+</code></pre>
+<p>hoặc:</p>
+<pre><code class="language-text">Jalview
+</code></pre>
+<p>Kiểm tra:</p>
+<ul>
+<li>abnormal gaps;</li>
+<li>sequence quá ngắn;</li>
+<li>alignment sai;</li>
+<li>vùng terminal;</li>
+<li>vùng có nhiều Ns.</li>
+</ul>
+<p>Có thể dùng:</p>
+<pre><code class="language-text">IQ-TREE
+</code></pre>
+<p>để chọn model và xây dựng ML tree.</p>
+<p>Ví dụ:</p>
+<pre><code class="language-text">IQ-TREE
+Model selection: ModelFinder
+Bootstrap: ultrafast bootstrap
+</code></pre>
+<p>Số bootstrap nên được xác định trước và báo cáo trong Methods.</p>
+<hr />
+<h1>25. Phân tích genotype/serotype</h1>
+<p>Không nên suy luận genotype chỉ từ tên sample.</p>
+<p>Nên thực hiện:</p>
+<pre><code class="language-text">Consensus
+   ↓
+alignment
+   ↓
+reference/reference dataset
+   ↓
+phylogenetic tree
+   ↓
+genotype assignment
+</code></pre>
+<p>Có thể kết hợp các công cụ/database chuyên biệt cho DENV nếu phù hợp với mục tiêu nghiên cứu.</p>
+<hr />
+<h1>26. Phân tích biến thể</h1>
+<p>Tạo bảng:</p>
+<pre><code class="language-text">Sample
+Position
+Reference
+Alternative
+Depth
+Alt depth
+Allele frequency
+Gene
+Codon
+Nucleotide change
+Amino-acid change
+</code></pre>
+<p>Ví dụ:</p>
+<table>
+<thead>
+<tr>
+<th>Sample</th>
+<th style="text-align: right;">Position</th>
+<th>Ref</th>
+<th>Alt</th>
+<th style="text-align: right;">Depth</th>
+<th style="text-align: right;">Alt depth</th>
+<th style="text-align: right;">AF</th>
+<th>Gene</th>
+<th>AA change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S01</td>
+<td style="text-align: right;">1234</td>
+<td>A</td>
+<td>G</td>
+<td style="text-align: right;">850</td>
+<td style="text-align: right;">823</td>
+<td style="text-align: right;">0.968</td>
+<td>NS1</td>
+<td>...</td>
+</tr>
+</tbody>
+</table>
+<p>Các biến thể cần được lọc theo tiêu chí đã xác định trước.</p>
+<hr />
+<h1>27. QC cần có cho một nghiên cứu xuất bản</h1>
+<p>Không nên chỉ cung cấp:</p>
+<pre><code class="language-text">Consensus FASTA
+</code></pre>
+<p>Nên tạo một <strong>Master QC table</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Sample</th>
+<th>Platform</th>
+<th style="text-align: right;">Reads</th>
+<th style="text-align: right;">Mapped %</th>
+<th style="text-align: right;">Mean depth</th>
+<th style="text-align: right;">Median depth</th>
+<th style="text-align: right;">≥10×</th>
+<th style="text-align: right;">≥20×</th>
+<th style="text-align: right;">≥50×</th>
+<th style="text-align: right;">%N</th>
+<th style="text-align: right;">SNPs</th>
+<th style="text-align: right;">Indels</th>
+<th>QC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S01</td>
+<td>Illumina</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td>S02</td>
+<td>ONT</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td style="text-align: right;">...</td>
+<td>PASS</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1>28. Tiêu chí QC nên định nghĩa trước</h1>
+<p>Ví dụ framework:</p>
+<pre><code class="language-text">PASS nếu:
+
+Genome breadth ≥ predefined threshold
+AND
+median/mean depth ≥ predefined threshold
+AND
+%N ≤ predefined threshold
+AND
+no major contamination detected
+AND
+no major amplicon dropout
+</code></pre>
+<p><strong>Không nên lấy các ngưỡng trên làm giá trị mặc định cho mọi nghiên cứu.</strong></p>
+<p>Ngưỡng phải dựa trên:</p>
+<ul>
+<li>sequencing platform;</li>
+<li>primer scheme;</li>
+<li>validation data;</li>
+<li>intended use;</li>
+<li>journal/database requirements.</li>
+</ul>
+<h2>28.1. Bộ ngưỡng khởi điểm tham khảo (không phải giá trị cố định)</h2>
+<p>Bảng dưới đưa ra các mốc <strong>thường thấy</strong> trong các nghiên cứu virus tiled-amplicon công bố (ví dụ ARTIC/SARS-CoV-2, các nghiên cứu DENV WGS) để làm điểm khởi đầu khi xây validation dataset — nhóm nghiên cứu vẫn cần tự xác nhận lại bằng dữ liệu của mình trước khi cố định:</p>
+<table>
+<thead>
+<tr>
+<th>Chỉ số</th>
+<th>Mốc khởi điểm thường gặp</th>
+<th>Ghi chú</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Depth tối thiểu để gọi base</td>
+<td>10×–20×</td>
+<td>Illumina thường dùng 10–20×; ONT thường yêu cầu cao hơn (≥20–30×) do error rate cao hơn</td>
+</tr>
+<tr>
+<td>Genome breadth để "PASS"</td>
+<td>≥ 70–90% genome có depth đạt ngưỡng</td>
+<td>Tuỳ mục đích: submission GenBank/GISAID-tương-tự thường đòi hỏi cao hơn phân tích nội bộ</td>
+</tr>
+<tr>
+<td>%N tối đa cho phép</td>
+<td>≤ 10–30%</td>
+<td>Càng thấp càng tốt cho phân tích phát sinh chủng loại; ngưỡng cao hơn có thể chấp nhận cho khảo sát dịch tễ sơ bộ</td>
+</tr>
+<tr>
+<td>Minimum allele frequency để gọi biến thể (consensus)</td>
+<td>0.5 (majority consensus) hoặc 0.75 tuỳ protocol</td>
+<td>0.5 = consensus theo đa số; ngưỡng cao hơn giảm nhiễu nhưng có thể bỏ sót biến thể thật</td>
+</tr>
+<tr>
+<td>Minimum allele frequency để báo cáo minor variant</td>
+<td>0.03–0.05 (chỉ với Illumina, depth cao)</td>
+<td>Không khuyến nghị áp dụng cho ONT nếu chưa validation riêng vì error profile khác</td>
+</tr>
+<tr>
+<td>Mapping quality tối thiểu</td>
+<td>≥ 20–30</td>
+<td>Áp dụng khi lọc reads trước variant calling</td>
+</tr>
+<tr>
+<td>Base quality tối thiểu</td>
+<td>≥ 20 (Phred)</td>
+<td>Áp dụng khi lọc trước variant calling</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Đây là các con số "thường thấy trong y văn/thực hành cộng đồng", không phải quy chuẩn bắt buộc.</strong> Nhóm nghiên cứu cần chạy validation dataset (mục 33) để xác nhận các ngưỡng này phù hợp với primer scheme, độ sâu đọc thực tế và mục tiêu công bố của chính mình, rồi mới cố định trong protocol.</p>
+<hr />
+<h1>29. Contamination và mixed infection</h1>
+<p>Đây là phần rất quan trọng nếu muốn công bố chất lượng cao.</p>
+<p>Nên kiểm tra:</p>
+<h3>29.1. Contamination</h3>
+<ul>
+<li>mapping ngoài reference;</li>
+<li>taxonomic classification nếu cần;</li>
+<li>unexpected genotype;</li>
+<li>unexpected serotype;</li>
+<li>sample-to-sample cross contamination.</li>
+</ul>
+<h3>29.2. Mixed infection</h3>
+<p>Nếu một vị trí có:</p>
+<pre><code class="language-text">REF = 52%
+ALT = 48%
+</code></pre>
+<p>không nên ngay lập tức gọi đó là true minority variant.</p>
+<p>Cần kiểm tra:</p>
+<ul>
+<li>depth;</li>
+<li>strand;</li>
+<li>base quality;</li>
+<li>mapping quality;</li>
+<li>primer position;</li>
+<li>neighboring variants;</li>
+<li>read-level support;</li>
+<li>possible contamination.</li>
+</ul>
+<hr />
+<h1>30. Reproducibility</h1>
+<p>Một bài báo quốc tế tốt nên có khả năng tái lập.</p>
+<p>Cần lưu:</p>
+<pre><code class="language-text">Galaxy instance
+Galaxy workflow
+Workflow version
+Tool name
+Tool version
+Reference accession/version
+Primer scheme/version
+Parameters
+QC thresholds
+Database versions
+Date of analysis
+</code></pre>
+<p>Nên export workflow:</p>
+<pre><code class="language-text">workflow.ga
+</code></pre>
+<p>và lưu trong GitHub/Zenodo hoặc repository phù hợp.</p>
+<p>Galaxy hỗ trợ workflow có thể chia sẻ và tái sử dụng; Galaxy Training Network cũng có tài liệu về quản lý, kiểm thử và công bố workflow.</p>
+<hr />
+<h1>30bis. Phụ lục: Gợi ý tool Galaxy cụ thể cho từng bước</h1>
+<p>Bảng dưới liệt kê tên tool thường thấy trên Galaxy Toolshed/usegalaxy.<em> tương ứng với từng bước ở trên. Đây là </em><em>gợi ý khởi điểm</em>* — cần kiểm tra tool nào thực sự có trên Galaxy server sẽ sử dụng (public hay riêng), và luôn ghi lại version cụ thể khi đã chọn.</p>
+<h2>Illumina</h2>
+<table>
+<thead>
+<tr>
+<th>Bước</th>
+<th>Tool Galaxy gợi ý</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>QC thô</td>
+<td><code>FastQC</code>, <code>MultiQC</code></td>
+</tr>
+<tr>
+<td>Adapter trimming</td>
+<td><code>fastp</code> hoặc <code>Cutadapt</code></td>
+</tr>
+<tr>
+<td>Primer trimming (theo BED)</td>
+<td><code>ivar trim</code> (trong bộ <code>iVar</code>), hoặc <code>Cutadapt</code> với toạ độ chuyển từ BED</td>
+</tr>
+<tr>
+<td>Mapping</td>
+<td><code>Map with BWA-MEM</code> (hoặc <code>BWA-MEM2</code>)</td>
+</tr>
+<tr>
+<td>Sort/Index/QC BAM</td>
+<td><code>Samtools sort</code>, <code>Samtools index</code>, <code>Samtools flagstat</code>, <code>Samtools idxstats</code>, <code>Samtools depth</code>, <code>Samtools coverage</code></td>
+</tr>
+<tr>
+<td>Coverage theo amplicon</td>
+<td><code>bedtools coverage</code> (BAM × amplicon BED)</td>
+</tr>
+<tr>
+<td>Primer-aware variant calling</td>
+<td><code>ivar variants</code> (yêu cầu BAM đã trim bằng <code>ivar trim</code>) hoặc <code>LoFreq</code></td>
+</tr>
+<tr>
+<td>Consensus</td>
+<td><code>ivar consensus</code>, hoặc <code>bcftools consensus</code> (reference + VCF đã lọc)</td>
+</tr>
+<tr>
+<td>Kiểm tra alignment</td>
+<td><code>IGV</code> (desktop, kết nối trực tiếp với Galaxy qua "display at IGV")</td>
+</tr>
+</tbody>
+</table>
+<h2>Oxford Nanopore (ONT)</h2>
+<table>
+<thead>
+<tr>
+<th>Bước</th>
+<th>Tool Galaxy gợi ý</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>QC thô</td>
+<td><code>NanoPlot</code>, <code>NanoQC</code></td>
+</tr>
+<tr>
+<td>Lọc chất lượng</td>
+<td><code>Filtlong</code>, hoặc <code>Chopper</code>/<code>NanoFilt</code></td>
+</tr>
+<tr>
+<td>Loại adapter (nếu chưa loại lúc basecalling)</td>
+<td><code>Porechop</code></td>
+</tr>
+<tr>
+<td>Primer trimming</td>
+<td>công cụ tương thích primer BED (ví dụ workflow dựa trên <code>ivar trim</code> áp dụng cho BAM long-read, hoặc bộ công cụ ARTIC field-bioinformatics nếu có trên server)</td>
+</tr>
+<tr>
+<td>Mapping</td>
+<td><code>minimap2</code> (preset <code>map-ont</code>)</td>
+</tr>
+<tr>
+<td>Sort/Index/QC BAM</td>
+<td><code>Samtools sort</code>, <code>Samtools index</code>, <code>Samtools flagstat</code>, <code>Samtools depth</code>, <code>Samtools coverage</code></td>
+</tr>
+<tr>
+<td>Coverage theo amplicon</td>
+<td><code>bedtools coverage</code></td>
+</tr>
+<tr>
+<td>Variant calling + consensus</td>
+<td><code>Medaka consensus</code> / <code>medaka_variant</code> (chọn đúng model theo basecaller/chemistry)</td>
+</tr>
+<tr>
+<td>Kiểm tra alignment</td>
+<td><code>IGV</code></td>
+</tr>
+</tbody>
+</table>
+<h2>Chung cho cả hai nhánh (sau khi có consensus)</h2>
+<table>
+<thead>
+<tr>
+<th>Bước</th>
+<th>Tool Galaxy gợi ý</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gộp &amp; lọc các consensus đạt QC</td>
+<td><code>Concatenate datasets</code>, kết hợp thao tác lọc theo bảng QC</td>
+</tr>
+<tr>
+<td>Multiple sequence alignment</td>
+<td><code>MAFFT</code></td>
+</tr>
+<tr>
+<td>Kiểm tra alignment</td>
+<td><code>AliView</code>/<code>Jalview</code> (thường chạy ngoài Galaxy, tải file alignment về)</td>
+</tr>
+<tr>
+<td>Cây phát sinh chủng loại</td>
+<td><code>IQ-TREE</code> (kèm <code>ModelFinder</code> + <code>ultrafast bootstrap</code>)</td>
+</tr>
+<tr>
+<td>Trực quan hoá cây</td>
+<td><code>iTOL</code> (web, ngoài Galaxy) hoặc <code>ggtree</code> nếu chạy trong Galaxy Jupyter/RStudio interactive tool</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Ghi chú: tên hiển thị và version của tool có thể khác nhau giữa các Galaxy server (usegalaxy.org, usegalaxy.eu, server nội bộ). Trước khi xây <code>.ga</code> chính thức, nên vào Galaxy, tìm từng tool trong ô "Tools" và ghi lại chính xác tên + version sẽ dùng, sau đó cập nhật bảng này cho project.</p>
+</blockquote>
+<hr />
+<h1>31. Cấu trúc Galaxy History đề nghị</h1>
+<p>Mỗi project có thể tổ chức:</p>
+<pre><code class="language-text">DENV_WGS_2026
+│
+├── 01_raw_fastq
+├── 02_raw_QC
+├── 03_trimmed_reads
+├── 04_posttrim_QC
+├── 05_mapping
+├── 06_BAM_QC
+├── 07_variants
+├── 08_consensus
+├── 09_consensus_QC
+├── 10_alignment
+├── 11_phylogeny
+├── 12_figures
+└── 13_final_results
+</code></pre>
+<hr />
+<h1>32. Hai workflow nên xây dựng trong Galaxy</h1>
+<h2>Workflow 1</h2>
+<p>Tên:</p>
+<pre><code class="language-text">DENV_TiledAmplicon_Illumina_WGS_v1
+</code></pre>
+<p>Inputs:</p>
+<pre><code class="language-text">R1
+R2
+reference.fasta
+primer.bed
+</code></pre>
+<p>Outputs:</p>
+<pre><code class="language-text">raw_QC
+trimmed_R1
+trimmed_R2
+posttrim_QC
+BAM
+BAM_index
+mapping_QC
+coverage
+VCF
+consensus.fasta
+consensus_QC
+</code></pre>
+<h2>Workflow 2</h2>
+<p>Tên:</p>
+<pre><code class="language-text">DENV_TiledAmplicon_ONT_WGS_v1
+</code></pre>
+<p>Inputs:</p>
+<pre><code class="language-text">ONT_FASTQ
+reference.fasta
+primer.bed
+</code></pre>
+<p>Outputs:</p>
+<pre><code class="language-text">NanoPlot
+filtered_FASTQ
+trimmed_FASTQ
+BAM
+BAM_index
+mapping_QC
+coverage
+VCF
+consensus.fasta
+consensus_QC
+</code></pre>
+<hr />
+<h1>32bis. Các bước thực hành để dựng workflow trong Galaxy Workflow Editor</h1>
+<p>Phần này mô tả thao tác cụ thể trên giao diện Galaxy để biến sơ đồ ở trên thành một workflow chạy được (<code>.ga</code>).</p>
+<ol>
+<li><strong>Tạo workflow mới</strong>: vào menu <code>Workflow</code> → <code>Create new workflow</code>, đặt tên đúng theo quy ước version, ví dụ <code>DENV_TiledAmplicon_Illumina_WGS_v1</code>.</li>
+<li><strong>Thêm input node</strong>: dùng khối <code>Input dataset</code> (hoặc <code>Input dataset collection</code> nếu chạy nhiều mẫu cùng lúc theo batch) cho từng input: <code>R1</code>, <code>R2</code> (hoặc collection paired R1/R2), <code>reference.fasta</code>, <code>primer.bed</code>.
+   - Với nhiều mẫu, nên gói <code>R1</code>/<code>R2</code> thành một <strong>dataset collection</strong> (paired list) để một workflow chạy được cho cả batch thay vì từng mẫu một.</li>
+<li><strong>Thêm từng tool bằng thanh tìm kiếm bên trái</strong> (gõ đúng tên tool ở bảng phụ lục mục 30bis), kéo vào canvas theo đúng thứ tự sơ đồ ở mục 4 (Illumina) hoặc mục 14 (ONT).</li>
+<li><strong>Nối các cổng (ports)</strong>: kéo dây từ output của tool trước sang input tương ứng của tool sau (ví dụ: output <code>FASTQ</code> của <code>fastp</code> → input <code>Reads</code> của <code>ivar trim</code>). Với các tool cần cả BAM và BED (ví dụ <code>ivar trim</code>, <code>bedtools coverage</code>), nhớ nối cả hai input.</li>
+<li><strong>Cấu hình tham số mặc định của từng tool</strong> trong khung bên phải (mapping quality, base quality, minimum depth, minimum allele frequency…) theo giá trị đã thống nhất (mục 28.1); các tham số có thể để dạng "runtime parameter" nếu muốn thay đổi linh hoạt mỗi lần chạy.</li>
+<li><strong>Đánh dấu output cần giữ lại</strong>: click vào từng output quan trọng (BAM, VCF, consensus FASTA, các báo cáo QC) → bật <code>Mark output for dataset collection</code> hoặc gắn nhãn rõ ràng để dễ nhận diện trong history sau khi chạy.</li>
+<li><strong>Lưu workflow</strong> (<code>Save</code>), sau đó chạy thử (<code>Run workflow</code>) trên 1–2 mẫu để kiểm tra toàn bộ chuỗi không lỗi trước khi chạy hàng loạt.</li>
+<li><strong>Export workflow</strong>: <code>Workflow</code> → chọn workflow → <code>Download</code> để lấy file <code>.ga</code>, lưu vào <code>workflows/</code> theo cấu trúc ở mục 38 và đưa lên repository (GitHub/Zenodo) để đảm bảo reproducibility.</li>
+<li>Lặp lại quy trình tương tự cho <code>DENV_TiledAmplicon_ONT_WGS_v1</code>.</li>
+</ol>
+<blockquote>
+<p>Ghi chú: Galaxy cũng hỗ trợ tạo workflow tự động bằng cách "trích xuất" (extract) từ một history đã chạy tay thành công (<code>History options</code> → <code>Extract workflow</code>) — cách này phù hợp nếu muốn thử nghiệm thủ công từng bước trước, sau đó mới đóng gói thành workflow chuẩn.</p>
+</blockquote>
+<hr />
+<h1>33. Workflow validation</h1>
+<p>Trước khi chạy hàng trăm mẫu, nên tạo một <strong>validation dataset</strong> gồm:</p>
+<pre><code class="language-text">Known positive samples
+Known negative/control samples
+High-quality samples
+Low-quality samples
+Samples with expected variants
+</code></pre>
+<p>Sau đó chạy cả workflow.</p>
+<p>So sánh:</p>
+<pre><code class="language-text">Galaxy workflow
+vs
+validated reference analysis
+</code></pre>
+<p>Đánh giá:</p>
+<ul>
+<li>consensus identity;</li>
+<li>SNP concordance;</li>
+<li>indel concordance;</li>
+<li>coverage;</li>
+<li>consensus Ns;</li>
+<li>genotype;</li>
+<li>phylogenetic placement.</li>
+</ul>
+<p>Chỉ sau khi validation đạt yêu cầu mới chạy toàn bộ dataset.</p>
+<hr />
+<h1>34. Publication-ready outputs</h1>
+<p>Tối thiểu nên có:</p>
+<h3>Supplementary Table 1</h3>
+<p>Sample metadata.</p>
+<h3>Supplementary Table 2</h3>
+<p>Sequencing/QC metrics.</p>
+<h3>Supplementary Table 3</h3>
+<p>Variant table.</p>
+<h3>Supplementary Table 4</h3>
+<p>Consensus genome statistics.</p>
+<h3>Supplementary Figure 1</h3>
+<p>Read QC.</p>
+<h3>Supplementary Figure 2</h3>
+<p>Coverage plots.</p>
+<h3>Figure 1</h3>
+<p>Study design / sequencing workflow.</p>
+<h3>Figure 2</h3>
+<p>Phylogenetic tree.</p>
+<h3>Figure 3</h3>
+<p>Geographical/temporal distribution.</p>
+<h3>Figure 4</h3>
+<p>Genetic diversity / mutation profile nếu phù hợp.</p>
+<hr />
+<h1>35. Những gì Methods của bài báo phải mô tả</h1>
+<p>Ví dụ cấu trúc:</p>
+<pre><code class="language-text">Sample collection
+        ↓
+RNA extraction
+        ↓
+DENV detection/serotyping
+        ↓
+Whole-genome tiled amplicon PCR
+        ↓
+Library preparation
+        ↓
+Illumina / ONT sequencing
+        ↓
+FASTQ
+        ↓
+Galaxy analysis
+        ↓
+QC
+        ↓
+Primer trimming
+        ↓
+Reference mapping
+        ↓
+Variant calling
+        ↓
+Consensus generation
+        ↓
+Phylogenetic analysis
+</code></pre>
+<p>Trong Methods phải ghi rõ:</p>
+<ol>
+<li>sequencing platform;</li>
+<li>library preparation;</li>
+<li>primer scheme;</li>
+<li>reference accession;</li>
+<li>trimming software/version;</li>
+<li>mapper/version;</li>
+<li>variant caller/version;</li>
+<li>consensus software/version;</li>
+<li>QC thresholds;</li>
+<li>phylogenetic software/version;</li>
+<li>database/accession selection;</li>
+<li>Galaxy workflow/version;</li>
+<li>workflow DOI/repository nếu có.</li>
+</ol>
+<hr />
+<h1>36. Một điểm rất quan trọng: không dùng một workflow cho cả Illumina và ONT</h1>
+<p>Không nên làm:</p>
+<pre><code class="language-text">FASTQ
+ ↓
+một pipeline chung
+ ↓
+consensus
+</code></pre>
+<p>Mà nên:</p>
+<pre><code class="language-text">                  DENV FASTQ
+                      │
+          ┌───────────┴───────────┐
+          │                       │
+      Illumina                   ONT
+          │                       │
+       FastQC                   NanoPlot
+          │                       │
+   adapter/primer             primer trim
+       trim                      │
+          │                   minimap2
+       BWA-MEM                    │
+          │                     BAM
+        BAM                       │
+          │                   ONT caller
+      iVar/...                    │
+          │                    Medaka
+      consensus                   │
+          │                   consensus
+          └───────────┬───────────┘
+                      │
+              Consensus QC
+                      │
+                   MAFFT
+                      │
+                  IQ-TREE
+                      │
+              Epidemiological
+                 analysis
+</code></pre>
+<p>Điều này giúp phân biệt rõ <strong>platform-specific errors</strong> và tăng tính minh bạch của nghiên cứu.</p>
+<hr />
+<h1>37. Có thể dùng Galaxy public hay Galaxy server riêng?</h1>
+<p>Đối với nghiên cứu thật:</p>
+<h3>Galaxy public</h3>
+<p>Phù hợp cho:</p>
+<ul>
+<li>thử nghiệm;</li>
+<li>pilot;</li>
+<li>học workflow;</li>
+<li>dataset không nhạy cảm.</li>
+</ul>
+<p>Galaxy có các public instances và workflow pathogen surveillance có thể dùng làm nền tảng tham khảo.</p>
+<h3>Galaxy server riêng</h3>
+<p>Phù hợp hơn nếu:</p>
+<ul>
+<li>dữ liệu bệnh nhân;</li>
+<li>dữ liệu chưa công bố;</li>
+<li>số lượng mẫu lớn;</li>
+<li>cần reproducibility lâu dài;</li>
+<li>cần kiểm soát phiên bản tool/database;</li>
+<li>cần tích hợp HPC.</li>
+</ul>
+<hr />
+<h1>38. Bộ file nên lưu sau khi hoàn thành</h1>
+<pre><code class="language-text">DENV_WGS_project/
+│
+├── raw_data/
+│
+├── metadata/
+│   └── sample_metadata.tsv
+│
+├── reference/
+│   ├── DENV_reference.fasta
+│   └── reference_metadata.tsv
+│
+├── primers/
+│   └── DENV_primer_scheme_v1.bed
+│
+├── workflows/
+│   ├── DENV_TiledAmplicon_Illumina_WGS_v1.ga
+│   └── DENV_TiledAmplicon_ONT_WGS_v1.ga
+│
+├── consensus/
+│
+├── variants/
+│
+├── QC/
+│
+├── phylogeny/
+│
+├── figures/
+│
+└── README.md
+</code></pre>
+<hr />
+<h1>39. Checklist trước khi submit bài</h1>
+<h2>Sequencing</h2>
+<ul>
+<li>[ ] Raw FASTQ được lưu.</li>
+<li>[ ] Metadata đầy đủ.</li>
+<li>[ ] Primer scheme có version.</li>
+<li>[ ] Reference có accession/version.</li>
+<li>[ ] Sequencing platform được ghi rõ.</li>
+</ul>
+<h2>Bioinformatics</h2>
+<ul>
+<li>[ ] Raw QC.</li>
+<li>[ ] Adapter trimming.</li>
+<li>[ ] Primer trimming.</li>
+<li>[ ] Post-trimming QC.</li>
+<li>[ ] Mapping QC.</li>
+<li>[ ] Coverage analysis.</li>
+<li>[ ] Variant calling.</li>
+<li>[ ] Consensus QC.</li>
+<li>[ ] Manual inspection các variant quan trọng.</li>
+<li>[ ] Phylogenetic analysis.</li>
+<li>[ ] Contamination assessment.</li>
+</ul>
+<h2>Reproducibility</h2>
+<ul>
+<li>[ ] Galaxy workflow được export.</li>
+<li>[ ] Tool versions được lưu.</li>
+<li>[ ] Parameters được lưu.</li>
+<li>[ ] Reference được lưu.</li>
+<li>[ ] Primer BED được lưu.</li>
+<li>[ ] QC thresholds được ghi.</li>
+<li>[ ] Code/scripts được lưu.</li>
+<li>[ ] Workflow được chia sẻ qua repository/DOI nếu phù hợp.</li>
+</ul>
+<hr />
+<h1>40. Khuyến nghị thiết kế nghiên cứu</h1>
+<p>Nếu mục tiêu là một bài báo quốc tế có chất lượng tốt, tôi khuyến nghị kiến trúc:</p>
+<pre><code class="language-text">                 DENV samples
+                       │
+             ┌─────────┴─────────┐
+             │                   │
+         Illumina               ONT
+             │                   │
+       Platform QC          Platform QC
+             │                   │
+       Primer trim          Primer trim
+             │                   │
+       Reference map        Reference map
+             │                   │
+      Variant calling      Variant calling
+             │                   │
+         Consensus           Consensus
+             │                   │
+             └─────────┬─────────┘
+                       │
+                Consensus QC
+                       │
+                 High-quality
+                DENV genomes
+                       │
+            ┌──────────┴──────────┐
+            │                     │
+       Variant analysis      Phylogenetics
+            │                     │
+      mutation profile       MAFFT + IQ-TREE
+            │                     │
+            └──────────┬──────────┘
+                       │
+              Epidemiological
+                  analysis
+</code></pre>
+<p>Đây là cấu trúc tốt hơn nhiều so với chỉ tạo FASTA rồi xây cây phát sinh chủng loại.</p>
+<hr />
+<h2>Tài liệu Galaxy nên tham khảo</h2>
+<ul>
+<li>Galaxy Public Health Genomics: https://galaxyproject.org/community/sig/public-health/</li>
+<li>Galaxy viral surveillance workflows: https://galaxyproject.org/projects/covid19/workflows/</li>
+<li>Galaxy Training Network: https://training.galaxyproject.org/</li>
+<li>Galaxy Nanopore pathogen analysis training: https://artifact.galaxyproject.org/news/2023-03-21-foodborne-training/</li>
+</ul>
+<p>Galaxy hiện có các workflow pathogen surveillance cho cả Illumina và ONT, và các workflow này có thể được dùng làm khung để xây dựng workflow DENV chuyên biệt.</p>
+<hr />
+<h2>Bước tiếp theo để biến tài liệu này thành workflow Galaxy thực sự</h2>
+<p>Tài liệu trên là <strong>kiến trúc phân tích publication-ready</strong>, nhưng để tạo <code>.ga</code> có thể import trực tiếp vào Galaxy, cần cố định:</p>
+<ol>
+<li><strong>DENV serotype</strong>: DENV-1, DENV-2, DENV-3, DENV-4 hay cả 4.</li>
+<li><strong>Primer scheme</strong>: tên/version và file BED.</li>
+<li><strong>Reference genome</strong>: accession/version.</li>
+<li><strong>Illumina</strong>: single-end hay paired-end.</li>
+<li><strong>ONT</strong>: chemistry/basecaller và loại library.</li>
+<li><strong>Ngưỡng QC</strong> dự kiến.</li>
+<li>Có hay không <strong>technical validation Illumina ↔ ONT</strong> trên cùng mẫu.</li>
+</ol>
+<p>Sau khi các thông số này được cố định, có thể xây dựng tiếp thành <strong>2 workflow Galaxy cụ thể theo từng tool, từng parameter và từng output</strong>, thay vì chỉ là sơ đồ tổng quát. Galaxy cũng hỗ trợ workflow có thể export/chia sẻ để tăng khả năng tái lập.</p>
+
+    <div class="article-license">
+      <p class="license-title">Bản quyền &amp; giấy phép</p>
+      <p>© 2026 Mạnh Phượng.</p>
+      <p>
+        Bài viết này được cấp phép theo
+        <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="license noopener">
+          Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+        </a>.
+      </p>
+      <p>
+        Bạn được phép chia sẻ và điều chỉnh nội dung cho mục đích phi thương mại,
+        với điều kiện ghi công tác giả phù hợp và dẫn liên kết tới bài viết gốc.
+      </p>
+    </div>
+
+  </div>
+</article>
+
+<div class="track"></div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-brand">
+      <strong>© 2026 Mạnh Phượng</strong>
+      <span>· Ghi chép Y Sinh &amp; Bioinformatics</span>
+    </div>
+    <ul class="foot-links">
+      <li><a href="../copyright.html">Copyright &amp; License</a></li>
+      <li><a href="https://github.com/daohuymanh" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://orcid.org/0000-0003-3874-5051" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="mailto:daohuymanh@gmail.com">daohuymanh@gmail.com</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+
+</body>
+</html>
