@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hướng dẫn biến máy Windows thành server phân tích từ xa qua SSH — Mạnh Phượng</title>
+<meta name="description" content="Hướng dẫn biến máy Windows thành server phân tích từ xa qua SSH">
+<meta name="author" content="Đào Huy Mạnh">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="../index.html" class="logo">
+      <img class="logo-mark" src="../assets/logo-icon.png" alt="Logo Mạnh Phượng">
+      <span class="logo-text">
+        <span class="logo-name">Mạnh Phượng</span>
+        <span class="logo-tagline">Biomedicine &amp; Bioinformatics</span>
+      </span>
+    </a>
+    <nav class="primary-nav" id="primaryNav">
+      <a href="../index.html">trang chủ</a>
+      <a href="../index.html#bai-viet">bài viết</a>
+      <a href="../index.html#chu-de">chủ đề</a>
+      <a href="../index.html#gioi-thieu">giới thiệu</a>
+      <a href="../index.html#lien-he">liên hệ</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Mở menu" aria-expanded="false" aria-controls="primaryNav"></button>
+  </div>
+</header>
+
+<div class="track"></div>
+
+<div class="wrap" style="padding-top:24px;">
+  <a href="../index.html#bai-viet" class="back-link">← quay lại danh sách bài viết</a>
+</div>
+
+<header class="article-header">
+  <div class="wrap">
+    <span class="tag tag--tools">Công cụ phân tích</span>
+    <h1>Hướng dẫn biến máy Windows thành server phân tích từ xa qua SSH</h1>
+    <div class="article-meta">
+      <span>2026.10.15</span>
+      <span>10 phút đọc</span>
+    </div>
+    <div class="article-author">
+      <strong>Tác giả:</strong> Đào Huy Mạnh
+    </div>
+  </div>
+</header>
+
+<article class="post-body">
+  <div class="wrap">
+
+    <p class="lead">
+      
+    </p>
+
+<h1>Hướng dẫn biến máy Windows thành server phân tích từ xa</h1>
+<p>Tài liệu này tổng hợp các bước đã thực hiện: cài OpenSSH Server trên Windows 11, kết nối từ mạng khác bằng Tailscale, làm việc trong WSL, và giữ máy chạy nền ổn định. Mục tiêu: dùng một máy (server) để chạy phân tích, và điều khiển nó từ máy khác như tablet.</p>
+<h2>1. Tổng quan kiến trúc</h2>
+<ul>
+<li><strong>Máy server</strong>: Windows 11 Pro, bật 24/7, chạy <code>sshd</code> và Tailscale dưới dạng service nền.</li>
+<li><strong>Máy client</strong> (tablet, laptop): có ứng dụng SSH và Tailscale, đăng nhập cùng tài khoản Tailscale.</li>
+<li><strong>Kết nối</strong>: qua mạng riêng ảo Tailscale, không cần mở port trên router, không cần IP tĩnh, dùng được cả khi bị CGNAT.</li>
+<li><strong>Công việc</strong>: chạy lệnh PowerShell hoặc Linux (WSL), script Python/R, Jupyter, truyền file.</li>
+</ul>
+<h2>2. Chuẩn bị</h2>
+<ul>
+<li>Mở <strong>Windows PowerShell 64-bit</strong> bằng quyền <strong>Administrator</strong> (không dùng bản "(x86)").</li>
+<li>Máy server có Internet.</li>
+<li>Lưu ý PowerShell: <code>sc</code> là alias của <code>Set-Content</code>, phải gõ <code>sc.exe</code>. Khi dán nhiều lệnh, dán từng lệnh một để tránh bị dính dòng.</li>
+</ul>
+<h2>3. Cài OpenSSH Server</h2>
+<h3>3.1. Cài đặt</h3>
+<pre><code class="language-powershell">Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+</code></pre>
+<h3>3.2. Kiểm tra cài đúng</h3>
+<pre><code class="language-powershell">[Environment]::Is64BitProcess
+Get-WindowsCapability -Online -Name OpenSSH* | Select Name, State
+Test-Path C:\Windows\System32\OpenSSH\sshd.exe
+&amp; &quot;C:\Windows\System32\OpenSSH\sshd.exe&quot; -V 2&gt;&amp;1
+</code></pre>
+<p>Cài đúng khi capability là <code>Installed</code> <strong>và</strong> <code>sshd.exe</code> tồn tại. Dòng <code>NativeCommandError</code> khi chạy <code>sshd -V</code> là bình thường vì phiên bản được in ra stderr.</p>
+<h3>3.3. Xử lý lỗi "Installed nhưng không có sshd.exe"</h3>
+<p>Triệu chứng đã gặp: capability báo <code>Installed</code>, DISM báo Healthy, nhưng thư mục <code>System32\OpenSSH</code> không có file. Lệnh <code>Add-WindowsCapability</code> lúc này không làm gì vì Windows thấy trạng thái đã là Installed (log CBS ghi <code>has the same start and target state: Installed, skip planning</code>).</p>
+<p>Cách sửa đã có hiệu quả:</p>
+<ol>
+<li>Gỡ cả hai capability:
+   <code>powershell
+   Remove-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+   Remove-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0</code></li>
+<li>Trạng thái sẽ là <code>UninstallPending</code>. <strong>Bắt buộc khởi động lại máy</strong> (<code>Restart-Computer</code>), đừng cài lại khi đang <code>UninstallPending</code>.</li>
+<li>Sau reboot, xác nhận cả hai là <code>NotPresent</code>:
+   <code>powershell
+   Get-WindowsCapability -Online -Name OpenSSH* | Select Name, State</code></li>
+<li>Cài lại, rồi kiểm tra file:
+   <code>powershell
+   Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+   Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+   Test-Path C:\Windows\System32\OpenSSH\sshd.exe
+   Test-Path C:\Windows\System32\OpenSSH\ssh.exe</code></li>
+</ol>
+<p>Nếu vẫn không ra file:</p>
+<ul>
+<li>Dùng DISM với log riêng: <code>DISM /Online /Add-Capability /CapabilityName:OpenSSH.Server~~~~0.0.1.0 /LogPath:C:\dism-ssh.log</code>.</li>
+<li>Chạy <code>DISM /Online /Cleanup-Image /RestoreHealth</code> rồi <code>sfc /scannow</code>.</li>
+<li>Phương án cuối: repair install bằng ISO đúng build, hoặc cài <strong>Win32-OpenSSH</strong> từ GitHub (gỡ capability OpenSSH trước để tránh xung đột service).</li>
+</ul>
+<p>Ghi chú: trên máy này <code>sfc /scannow</code> báo "could not start the repair service". Việc này chưa được xử lý và không ảnh hưởng SSH, nhưng cho thấy servicing của Windows có vấn đề; nên sửa khi có thời gian.</p>
+<h2>4. Bật dịch vụ sshd</h2>
+<pre><code class="language-powershell">Set-Service sshd -StartupType Automatic
+Start-Service sshd
+Get-Service sshd | Select Name, Status, StartType
+</code></pre>
+<p>Tự khởi động lại service nếu bị crash:</p>
+<pre><code class="language-powershell">sc.exe failure sshd reset= 86400 actions= restart/5000/restart/5000/restart/5000
+</code></pre>
+<p>Kiểm tra cấu hình và cổng:</p>
+<pre><code class="language-powershell">&amp; &quot;C:\Windows\System32\OpenSSH\sshd.exe&quot; -t
+Get-NetTCPConnection -LocalPort 22 -State Listen
+Test-NetConnection -ComputerName localhost -Port 22
+</code></pre>
+<p><code>sshd -t</code> không in gì nghĩa là cấu hình hợp lệ. <code>TcpTestSucceeded : True</code> là đạt.</p>
+<h3>Firewall</h3>
+<p>Cài OpenSSH Server thường tự tạo rule <code>OpenSSH-Server-In-TCP</code>. Kiểm tra:</p>
+<pre><code class="language-powershell">Get-NetFirewallRule -Name *ssh* | Select Name, Enabled, Direction, Action
+</code></pre>
+<p>Nếu đã có rule này thì <strong>không cần tạo thêm</strong>. Rule tự tạo tên <code>sshd</code> với <code>Profile: Any</code> là thừa và mở cổng 22 cả trên mạng Public, nên xóa:</p>
+<pre><code class="language-powershell">Remove-NetFirewallRule -Name sshd
+</code></pre>
+<h2>5. Đặt PowerShell làm shell mặc định (tùy chọn)</h2>
+<p>Mặc định SSH vào Windows dùng <code>cmd</code>. Đổi sang PowerShell:</p>
+<pre><code class="language-powershell">New-ItemProperty -Path &quot;HKLM:\SOFTWARE\OpenSSH&quot; -Name DefaultShell -Value &quot;C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe&quot; -PropertyType String -Force
+</code></pre>
+<p>Không nên đặt <code>wsl.exe</code> làm shell mặc định: nếu WSL hỏng, bạn sẽ không SSH vào quản trị Windows được. Cứ vào PowerShell rồi gõ <code>wsl</code> khi cần.</p>
+<h2>6. Đăng nhập bằng khóa SSH (khuyến nghị)</h2>
+<p><strong>Trên máy client</strong> (tạo cặp khóa):</p>
+<pre><code class="language-powershell">ssh-keygen -t ed25519
+type $env:USERPROFILE\.ssh\id_ed25519.pub
+</code></pre>
+<p><strong>Trên máy server</strong>, đặt public key tùy loại tài khoản:</p>
+<ul>
+<li>Tài khoản thường: dán vào <code>C:\Users\TênUser\.ssh\authorized_keys</code>.</li>
+<li>Tài khoản thuộc nhóm Administrators: dán vào <code>C:\ProgramData\ssh\administrators_authorized_keys</code>, rồi chỉnh quyền:
+  <code>powershell
+  icacls C:\ProgramData\ssh\administrators_authorized_keys /inheritance:r /grant "SYSTEM:F" /grant "Administrators:F"</code></li>
+</ul>
+<p>Kiểm tra đăng nhập bằng khóa thành công <strong>rồi mới</strong> tắt mật khẩu. Sửa <code>C:\ProgramData\ssh\sshd_config</code>:</p>
+<pre><code>PubkeyAuthentication yes
+PasswordAuthentication no
+</code></pre>
+<p>Sau đó <code>Restart-Service sshd</code>. Lưu ý: tài khoản Microsoft đăng nhập SSH bằng mật khẩu tài khoản (không phải PIN); tài khoản không có mật khẩu sẽ không đăng nhập SSH bằng mật khẩu được.</p>
+<h2>7. Kết nối từ mạng khác bằng Tailscale</h2>
+<p>Tailscale tạo mạng riêng ảo giữa các máy, an toàn hơn nhiều so với mở port ra Internet.</p>
+<h3>7.1. Cài đặt</h3>
+<p>Trên máy server:</p>
+<pre><code class="language-powershell">winget install --id Tailscale.Tailscale -e
+</code></pre>
+<p>Sau đó <strong>mở cửa sổ PowerShell mới</strong>, đăng nhập (<code>tailscale up</code> hoặc biểu tượng khay hệ thống). Nếu lệnh <code>tailscale</code> không được nhận, gọi bằng đường dẫn đầy đủ: <code>&amp; "C:\Program Files\Tailscale\tailscale.exe"</code>.</p>
+<p>Trên máy client: cài Tailscale và <strong>đăng nhập cùng tài khoản</strong>.</p>
+<h3>7.2. Lấy địa chỉ và kết nối</h3>
+<pre><code class="language-powershell">tailscale status
+tailscale ip -4
+</code></pre>
+<p>Từ client:</p>
+<pre><code>ssh tên_user@100.x.y.z
+</code></pre>
+<h3>7.3. Chạy nền, không cần mở cửa sổ</h3>
+<p>Tailscale chạy bằng Windows service <code>Tailscale</code>; biểu tượng khay hệ thống chỉ là giao diện điều khiển.</p>
+<pre><code class="language-powershell">Get-Service Tailscale | Select Name, Status, StartType
+Set-Service Tailscale -StartupType Automatic
+Start-Service Tailscale
+tailscale set --unattended
+</code></pre>
+<p>Nếu lệnh <code>--unattended</code> không có ở phiên bản của bạn, bật trong giao diện: Preferences, <strong>Run unattended</strong>.</p>
+<h3>7.4. Tắt hết hạn khóa</h3>
+<p>Vào <strong>login.tailscale.com/admin/machines</strong>, bấm dấu ba chấm cạnh máy server, chọn <strong>Disable key expiry</strong>. Nếu không, máy sẽ mất kết nối khi khóa hết hạn (khoảng 180 ngày).</p>
+<h3>7.5. Nếu SSH bị timeout dù đã có IP Tailscale</h3>
+<p>Có thể mạng Tailscale bị Windows coi là profile Public và rule firewall không áp dụng. Kiểm tra bằng <code>Get-NetFirewallRule -Name OpenSSH-Server-In-TCP | Get-NetFirewallProfile</code> và <code>Get-NetConnectionProfile</code>.</p>
+<h2>8. Giữ máy server luôn sẵn sàng</h2>
+<p>Server phải <strong>bật và có mạng</strong> thì mới kết nối được. Không cần bật màn hình.</p>
+<pre><code class="language-powershell">powercfg /change standby-timeout-ac 0
+powercfg /change hibernate-timeout-ac 0
+powercfg /change monitor-timeout-ac 10
+</code></pre>
+<ul>
+<li><strong>Laptop</strong>: đặt đóng nắp là "Do nothing" (Control Panel, Power Options, Choose what closing the lid does), cắm sạc.</li>
+<li><strong>Mạng</strong>: ưu tiên cáp LAN hơn Wi-Fi.</li>
+<li><strong>Windows Update</strong> có thể tự khởi động lại máy. <code>sshd</code> và Tailscale ở chế độ Automatic sẽ tự lên lại; đặt Active hours để hạn chế reboot giữa giờ làm việc.</li>
+<li><strong>Mất điện</strong>: vào BIOS bật "Restore on AC Power Loss" thành Power On để máy tự bật khi có điện.</li>
+<li><strong>BitLocker</strong> kiểu pre-boot PIN sẽ chặn máy ở màn hình nhập PIN; chế độ TPM mặc định thì không.</li>
+<li><strong>Bật máy từ xa</strong>: Wake-on-LAN chỉ chạy trong LAN, nên qua Tailscale cần một thiết bị luôn bật trong mạng nhà (ví dụ Raspberry Pi) hoặc dùng ổ cắm thông minh.</li>
+</ul>
+<h3>Kiểm tra cuối</h3>
+<p>Khởi động lại server, <strong>không đăng nhập Windows</strong>, chờ 1 đến 2 phút, rồi từ client chạy <code>ssh tên_user@100.x.y.z</code>. Kết nối được nghĩa là mọi thứ chạy nền đúng.</p>
+<h2>9. Làm việc trong WSL qua SSH</h2>
+<pre><code class="language-powershell">wsl --status
+wsl -l -v
+wsl --install -d Ubuntu
+</code></pre>
+<p>Sau khi cài cần khởi động lại và chạy Ubuntu một lần để tạo user Linux. Distro WSL gắn với từng tài khoản Windows, nên SSH bằng đúng tài khoản đã cài.</p>
+<p>Dùng:</p>
+<pre><code class="language-powershell">wsl
+wsl -d Ubuntu
+wsl ~ -e bash -lc &quot;cd ~/project &amp;&amp; python analyze.py&quot;
+</code></pre>
+<p>Ghi chú:</p>
+<ul>
+<li>Để code và dữ liệu trong <code>~/</code> (hệ file Linux) cho nhanh; ổ C nằm ở <code>/mnt/c</code> nhưng chậm hơn.</li>
+<li>Dùng <strong>tmux</strong> (<code>sudo apt install tmux</code>) để tác vụ chạy lâu không chết khi tablet mất mạng. Nếu distro vẫn bị tắt khi rảnh, thử thêm vào <code>C:\Users\TênUser\.wslconfig</code>: <code>[wsl2]</code> và <code>vmIdleTimeout=-1</code> (tùy phiên bản WSL mà tùy chọn này có hiệu lực).</li>
+<li>Ứng dụng đồ họa Linux (WSLg) chỉ hiện trên màn hình server, không hiện qua SSH.</li>
+</ul>
+<h2>10. Quy trình phân tích từ xa</h2>
+<h3>Công cụ trên tablet</h3>
+<ul>
+<li>iPad: Termius, Blink Shell.</li>
+<li>Android: Termius, Termux, JuiceSSH.</li>
+<li>Nên dùng bàn phím rời.</li>
+</ul>
+<h3>Việc thường làm</h3>
+<ul>
+<li><strong>Chạy script/phân tích</strong>: SSH vào, <code>wsl</code>, rồi chạy <code>python analyze.py</code> trong tmux.</li>
+<li><strong>Jupyter hoặc web app trên server</strong>: dùng port forwarding rồi mở trình duyệt trên tablet.
+  <code>ssh -L 8888:localhost:8888 tên_user@100.x.y.z</code>
+  Mở <code>localhost:8888</code> trên tablet.</li>
+<li><strong>Truyền file</strong>: <code>scp file.csv tên_user@100.x.y.z:~/data/</code> hoặc dùng SFTP trong Termius.</li>
+<li><strong>Quản trị Windows</strong>: <code>Get-Process</code>, <code>Get-Service</code>, <code>winget upgrade --all</code>, <code>Restart-Computer</code>.</li>
+<li><strong>Cần giao diện đồ họa</strong>: bật Remote Desktop và kết nối qua IP Tailscale bằng ứng dụng Windows App:
+  <code>powershell
+  Set-ItemProperty 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name fDenyTSConnections -Value 0
+  Enable-NetFirewallRule -DisplayGroup "Remote Desktop"</code></li>
+</ul>
+<h3>Hạn chế cần nhớ</h3>
+<ul>
+<li>Không mở được ứng dụng đồ họa trên màn hình server qua SSH.</li>
+<li>Tiến trình chạy trong phiên SSH chết khi ngắt kết nối, trừ khi chạy trong tmux, service hoặc Scheduled Task.</li>
+<li>Server tắt hoặc mất mạng thì không vào được.</li>
+</ul>
+<h2>11. Bảo mật</h2>
+<ul>
+<li>Chỉ truy cập qua Tailscale, <strong>không</strong> mở port 22 ra Internet. Xóa rule firewall thừa <code>sshd</code> (Profile: Any).</li>
+<li>Dùng khóa SSH, tắt đăng nhập bằng mật khẩu sau khi thử khóa thành công.</li>
+<li>Bật 2FA cho tài khoản Tailscale (và nhà cung cấp đăng nhập đi kèm).</li>
+<li>Chỉ cho phép người dùng cần thiết đăng nhập SSH; không dùng chung tài khoản.</li>
+<li>Cập nhật Windows, OpenSSH và Tailscale định kỳ.</li>
+<li>Nếu buộc phải mở port qua router: đổi cổng ngoài, chỉ dùng khóa, và cân nhắc giới hạn nguồn kết nối.</li>
+</ul>
+<h2>12. Checklist hoàn thành</h2>
+<ul>
+<li>[ ] <code>sshd.exe</code> có trong <code>C:\Windows\System32\OpenSSH</code></li>
+<li>[ ] Service <code>sshd</code> Running và Automatic</li>
+<li>[ ] <code>sshd -t</code> không báo lỗi, cổng 22 đang Listen</li>
+<li>[ ] Rule firewall chuẩn tồn tại, rule thừa <code>sshd</code> đã xóa</li>
+<li>[ ] Đăng nhập bằng khóa SSH thành công, đã tắt mật khẩu</li>
+<li>[ ] Tailscale cài trên cả hai máy, cùng tài khoản, đã Run unattended</li>
+<li>[ ] Đã Disable key expiry cho máy server</li>
+<li>[ ] Sleep/hibernate đã tắt, mạng ổn định</li>
+<li>[ ] Đã thử reboot server không đăng nhập và vẫn SSH vào được</li>
+<li>[ ] WSL cài sẵn, tmux hoạt động (nếu dùng)</li>
+</ul>
+<h2>13. Xử lý sự cố nhanh</h2>
+<table>
+<thead>
+<tr>
+<th>Triệu chứng</th>
+<th>Nguyên nhân thường gặp</th>
+<th>Cách xử lý</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Installed</code> nhưng không có <code>sshd.exe</code></td>
+<td>Servicing không triển khai file</td>
+<td>Remove, reboot, Add lại (mục 3.3)</td>
+</tr>
+<tr>
+<td><code>sc config ...</code> báo lỗi <code>Set-Content</code></td>
+<td><code>sc</code> là alias PowerShell</td>
+<td>Dùng <code>sc.exe</code></td>
+</tr>
+<tr>
+<td><code>tailscale</code> không được nhận</td>
+<td>Chưa cài hoặc PATH chưa cập nhật</td>
+<td>Cài, mở PowerShell mới, hoặc gọi đường dẫn đầy đủ</td>
+</tr>
+<tr>
+<td>SSH timeout qua Tailscale</td>
+<td>Firewall profile Public, server tắt/sleep</td>
+<td>Kiểm tra profile firewall, <code>tailscale status</code>, cài đặt nguồn</td>
+</tr>
+<tr>
+<td><code>Permission denied (publickey)</code></td>
+<td>Sai vị trí hoặc quyền file <code>authorized_keys</code></td>
+<td>Dùng đúng file theo loại tài khoản, chỉnh <code>icacls</code></td>
+</tr>
+<tr>
+<td>Mất kết nối sau vài tháng</td>
+<td>Key expiry của Tailscale</td>
+<td>Disable key expiry</td>
+</tr>
+<tr>
+<td>Tác vụ chết khi ngắt SSH</td>
+<td>Tiến trình gắn với phiên</td>
+<td>Dùng tmux, service hoặc Scheduled Task</td>
+</tr>
+<tr>
+<td><code>sfc /scannow</code> không start</td>
+<td>Servicing stack lỗi</td>
+<td><code>DISM /RestoreHealth</code>, cập nhật Windows, repair install nếu cần</td>
+</tr>
+</tbody>
+</table>
+
+    <div class="article-license">
+      <p class="license-title">Bản quyền &amp; giấy phép</p>
+      <p>© 2026 Đào Huy Mạnh.</p>
+      <p>
+        Bài viết này được cấp phép theo
+        <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="license noopener">
+          Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+        </a>.
+      </p>
+      <p>
+        Bạn được phép chia sẻ và điều chỉnh nội dung cho mục đích phi thương mại,
+        với điều kiện ghi công tác giả phù hợp và dẫn liên kết tới bài viết gốc.
+      </p>
+    </div>
+
+  </div>
+</article>
+
+<div class="track"></div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-brand">
+      <strong>© 2026 Mạnh Phượng</strong>
+      <span>· Ghi chép Y Sinh &amp; Bioinformatics</span>
+    </div>
+    <ul class="foot-links">
+      <li><a href="../copyright.html">Copyright &amp; License</a></li>
+      <li><a href="https://github.com/daohuymanh" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://orcid.org/0000-0003-3874-5051" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="mailto:daohuymanh@gmail.com">daohuymanh@gmail.com</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+
+</body>
+</html>
