@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pipeline giải trình tự Dengue (multi-primer amplicon) trên nf-core/viralrecon — Mạnh Phượng</title>
-<meta name="description" content="Pipeline giải trình tự Dengue (multi-primer amplicon) trên nf-core-viralrecon">
+<title>Pipeline giải trình tự Dengue và các virus RNA khác (multi-primer amplicon) trên nf-core/viralrecon: từ dữ liệu thô đến genotype, cây phát sinh loài và đột biến — Mạnh Phượng</title>
+<meta name="description" content="Hướng dẫn trọn quy trình giải trình tự virus RNA bằng amplicon đa mồi trên nf-core-viralrecon (Dengue 1-4, Zika, Chikungunya, Dại, Enterovirus...): chuẩn bị mồi và reference, chạy trên server qua SSH/Tailscale/tmux, xử lý lỗi, đánh giá chất lượng, phân loại genotype, chọn chuỗi tham chiếu NCBI, dựng và vẽ cây (TIFF 300 dpi), tìm và diễn giải đột biến">
 <meta name="author" content="Đào Huy Mạnh">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -41,10 +41,10 @@
 <header class="article-header">
   <div class="wrap">
     <span class="tag tag--tools">Công cụ phân tích</span>
-    <h1>Pipeline giải trình tự Dengue (multi-primer amplicon) trên nf-core/viralrecon</h1>
+    <h1>Pipeline giải trình tự Dengue và các virus RNA khác (multi-primer amplicon) trên nf-core/viralrecon: từ dữ liệu thô đến genotype, cây phát sinh loài và đột biến</h1>
     <div class="article-meta">
       <span>2026.09.23</span>
-      <span>20 phút đọc</span>
+      <span>90 phút đọc</span>
     </div>
     <div class="article-author">
       <strong>Tác giả:</strong> Đào Huy Mạnh
@@ -62,53 +62,157 @@
     <div class="script-download">
       <p class="script-download-title">File mẫu dùng trong bài viết</p>
       <ul class="script-download-list">
-      <li><span class="script-download-icon">📎</span><a href="../scripts/01_parse_primers.py" download>01_parse_primers.py</a></li>
-      <li><span class="script-download-icon">📎</span><a href="../scripts/02_select_reference.sh" download>02_select_reference.sh</a></li>
-      <li><span class="script-download-icon">📎</span><a href="../scripts/03_build_primer_bed.py" download>03_build_primer_bed.py</a></li>
-      <li><span class="script-download-icon">📎</span><a href="../scripts/04_run_viralrecon.sh" download>04_run_viralrecon.sh</a></li>
-      <li><span class="script-download-icon">📎</span><a href="../scripts/fastq_dir_to_samplesheet.py" download>fastq_dir_to_samplesheet.py</a></li>
+      <li><span class="script-download-icon">📎</span><a href="../scripts/01_parse_primers.py" download>02_select_reference.sh|03_build_primer_bed.py|04_run_viralrecon.sh|fastq_dir_to_samplesheet.py</a></li>
       </ul>
     </div>
 
-<h1>Pipeline giải trình tự Dengue (multi-primer amplicon) trên nf-core/viralrecon</h1>
-<p>Bộ script này tự động hoá 3 bước bạn yêu cầu, nối tiếp nhau:</p>
-<pre><code>Excel mồi (4 serotype)          dữ liệu NGS (contig/reads)
-        │                                │
-        ▼                                ▼
-01_parse_primers.py          02_select_reference.sh   (BLAST -&gt; chọn reference/serotype)
-        │                                │
-        └───────────────┬────────────────┘
-                         ▼
-              03_build_primer_bed.py   (BLAST từng mồi lên reference đã chọn -&gt; BED chuẩn)
-                         │
-                         ▼
-              04_run_viralrecon.sh     (chạy nf-core/viralrecon: Illumina MiSeq / Nanopore)
+<h1>Pipeline giải trình tự Dengue và các virus RNA khác (multi-primer amplicon) trên nf-core/viralrecon</h1>
+<p>Tài liệu này đi trọn quy trình, từ file mồi và dữ liệu thô đến diễn giải kết quả (genotype, cây phát sinh loài, đột biến).
+Các ví dụ số liệu lấy từ một lô thực tế DENV1 (Illumina, 15 mẫu); phần cuối có hướng dẫn điều chỉnh cho
+DENV2, DENV3, DENV4, Zika, Chikungunya, virus Dại và Enterovirus.</p>
+<pre><code>Excel mồi                         dữ liệu NGS (contig/reads)
+    │                                      │
+    ▼                                      ▼
+01_parse_primers.py            02_select_reference.sh   (BLAST -&gt; chọn reference/type)
+    │                                      │
+    └──────────────┬───────────────────────┘
+                   ▼
+        03_build_primer_bed.py     (BLAST từng mồi lên reference đã chọn -&gt; BED chuẩn)
+                   │
+                   ▼
+        Bước 4: nf-core/viralrecon (Illumina / Nanopore)
+                   │
+                   ▼
+        Bước 5: đánh giá chất lượng mẫu
+                   │
+        ┌──────────┴───────────┬────────────────────┐
+        ▼                      ▼                    ▼
+  Bước 6: phân loại    Bước 7-9: chuỗi tham   Bước 10: đột biến
+  (genotype/lineage)   chiếu, cây, vẽ cây     (bảng, ma trận, diễn giải)
+                   │
+                   ▼
+        Bước 11: diễn giải kết quả và kiểm tra trước khi xuất bản
 </code></pre>
 <p><strong>Quan trọng:</strong> các script 02 và 03 cần <code>blastn</code>/<code>makeblastdb</code> (gói <code>ncbi-blast+</code>)
-và Internet (để tải genome tham chiếu).</p>
+và Internet (để tải genome tham chiếu). Các script 01-03 được viết cho 4 serotype Dengue
+(thư mục <code>D1</code> đến <code>D4</code>); với virus khác, đổi tên nhóm (type) tương ứng và kiểm tra lại vòng lặp trong script.</p>
+<blockquote>
+<p><strong>Bài học quan trọng từ lô DENV1:</strong> dùng thẳng reference RefSeq mà bỏ qua Bước 2 có thể làm mẫu cách reference
+khoảng 7% (khoảng 800 SNP trên genome 10,7 kb). Khi đó QUAST không align được, primer có thể bắt cặp kém và
+một số amplicon bị mất. <strong>Chọn reference gần genotype của mẫu (Bước 2) và BED đúng tọa độ reference đó (Bước 3)
+là bước không nên bỏ qua.</strong></p>
+</blockquote>
+<h2>Bảng tham khảo theo virus</h2>
+<p>Bảng dưới là điểm xuất phát; hãy xác nhận accession, độ dài và hệ phân loại trên NCBI/ICTV và tài liệu mới nhất
+trước khi dùng, vì tên gọi và cách phân loại thay đổi theo thời gian.</p>
+<table>
+<thead>
+<tr>
+<th>Virus</th>
+<th>RefSeq tham khảo</th>
+<th>Độ dài genome (xấp xỉ)</th>
+<th>Cấu trúc gene</th>
+<th>Hệ phân loại thường dùng</th>
+<th>Vùng thường dùng để định type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DENV1</td>
+<td>NC_001477.1</td>
+<td>10,7 kb</td>
+<td>1 polyprotein</td>
+<td>Genotype</td>
+<td>Gene E</td>
+</tr>
+<tr>
+<td>DENV2</td>
+<td>NC_001474.2</td>
+<td>10,7 kb</td>
+<td>1 polyprotein</td>
+<td>Genotype/lineage (có nhiều hệ thống)</td>
+<td>Gene E</td>
+</tr>
+<tr>
+<td>DENV3</td>
+<td>NC_001475.2</td>
+<td>10,7 kb</td>
+<td>1 polyprotein</td>
+<td>Genotype</td>
+<td>Gene E</td>
+</tr>
+<tr>
+<td>DENV4</td>
+<td>NC_002640.1</td>
+<td>10,6 kb</td>
+<td>1 polyprotein</td>
+<td>Genotype</td>
+<td>Gene E</td>
+</tr>
+<tr>
+<td>Zika</td>
+<td>NC_012532.1</td>
+<td>10,8 kb</td>
+<td>1 polyprotein</td>
+<td>Lineage Châu Phi và Châu Á (gồm Châu Mỹ)</td>
+<td>Toàn CDS hoặc gene E</td>
+</tr>
+<tr>
+<td>Chikungunya</td>
+<td>NC_004162.2</td>
+<td>11,8 kb</td>
+<td>2 ORF (không cấu trúc và cấu trúc)</td>
+<td>Genotype ECSA, West Africa, Asian (và nhánh IOL)</td>
+<td>Gene E1 hoặc toàn CDS</td>
+</tr>
+<tr>
+<td>Dại (RABV)</td>
+<td>NC_001542.1</td>
+<td>11,9 kb</td>
+<td>5 gene riêng (N, P, M, G, L)</td>
+<td>Clade/lineage (Cosmopolitan, Asian, Arctic-like...)</td>
+<td>Gene N hoặc toàn genome</td>
+</tr>
+<tr>
+<td>Enterovirus</td>
+<td>Theo từng type (xem phụ lục)</td>
+<td>7,4 kb</td>
+<td>1 polyprotein</td>
+<td>Type, rồi genogroup/subgenogroup</td>
+<td>Gene VP1</td>
+</tr>
+</tbody>
+</table>
+<p>Hệ quả thực tế của bảng này:
+- <strong>Một virus nhiều type</strong> (Dengue 1-4, Enterovirus): mỗi type cần reference, GFF, BED và samplesheet riêng; không trộn type trong một lần chạy.
+- <strong>Hai ORF hoặc nhiều gene</strong> (Chikungunya, Dại): GFF có nhiều CDS; tọa độ cắt vùng mã hóa và cách đánh số đột biến khác với trường hợp 1 polyprotein (xem Bước 8 và Bước 10).
+- <strong>Virus đa dạng cao</strong> (Enterovirus, Dại): nên chọn reference đúng type/lineage và cân nhắc giữ assembly de novo để so với consensus từ mapping (xem phụ lục).</p>
 <hr />
 <h2>Bước 0 — Chuẩn bị file primer</h2>
-<p>Chuẩn bị file excel chứa thông tin mồi. Ví dụ Mồi_NGS_DEN.xlsx. Trong file chứa các cột sau:  Thứ tự, Name, Position (From, To), Sequence of primer (5’-3’), Length of primer, size (bp), Pool để chuẩn bị làm file .BED cho phân tích. Ngoài ra chuẩn bị thêm một file samplesheet thông tin về mẻ chạy, có thể tạo file này tự động dùng script fastq_dir_to_samplesheet.py</p>
+<p>Chuẩn bị file excel chứa thông tin mồi. Ví dụ Mồi_NGS_DEN.xlsx. Trong file chứa các cột sau:  Thứ tự, Name, Position (From, To), Sequence of primer (5’-3’), Length of primer, size (bp), Pool để chuẩn bị làm file .BED cho phân tích.</p>
+<p>Nếu dùng bộ mồi có sẵn kiểu ARTIC/PrimalScheme (đã có file BED), chỉ cần kiểm tra tên mồi có hậu tố <code>_LEFT</code> và
+<code>_RIGHT</code> và cột đầu của BED trùng tên sequence trong FASTA reference. Với virus chưa có bộ mồi công bố, có thể thiết kế
+bằng PrimalScheme (xem tài liệu của công cụ) trên các genome đại diện của virus đó.</p>
 <hr />
 <h2>Bước 1 — chuẩn hoá bảng mồi</h2>
 <p>Chạy sau khi có file primer Excel:</p>
 <pre><code class="language-bash">python3 scripts/01_parse_primers.py Mồi_NGS_DEN.xlsx primers_parsed
 </code></pre>
-<h2>Bước 2 — Chọn reference (genotype) phù hợp, TRONG PHẠM VI serotype đã biết trước</h2>
-<p>Vì serotype mỗi mẫu <strong>đã biết trước</strong> (RT-PCR định type...), script không còn
-BLAST để "đoán serotype" nữa — chỉ BLAST để chọn đúng <strong>genotype/isolate</strong>
-tham chiếu khớp nhất trong chính serotype đó, nhanh hơn và tránh nhầm chéo.</p>
-<p><strong>Bắt buộc tổ chức contig/consensus theo thư mục con = serotype đã biết:</strong></p>
+<h2>Bước 2 — Chọn reference (genotype) phù hợp, TRONG PHẠM VI type đã biết trước</h2>
+<p>Vì type (serotype) mỗi mẫu <strong>đã biết trước</strong> (RT-PCR định type...), script không còn
+BLAST để "đoán type" nữa — chỉ BLAST để chọn đúng <strong>genotype/isolate</strong>
+tham chiếu khớp nhất trong chính type đó, nhanh hơn và tránh nhầm chéo.</p>
+<p><strong>Bắt buộc tổ chức contig/consensus theo thư mục con = type đã biết:</strong></p>
 <pre><code>contigs_per_sample/
   D1/  DENV1_S001.fasta  DENV1_S007.fasta
   D2/  DENV2_S002.fasta  DENV2_S010.fasta
   D3/  DENV3_S003.fasta
   D4/  DENV4_S004.fasta
 </code></pre>
-<p>(chỉ tạo thư mục cho serotype bạn thực sự có mẫu; xem cách lấy contig từ
+<p>(chỉ tạo thư mục cho type bạn thực sự có mẫu; xem cách lấy contig từ
 Illumina/Nanopore ở mục "Lấy contig/consensus đầu vào cho bước 2" bên dưới)</p>
 <p><strong>(Khuyến nghị) trước khi chạy</strong>, bổ sung thêm vài genotype đang lưu hành tại
-khu vực lấy mẫu cho từng serotype (không bắt buộc, nhưng giúp chọn reference
+khu vực lấy mẫu cho từng type (không bắt buộc, nhưng giúp chọn reference
 sát thực tế hơn RefSeq đơn lẻ):</p>
 <pre><code>ref_selection_out/references/D1_extra.fasta   # tự tải từ NCBI Virus, gộp thêm
 ref_selection_out/references/D2_extra.fasta
@@ -117,11 +221,11 @@ ref_selection_out/references/D2_extra.fasta
 <p>Chạy:</p>
 <pre><code class="language-bash">bash scripts/02_select_reference.sh contigs_per_sample/ ref_selection_out/
 </code></pre>
-<p>Script tự động: với mỗi serotype có mẫu → build ngân hàng BLAST riêng (RefSeq
-+ file <code>_extra.fasta</code> nếu có) → BLAST từng mẫu trong đúng serotype đó.</p>
+<p>Script tự động: với mỗi type có mẫu → build ngân hàng BLAST riêng (RefSeq
++ file <code>_extra.fasta</code> nếu có) → BLAST từng mẫu trong đúng type đó.</p>
 <p>Kết quả <code>ref_selection_out/results/best_reference_per_sample.tsv</code> cho biết
-accession NCBI khớp nhất với từng mẫu (kèm cột serotype để đối chiếu). Trong
-từng serotype, nếu các mẫu đều khớp cùng 1 accession → chọn accession đó làm
+accession NCBI khớp nhất với từng mẫu (kèm cột type để đối chiếu). Trong
+từng type, nếu các mẫu đều khớp cùng 1 accession → chọn accession đó làm
 reference đại diện; nếu các mẫu lệch rõ rệt sang accession khác nhau → có thể
 đang lưu hành &gt;1 genotype, cân nhắc dùng reference riêng cho từng nhóm mẫu.
 Tải genome accession đã chọn, lưu thành:</p>
@@ -130,6 +234,11 @@ ref_selection_out/references/D2_chosen_reference.fasta
 ref_selection_out/references/D3_chosen_reference.fasta
 ref_selection_out/references/D4_chosen_reference.fasta
 </code></pre>
+<p><strong>Khi chưa biết chắc type của mẫu:</strong> BLAST consensus (hoặc contig dài nhất) lên bộ RefSeq của tất cả type
+có thể gặp, hoặc lên toàn bộ nucleotide collection trên web NCBI, để xác định type trước rồi mới tách mẫu theo type.</p>
+<p><strong>Kiểm tra độ gần của reference đã chọn</strong> (khuyến nghị): sau lần chạy viralrecon đầu tiên, đếm số SNP của
+từng mẫu so với reference (Bước 5, mục 6). Nếu mẫu khác reference khoảng 5% trở lên, chọn reference gần hơn
+rồi chạy lại từ Bước 3.</p>
 <h3>Lấy contig/consensus đầu vào cho bước 2</h3>
 <p><strong>Từ Illumina MiSeq:</strong></p>
 <pre><code class="language-bash">fastp -i sample_R1.fastq.gz -I sample_R2.fastq.gz \
@@ -146,6 +255,8 @@ seqtk seq -A sample.filt.fastq | head -400 &gt; contigs_per_sample/D2/DENV2_S001
 flye --nano-raw sample.filt.fastq --out-dir sample_flye_out --meta
 cp sample_flye_out/assembly.fasta contigs_per_sample/D2/DENV2_S001.fasta
 </code></pre>
+<p><strong>Từ lần chạy viralrecon đầu tiên (cách nhanh):</strong> nếu đã chạy viralrecon với reference tạm, gom consensus
+(đường dẫn ở Bước 4.8) để BLAST ở Bước 2. Consensus ít N (khoảng 1% N) cho kết quả BLAST đáng tin nhất.</p>
 <h2>Bước 3 — Dựng BED mồi chính xác (BLAST mồi lên reference đã chọn)</h2>
 <pre><code class="language-bash">mkdir -p final_bed
 for D in D1 D2 D3 D4; do
@@ -159,8 +270,137 @@ done
 <p>Kiểm tra <code>final_bed/D*.mapping_report.tsv</code> — mồi nào có <code>pident&lt;90</code> hoặc
 <code>qcovs&lt;90</code> cần xem lại (thiết kế mồi lệch reference, hoặc reference chọn sai
 genotype).</p>
-<h2>Bước 4 — Chạy nf-core/viralrecon (giống pipeline gốc đã phân tích ở trên)</h2>
-<p><strong>Illumina MiSeq</strong>, ví dụ serotype D2:</p>
+<p><strong>Lưu ý về BED:</strong> tên primer phải có hậu tố <code>_LEFT</code> và <code>_RIGHT</code> (ví dụ <code>D1,18F_LEFT</code>,
+<code>D1,17R_RIGHT</code>). Nếu dùng hậu tố khác, thêm <code>--primer_left_suffix</code> và
+<code>--primer_right_suffix</code> khi chạy viralrecon. Cột đầu của BED phải trùng tên sequence trong file FASTA reference
+(ví dụ <code>NC_001477.1</code>).</p>
+<hr />
+<h2>Bước 4 — Chuẩn bị môi trường và chạy nf-core/viralrecon</h2>
+<h3>4.0. Đặt biến dùng chung (sửa theo virus và lô)</h3>
+<p>Đặt biến một lần ở đầu mỗi phiên để các lệnh sau dùng lại cho mọi virus:</p>
+<pre><code class="language-bash">export WD=/mnt/e/Analysis                    # thư mục phân tích
+export TAG=D1                                # nhãn lô/type: D1..D4, ZIKV, CHIKV, RABV, EVA71...
+export REF=reference/dengue/DENV1.fasta      # reference đã chọn ở Bước 2
+export GFF=reference/dengue/DENV1.gff        # annotation của đúng reference đó
+export BED=final_bed/D1_DENV1.bed            # BED từ Bước 3
+export SAMPLESHEET=samplesheet_D1.csv
+export OUT=output/result_illumina_D1
+cd $WD
+</code></pre>
+<p>Samplesheet Illumina có 3 cột <code>sample,fastq_1,fastq_2</code> (xem mẫu ở mục 4.4). Đường dẫn FASTQ phải đọc được từ WSL (<code>/mnt/e/...</code>).</p>
+<h3>4.1. Chuẩn bị file GFF của reference (cho SnpEff)</h3>
+<p>GFF phải lấy từ <strong>đúng accession và đúng phiên bản</strong> của file reference, nếu không tọa độ sẽ lệch.</p>
+<pre><code class="language-bash">head -n 1 $REF                                  # xem accession, ví dụ NC_001477.1
+curl -o $GFF \
+  &quot;https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&amp;id=ACCESSION&amp;rettype=gff3&amp;retmode=text&quot;
+head $GFF                                       # phải có dòng ##gff-version 3
+</code></pre>
+<p>Kiểm tra tên sequence ở cột 1 của GFF trùng với header FASTA:</p>
+<pre><code class="language-bash">grep '&gt;' $REF | cut -d' ' -f1
+grep -v '^#' $GFF | cut -f1 | sort -u
+</code></pre>
+<p>Xem cấu trúc gene (quyết định cách cắt vùng ở Bước 8 và cách đánh số đột biến ở Bước 10):</p>
+<pre><code class="language-bash">grep -v '^#' $GFF | awk '$3==&quot;CDS&quot;' | cut -f4,5,9 | cut -c1-120
+</code></pre>
+<ul>
+<li><strong>Một CDS dài</strong> (Dengue, Zika, Enterovirus): một polyprotein duy nhất; SnpEff báo vị trí amino acid theo toàn polyprotein.</li>
+<li><strong>Nhiều CDS</strong> (Dại: N, P, M, G, L; Chikungunya: hai ORF): SnpEff báo theo từng gene/ORF, thuận tiện hơn.</li>
+</ul>
+<h3>4.2. Cố định phiên bản Nextflow và pipeline</h3>
+<p>Luôn ghim phiên bản pipeline bằng <code>-r</code> và Nextflow bằng <code>NXF_VER</code>:</p>
+<pre><code class="language-bash">conda activate nf-core
+export NXF_CONDA_CACHEDIR=$HOME/nf_conda_cache   # build env một lần, dùng lại
+NXF_VER=25.04.6 nextflow run nf-core/viralrecon -r 3.0.0 ...
+</code></pre>
+<p>Lý do: Nextflow mới (ví dụ 26.x) parse file cấu hình chặt hơn và có thể báo lỗi
+<code>Invalid include source ... conf/test_full_sispa.config</code> khi chạy bản pipeline chưa tương
+thích. Ghim <code>-r 3.0.0</code> kèm <code>NXF_VER=25.04.6</code> đã chạy ổn trong thực tế. Khi cần xoá cache
+pipeline: <code>nextflow drop nf-core/viralrecon</code>.</p>
+<h3>4.3. File <code>custom.config</code> (giới hạn tài nguyên và sửa môi trường conda)</h3>
+<p>Tạo <code>custom.config</code> trong thư mục phân tích:</p>
+<pre><code class="language-groovy">process {
+    // Giới hạn theo cấu hình máy thật (kiểm tra bằng nproc, free -h)
+    resourceLimits = [
+        cpus: 30,
+        memory: 42.GB,
+        time: 48.h
+    ]
+
+    // QUAST với Python 3.13 thiếu module distutils -&gt; ghim Python 3.11
+    withName: 'QUAST' {
+        conda = 'bioconda::quast=5.3.0 conda-forge::python=3.11 conda-forge::setuptools'
+    }
+}
+
+executor {
+    cpus   = 30
+    memory = '42 GB'
+}
+</code></pre>
+<ul>
+<li><code>resourceLimits</code> sửa lỗi <code>Process requirement exceeds available memory -- req: 72 GB; avail: 47 GB</code>
+  (ví dụ bước <code>BOWTIE2_BUILD</code>). Đặt RAM thấp hơn RAM thật khoảng 5-10%.</li>
+<li>Dòng <code>executor</code> giới hạn tổng tài nguyên chạy đồng thời, tránh OOM khi nhiều tiến trình chạy song song.</li>
+<li>Kiểm tra cấu hình đã được nhận (lưu ý <code>-c</code> đứng <strong>trước</strong> từ <code>config</code>):
+  <code>bash
+  NXF_VER=25.04.6 nextflow -c custom.config config ~/.nextflow/assets/nf-core/viralrecon -profile conda -flat | grep -i quast</code></li>
+</ul>
+<h3>4.4. Lệnh chạy Illumina (đã kiểm chứng với dengue D1)</h3>
+<pre><code class="language-bash">NXF_VER=25.04.6 nextflow run nf-core/viralrecon -r 3.0.0 \
+  --input $SAMPLESHEET \
+  --platform illumina \
+  --outdir $OUT \
+  --fasta $REF \
+  --gff $GFF \
+  --primer_bed $BED \
+  --skip_pangolin \
+  --skip_nextclade \
+  --skip_freyja \
+  --skip_assembly \
+  --skip_variants_quast \
+  -profile conda \
+  -c custom.config \
+  -ansi-log false \
+  -resume
+</code></pre>
+<p>Giải thích các tham số bỏ qua (Pangolin, Freyja và dataset Nextclade mặc định dành cho SARS-CoV-2):</p>
+<table>
+<thead>
+<tr>
+<th>Tham số</th>
+<th>Lý do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--skip_pangolin</code></td>
+<td>Pangolin chỉ dành cho SARS-CoV-2; bước <code>PANGOLIN_UPDATEDATA</code> còn có thể lỗi khi tạo env conda</td>
+</tr>
+<tr>
+<td><code>--skip_nextclade</code></td>
+<td>Dataset Nextclade mặc định là SARS-CoV-2 (chạy Nextclade riêng cho virus của bạn ở Bước 6)</td>
+</tr>
+<tr>
+<td><code>--skip_freyja</code></td>
+<td>Freyja dùng dữ liệu SARS-CoV-2</td>
+</tr>
+<tr>
+<td><code>--skip_assembly</code></td>
+<td>Bỏ SPAdes và các bước de novo; với dữ liệu amplicon thường chỉ cần consensus từ mapping. <strong>Với virus đa dạng cao (Enterovirus, Dại) cân nhắc không bỏ</strong></td>
+</tr>
+<tr>
+<td><code>--skip_variants_quast</code></td>
+<td>Tránh lỗi MultiQC khi QUAST không align được consensus (xem bảng lỗi, Mục 4.7)</td>
+</tr>
+<tr>
+<td><code>--skip_kraken2</code> (tuỳ chọn)</td>
+<td>Bỏ bước loại reads người nếu không cần, tiết kiệm thời gian và RAM</td>
+</tr>
+</tbody>
+</table>
+<p><code>-ansi-log false</code> giúp log dễ đọc hơn trong tmux và trên màn hình nhỏ (tablet). Caller biến thể trong lô
+D1 là bcftools (thư mục <code>variants/bcftools</code>); kiểm tra caller thực tế trong <code>pipeline_info/params_*.json</code>.</p>
+<p>Script <code>04_run_viralrecon.sh</code> (Illumina MiSeq, ví dụ type D2):</p>
 <pre><code class="language-bash">bash scripts/04_run_viralrecon.sh illumina D2 \
   samplesheet_illumina_D2.csv \
   final_bed/D2.bed \
@@ -168,7 +408,8 @@ genotype).</p>
   ref_selection_out/references/D2_chosen_reference.fasta \
   results_illumina_D2
 </code></pre>
-<p><strong>Nanopore</strong> (Medaka, không cần fast5), ví dụ serotype D2:</p>
+<p>Nên mở script và đảm bảo nó đã gồm các tham số trên (ghim <code>-r</code>, <code>-c custom.config</code>, các <code>--skip_*</code>).</p>
+<p><strong>Nanopore</strong> (Medaka, không cần fast5), ví dụ type D2:</p>
 <pre><code class="language-bash">bash scripts/04_run_viralrecon.sh nanopore D2 \
   samplesheet_nanopore_D2.csv \
   final_bed/D2.bed \
@@ -186,13 +427,1052 @@ DENV2_S001,DENV2_S001_R1.fastq.gz,DENV2_S001_R2.fastq.gz
 sample,barcode
 DENV2_S001,1
 </code></pre>
-<p>Chạy riêng từng serotype (samplesheet/BED/reference khác nhau) — nếu 1 lô
-mẫu lẫn nhiều serotype, tách mẫu theo serotype (dựa kết quả BLAST ở bước 2)
-trước khi tạo samplesheet cho từng lần chạy.</p>
-<p>Sau khi chạy xong, các bước phân tích downstream (QC iVar/artic, consensus,
-SnpEff annotation, coverage mosdepth, MultiQC...) giữ nguyên như phần pipeline
-viralrecon đã trình bày trước đó — không có gì khác biệt thêm ngoài việc mỗi
-serotype dùng bộ <code>--fasta</code>/<code>--primer_bed</code>/<code>--primer_fasta</code> riêng.</p>
+<p>Chạy riêng từng type (samplesheet/BED/reference khác nhau) — nếu 1 lô mẫu lẫn nhiều type, tách mẫu theo
+type (dựa kết quả BLAST ở bước 2) trước khi tạo samplesheet cho từng lần chạy.</p>
+<h3>4.5. Chạy trên server từ xa (SSH + Tailscale + tmux)</h3>
+<p>Pipeline kéo dài hàng giờ, nên luôn chạy trong <code>tmux</code> trên server để mất kết nối không làm
+dừng pipeline.</p>
+<p><strong>Từ PowerShell trên Windows client:</strong></p>
+<pre><code class="language-powershell">tailscale status                                    # tìm IP 100.x.y.z của server
+ssh daohuymanh@&lt;IP-tailscale&gt;                       # kiểm tra đăng nhập
+ssh -t daohuymanh@&lt;IP-tailscale&gt; wsl tmux new -As viralrecon
+</code></pre>
+<ul>
+<li>Nếu sshd chạy trong WSL (prompt dạng <code>user@host:~$</code>), bỏ chữ <code>wsl</code>. Nếu vào Windows của server
+  (prompt dạng <code>C:\...&gt;</code>), giữ <code>wsl</code>.</li>
+<li>Lỗi <code>Could not resolve hostname server</code> nghĩa là bạn chưa tạo bí danh. Dùng IP trực tiếp, hoặc tạo
+  <code>C:\Users\&lt;bạn&gt;\.ssh\config</code>:
+  <code>Host server
+      HostName &lt;IP-tailscale&gt;
+      User daohuymanh
+      ServerAliveInterval 30
+      ServerAliveCountMax 6</code></li>
+<li>Chạy lệnh tmux từ PowerShell không cần vào hẳn server: <code>ssh &lt;host&gt; wsl tmux ls</code>,
+  <code>ssh &lt;host&gt; wsl pgrep -af nextflow</code>, <code>ssh &lt;host&gt; wsl tail -n 30 /mnt/e/Analysis/.nextflow.log</code>.
+  Chỉ lệnh tương tác (<code>tmux attach</code>, <code>tmux new</code>) mới cần <code>-t</code>.</li>
+</ul>
+<p><strong>Vì sao dùng <code>tmux new -As &lt;tên&gt;</code>:</strong> lệnh chạy trong phiên SSH sẽ chết khi mạng chập chờn hoặc đóng cửa sổ;
+tmux giữ phiên trên server. <code>-s &lt;tên&gt;</code> đặt tên phiên; <code>-A</code> nghĩa là nếu phiên đã có thì vào lại thay vì tạo mới.
+Bên trong tmux là shell mới, nên cần <code>conda activate</code> lại. Cách khác:
+<code>nohup &lt;lệnh&gt; &gt; run.out 2&gt;&amp;1 &amp;</code> rồi <code>tail -f run.out</code>.</p>
+<p><strong>Thao tác tmux cần nhớ:</strong>
+- Thoát mà vẫn để lệnh chạy: <code>Ctrl+b</code> rồi <code>d</code>.
+- Vào lại: <code>tmux attach -d -t viralrecon</code> (<code>-d</code> đá thiết bị kia ra, hữu ích khi đổi giữa máy tính và tablet).
+- Thêm vào <code>~/.tmux.conf</code> trên server: <code>set -g mouse on</code>, <code>set -g history-limit 50000</code>, <code>set -g window-size latest</code>.</p>
+<p><strong>WSL tự tắt làm mất tmux:</strong> nếu sau khi SSH rớt mà <code>tmux ls</code> báo
+<code>error connecting to /tmp/tmux-.../default</code>, WSL đã tắt và kéo pipeline theo. Giữ WSL luôn sống bằng
+một tiến trình nền (chạy trong PowerShell trên Windows của server; thay <code>Ubuntu</code> bằng tên distro
+từ <code>wsl -l -v</code>):</p>
+<pre><code class="language-powershell">Start-Process wsl -ArgumentList &quot;-d&quot;,&quot;Ubuntu&quot;,&quot;-e&quot;,&quot;sleep&quot;,&quot;infinity&quot; -WindowStyle Hidden
+</code></pre>
+<p>Nên tạo Task Scheduler chạy lệnh này lúc đăng nhập. Tắt chế độ sleep/hibernate của server. Nếu pipeline
+bị dừng, chạy lại đúng lệnh cũ với <code>-resume</code>: các bước đã xong sẽ hiện <code>cached</code>.</p>
+<p>Dữ liệu và thư mục <code>work</code> nằm trên ổ Windows (<code>/mnt/e/...</code>) thì I/O chậm hơn; nếu có chỗ trên ổ Linux,
+dùng <code>-w $HOME/nf_work</code> (lưu ý đổi thư mục work thì <code>-resume</code> không dùng lại kết quả cũ).</p>
+<h3>4.6. Tải file về máy client</h3>
+<p>Chạy trong <strong>PowerShell trên máy client</strong>, không phải trong WSL của server. Cú pháp là <code>người_dùng@địa_chỉ:đường_dẫn</code>
+với tên đăng nhập SSH của server (không phải tên tài khoản Windows của client):</p>
+<pre><code class="language-powershell">cd $HOME\Downloads
+scp daohuymanh@&lt;IP-tailscale&gt;:/mnt/e/Analysis/output/result_illumina_D1/multiqc/multiqc_report.html .
+</code></pre>
+<ul>
+<li><code>hostname contains invalid characters</code>: sai cú pháp (thiếu <code>user@</code> hoặc <code>:</code>), hoặc gõ trong WSL thay vì client.</li>
+<li>Báo không tìm thấy đường dẫn: sshd của server có thể là sshd của Windows; thử đường dẫn dạng <code>/E:/Analysis/...</code>.</li>
+<li>Dự phòng cho file văn bản nhỏ (ví dụ cây Newick): <code>cat file</code> trong WSL, sao chép và dán vào Notepad.</li>
+</ul>
+<h3>4.7. Bảng lỗi thường gặp và cách xử lý</h3>
+<table>
+<thead>
+<tr>
+<th>Lỗi</th>
+<th>Nguyên nhân</th>
+<th>Cách xử lý</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Invalid include source ... test_full_sispa.config</code></td>
+<td>Nextflow quá mới so với phiên bản pipeline, hoặc cache pipeline không đầy đủ</td>
+<td><code>NXF_VER=25.04.6</code> và <code>-r 3.0.0</code>; <code>nextflow drop nf-core/viralrecon</code> rồi chạy lại</td>
+</tr>
+<tr>
+<td><code>Parameter --platform is required</code></td>
+<td>Gõ lệnh với <code>...</code> thay cho tham số</td>
+<td>Truyền đủ các tham số</td>
+</tr>
+<tr>
+<td><code>PANGOLIN_UPDATEDATA</code> lỗi tạo env conda (status 120)</td>
+<td>Pangolin dành cho SARS-CoV-2, không cần với virus khác</td>
+<td><code>--skip_pangolin --skip_nextclade --skip_freyja</code></td>
+</tr>
+<tr>
+<td><code>Process requirement exceeds available memory -- req: 72 GB; avail: 47 GB</code></td>
+<td>Module yêu cầu nhiều RAM hơn máy có</td>
+<td><code>resourceLimits</code> trong <code>custom.config</code> (Mục 4.3)</td>
+</tr>
+<tr>
+<td>QUAST: <code>No module named 'distutils'</code></td>
+<td>Env conda dùng Python 3.13</td>
+<td>Ghim <code>python=3.11</code> + <code>setuptools</code> cho QUAST (Mục 4.3)</td>
+</tr>
+<tr>
+<td>MultiQC: <code>TypeError: unsupported operand type(s) for /: 'str' and 'int'</code> (kèm <code>rich has no attribute 'panel'</code>)</td>
+<td>Báo cáo QUAST chứa <code>-</code> vì consensus không align được với reference (độ tương đồng thấp hơn ngưỡng của QUAST); lỗi <code>rich</code> chỉ là lỗi phụ che lỗi gốc</td>
+<td><code>--skip_variants_quast</code>; về lâu dài chọn reference gần hơn (Bước 2)</td>
+</tr>
+<tr>
+<td><code>client_loop: send disconnect: Connection reset</code></td>
+<td>SSH bị ngắt</td>
+<td>Chạy trong tmux; vào lại <code>tmux attach -d -t viralrecon</code></td>
+</tr>
+<tr>
+<td><code>error connecting to /tmp/tmux-.../default</code> sau khi SSH rớt</td>
+<td>WSL đã tắt</td>
+<td>Giữ WSL sống (Mục 4.5), chạy lại với <code>-resume</code></td>
+</tr>
+<tr>
+<td><code>nextflow config ... -r</code> hoặc <code>-c</code> báo <code>Unknown option</code></td>
+<td>Sai vị trí tuỳ chọn</td>
+<td><code>nextflow -c custom.config config &lt;đường dẫn pipeline&gt; -profile conda -flat</code></td>
+</tr>
+<tr>
+<td><code>NullPointerException ... MermaidRenderer</code> trong <code>.nextflow.log</code></td>
+<td>Lỗi vẽ sơ đồ DAG lúc kết thúc</td>
+<td>Vô hại, bỏ qua</td>
+</tr>
+<tr>
+<td><code>iqtree2: command not found</code></td>
+<td>IQ-TREE 3.x dùng lệnh <code>iqtree</code></td>
+<td>Dùng <code>iqtree</code> (kiểm tra <code>iqtree --version</code>)</td>
+</tr>
+<tr>
+<td><code>scp</code>: <code>hostname contains invalid characters</code></td>
+<td>Sai cú pháp hoặc chạy trên server</td>
+<td>Chạy từ PowerShell client, dạng <code>user@IP:/đường/dẫn</code></td>
+</tr>
+<tr>
+<td><code>dataformat</code> báo sai tên trường</td>
+<td>Tên trường khác giữa các phiên bản</td>
+<td><code>dataformat tsv virus-genome --help</code></td>
+</tr>
+<tr>
+<td>Cảnh báo <code>size</code> aesthetic lỗi thời, <code>codetools</code> khi vẽ cây</td>
+<td>Cảnh báo của ggplot2/ggtree/R</td>
+<td>Vô hại</td>
+</tr>
+</tbody>
+</table>
+<p>Khi gặp lỗi lạ, xem 30 dòng cuối của <code>.nextflow.log</code> và nội dung <code>.command.err</code> trong thư mục work của
+tiến trình lỗi (đường dẫn in trong thông báo <code>Work dir:</code>).</p>
+<h3>4.8. Ý nghĩa các thư mục trong <code>output/result_illumina_D1/</code></h3>
+<table>
+<thead>
+<tr>
+<th>Thư mục</th>
+<th>Chứa gì</th>
+<th>Mức độ quan trọng</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>multiqc/</code></td>
+<td><code>multiqc_report.html</code> tổng hợp QC mọi mẫu; <code>multiqc_data/</code> là số liệu thô</td>
+<td><strong>Xem đầu tiên</strong></td>
+</tr>
+<tr>
+<td><code>variants/</code></td>
+<td>BAM, VCF, consensus, SnpEff, thống kê độ phủ</td>
+<td><strong>Kết quả chính</strong></td>
+</tr>
+<tr>
+<td><code>fastp/</code></td>
+<td>Báo cáo cắt adapter và lọc chất lượng reads (<code>*.fastp.html/json/log</code>)</td>
+<td>Trung bình</td>
+</tr>
+<tr>
+<td><code>fastqc/</code></td>
+<td>Chất lượng reads thô (<code>*_fastqc.html/zip</code>)</td>
+<td>Trung bình</td>
+</tr>
+<tr>
+<td><code>kraken2/</code></td>
+<td>Phân loại reads (<code>*.kraken2.report.txt</code>), dùng để loại reads người</td>
+<td>Trung bình</td>
+</tr>
+<tr>
+<td><code>pipeline_info/</code></td>
+<td>Báo cáo thực thi, timeline, phiên bản phần mềm, tham số đã dùng</td>
+<td>Dùng để viết Methods</td>
+</tr>
+<tr>
+<td><code>assembly/</code></td>
+<td>Kết quả SPAdes (chỉ có nếu không dùng <code>--skip_assembly</code>)</td>
+<td>Thấp, trừ virus đa dạng cao</td>
+</tr>
+</tbody>
+</table>
+<p>Cấu trúc thực tế trong <code>variants/</code> (caller bcftools):</p>
+<pre><code>variants/
+├── bowtie2/
+│   ├── log/                 # log Bowtie2: có dòng &quot;overall alignment rate&quot;
+│   ├── samtools_stats/      # flagstat, stats, idxstats
+│   ├── mosdepth/genome/     # *.mosdepth.summary.txt (độ sâu trung bình)
+│   └── *.sorted.bam (+ .bai)  # reads đã map (mở bằng IGV)
+└── bcftools/
+    ├── D1-xxx.vcf.gz (+ .tbi)          # toàn bộ biến thể gọi được
+    ├── bcftools_stats/                 # số SNP/indel mỗi mẫu
+    ├── snpeff/                         # VCF chú giải amino acid + báo cáo SnpEff
+    ├── consensus/bcftools/
+    │   ├── D1-xxx.consensus.fa         # CHUỖI CONSENSUS từng mẫu
+    │   └── D1-xxx.filtered.vcf.gz      # biến thể sau lọc, nguồn tạo consensus
+    └── variants_long_table.csv         # bảng tổng hợp mọi biến thể của mọi mẫu
+</code></pre>
+<p>Tên file chính xác có thể khác chút giữa các phiên bản; khi không thấy, dùng
+<code>find $OUT -name '*từ_khóa*'</code>.</p>
+<p><strong>Cách dùng từng nhóm:</strong>
+- <code>multiqc_report.html</code>: rà mẫu bất thường (ít reads, map thấp, độ phủ lệch) trước khi dùng kết quả.
+- <code>fastp/</code>, <code>fastqc/</code>: mở file riêng khi mẫu đáng ngờ; ghi lại Q30 hoặc số reads bị loại làm lý do loại mẫu.
+- <code>kraken2/</code>: ước lượng mức lẫn vật chủ. Tỷ lệ reads virus thật nằm ở log Bowtie2, không phải ở đây.
+- <code>variants/bowtie2/</code>: tỷ lệ map thật, độ sâu, BAM để xem trực quan bằng IGV.
+- <code>variants/bcftools/consensus/bcftools/*.consensus.fa</code>: <strong>đầu vào của BLAST, Nextclade, MAFFT và cây phát sinh loài</strong>.
+- <code>variants_long_table.csv</code> và <code>snpeff/</code>: lọc và so sánh đột biến theo mẫu, gene, loại tác động, AF, DP (Bước 10).
+- <code>pipeline_info/</code>: lấy phiên bản phần mềm và tham số (<code>params_*.json</code>) điền vào Methods.</p>
+<p>Thư mục <code>work/</code> (cùng cấp thư mục chạy) lớn hơn <code>output/</code> rất nhiều. Chỉ xoá khi đã xong mọi lần chạy,
+vì xoá <code>work/</code> làm <code>-resume</code> không dùng lại được.</p>
+<hr />
+<h2>Bước 5 — Đánh giá chất lượng mẫu (và cách diễn giải)</h2>
+<p>Mở <code>multiqc/multiqc_report.html</code> trước, rồi kiểm tra thêm bằng các lệnh dưới đây (chạy trong <code>$WD</code>).</p>
+<p><strong>1. Tỷ lệ reads map vào reference.</strong> Chỉ số <code>100% mapped</code> trong flagstat <strong>không có ý nghĩa</strong> vì reads không
+map đã bị loại; hãy xem log Bowtie2:</p>
+<pre><code class="language-bash">grep -H &quot;overall alignment rate&quot; $(find $OUT -name '*.bowtie2.log')
+</code></pre>
+<p>Mẫu có tỷ lệ map quá thấp (ví dụ dưới 1%) hoặc chỉ vài chục reads thì loại khỏi samplesheet
+(ví dụ lô D1: một mẫu có 0,96% và chỉ 52 reads map, không tạo được consensus).</p>
+<p><strong>2. Độ sâu trung bình</strong> (cột thứ 4 của dòng <code>total</code>):</p>
+<pre><code class="language-bash">grep -H total $(find $OUT -name '*.mosdepth.summary.txt')
+</code></pre>
+<p>Độ sâu trung bình chưa đủ để kết luận, vì nó che các vùng có độ sâu bằng 0 (xem mục 4).</p>
+<p><strong>3. Độ dài consensus, tổng số N và N trong vùng mã hóa</strong> (lưu thành <code>qc_consensus.py</code> để dùng lại cho mọi virus):</p>
+<pre><code class="language-bash">cat &gt; qc_consensus.py &lt;&lt; 'EOF'
+import sys, re, glob
+# Cách dùng: python3 qc_consensus.py &quot;&lt;glob consensus&gt;&quot; &lt;start_CDS&gt; &lt;end_CDS&gt;
+files = sorted(glob.glob(sys.argv[1]))
+start, end = int(sys.argv[2]), int(sys.argv[3])
+print(&quot;mau\tdo_dai\ttong_N\t%N\tN_trong_CDS\t%N_CDS\tdoan_N_dai_nhat_trong_CDS&quot;)
+for f in files:
+    seq = ''.join(l.strip() for l in open(f) if not l.startswith('&gt;')).upper()
+    n = seq.count('N')
+    w = seq[start-1:end]
+    nw = w.count('N')
+    longest = max([len(m.group()) for m in re.finditer(r'N+', w)] or [0])
+    name = f.split('/')[-1].replace('.consensus.fa', '')
+    print(f&quot;{name}\t{len(seq)}\t{n}\t\t{nw}\t\t{longest}&quot;)
+EOF
+python3 qc_consensus.py &quot;$OUT/variants/bcftools/consensus/bcftools/*.consensus.fa&quot; 95 10273 | column -t
+</code></pre>
+<p>Thay <code>95 10273</code> bằng tọa độ CDS của reference (lấy từ GFF, Mục 4.1). Lưu ý cách tính này giả định consensus giữ
+nguyên độ dài và tọa độ của reference (đúng với lô D1: mọi consensus dài 10.735 bp).</p>
+<p><strong>4. Vị trí các đoạn N</strong> (quan trọng hơn tỷ lệ N):</p>
+<pre><code class="language-bash">for f in $OUT/variants/bcftools/consensus/bcftools/*.consensus.fa; do
+  echo &quot;== $(basename $f)&quot;
+  grep -v '&gt;' $f | tr -d '\n' | grep -ob 'N\+' | awk -F: '{print $1+1 &quot;-&quot; $1+length($2)}' | head -n 20
+done
+</code></pre>
+<ul>
+<li>N chỉ ở hai đầu genome (ngoài vùng primer) thường nằm trong UTR. So với CDS trong GFF để biết vùng mã hóa còn đầy đủ không.</li>
+<li>N ở <strong>giữa genome</strong>, bắt đầu cùng một vị trí ở nhiều mẫu, là dấu hiệu <strong>mất amplicon</strong>
+  (độ sâu bằng 0 ở đó dù các vùng khác sâu hàng nghìn lần).</li>
+</ul>
+<p><strong>5. Đối chiếu vùng mất với tọa độ primer</strong> để biết amplicon nào bị mất (đổi khoảng tọa độ cho phù hợp):</p>
+<pre><code class="language-bash">awk '$2&gt;7400 &amp;&amp; $3&lt;9300' $BED | sort -k2,2n
+</code></pre>
+<p>Vùng chỉ một amplicon phủ riêng nằm giữa đầu primer phải của amplicon kề trước và đầu primer trái của amplicon
+kề sau. Nhiều mẫu cùng mất một amplicon thường do nguyên nhân chung (ví dụ biến dị ở vị trí gắn primer).
+Đó là giả thuyết cần xác nhận bằng độ sâu theo amplicon (thư mục <code>mosdepth/amplicon</code> nếu có) và bằng cách so
+trình tự consensus ở vị trí primer với trình tự primer.</p>
+<p><strong>6. Số SNP so với reference</strong> (đo độ xa của reference):</p>
+<pre><code class="language-bash">grep -H &quot;number of SNPs:&quot; $(find $OUT -name '*.bcftools_stats.txt' | grep -v snpeff)
+</code></pre>
+<p>Ví dụ lô D1: mỗi mẫu có khoảng 710-820 SNP trên 10.735 bp (khoảng 6,6-7,6%). Mức này đủ để QUAST không align được
+dù Bowtie2 vẫn map 85-94% reads. Số SNP cao nghĩa là reference nên được thay bằng chuỗi gần genotype hơn (Bước 2).</p>
+<h3>Cách phân loại chất lượng mẫu (ví dụ lô D1)</h3>
+<table>
+<thead>
+<tr>
+<th>Nhóm</th>
+<th>Đặc điểm</th>
+<th>Dùng cho</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>N chỉ ở hai đầu (khoảng 1% N)</td>
+<td>Phân loại, cây toàn CDS, đột biến</td>
+</tr>
+<tr>
+<td>B</td>
+<td>Hai đầu cộng một đoạn N ngắn trong UTR</td>
+<td>Tương đương nhóm A sau khi kiểm tra bằng GFF</td>
+</tr>
+<tr>
+<td>C</td>
+<td>Hai đầu cộng khoảng trống giữa genome (3,5% đến 16% N) từ cùng một vị trí</td>
+<td>Phân loại qua gene đủ dữ liệu; loại khỏi cây toàn CDS và phân tích đột biến vùng thiếu, hoặc nêu rõ trong Methods</td>
+</tr>
+<tr>
+<td>Loại</td>
+<td>Quá ít reads map</td>
+<td>Không dùng</td>
+</tr>
+</tbody>
+</table>
+<p>Ngưỡng cụ thể (độ sâu tối thiểu, tỷ lệ N tối đa) tùy mục đích, loại virus và tạp chí; hãy đặt tiêu chí rõ
+ràng, ghi vào Methods và áp dụng thống nhất cho mọi mẫu. Lưu danh sách mẫu đạt chuẩn vào <code>good_samples.txt</code>
+(mỗi dòng một tên mẫu, ví dụ <code>D1-4000_S31_L001</code>) để dùng ở các bước sau.</p>
+<hr />
+<h2>Bước 6 — Phân loại genotype/lineage</h2>
+<p>viralrecon <strong>không</strong> phân loại Dengue và các virus khác (Pangolin, Freyja và dataset Nextclade mặc định chỉ dành cho
+SARS-CoV-2). Hãy làm riêng sau khi có consensus, trong một môi trường conda riêng (không dùng chung với <code>nf-core</code>):</p>
+<pre><code class="language-bash">conda create -n phylo -c conda-forge -c bioconda nextclade mafft iqtree seqkit entrez-direct ncbi-datasets-cli snp-dists -y
+conda activate phylo
+mkdir -p $WD/downstream &amp;&amp; cd $WD/downstream
+</code></pre>
+<h3>6.1. Gom consensus của mẫu đạt chuẩn</h3>
+<pre><code class="language-bash">CONS=$WD/$OUT/variants/bcftools/consensus/bcftools
+cd $WD/downstream
+# good_samples.txt: mỗi dòng một tên mẫu đạt chuẩn (xem Bước 5)
+for s in $(cat good_samples.txt); do cat $CONS/${s}.consensus.fa; done &gt; ${TAG}_good.fasta
+cat $CONS/*.consensus.fa &gt; ${TAG}_all.fasta           # toàn bộ mẫu, dùng cho BLAST/phân loại
+sed -i 's/ .*//' ${TAG}_good.fasta ${TAG}_all.fasta   # bỏ phần sau khoảng trắng trong header
+grep -c '&gt;' ${TAG}_good.fasta ${TAG}_all.fasta
+</code></pre>
+<p>Header consensus dạng <code>&gt;D1-4000_S31_L001 NC_001477.1</code>; sau lệnh <code>sed</code> chỉ còn tên mẫu.</p>
+<h3>6.2. Ba cách phân loại, nên dùng ít nhất hai để đối chiếu</h3>
+<p><strong>(a) Nextclade với dataset của virus bạn</strong> (nhanh, cho kết quả phân loại, đột biến và chất lượng chuỗi):</p>
+<pre><code class="language-bash">nextclade dataset list | grep -i -E &quot;dengue|denv|zika|chik|rabies|entero&quot;   # xem dataset nào có
+nextclade dataset get --name &lt;tên_dataset&gt; --output-dir nc_dataset
+nextclade run -D nc_dataset --output-all nextclade_out ${TAG}_all.fasta
+</code></pre>
+<p>Không phải virus nào cũng có dataset; nếu danh sách không có, dùng (b) và (c). Kết quả nằm trong <code>nextclade_out/</code>
+(bảng <code>nextclade.tsv</code> gồm clade/lineage được gán, đột biến nucleotide và amino acid, điểm chất lượng).</p>
+<p><strong>(b) BLAST</strong> consensus lên cơ sở dữ liệu NCBI (web: blastn, nucleotide collection) để xem chuỗi giống nhất là
+genotype/lineage nào và tương đồng bao nhiêu phần trăm. Mẫu ít N cho kết quả tin cậy nhất.</p>
+<p><strong>(c) Phân loại bằng cây phát sinh loài</strong> (Bước 7-9): đặt mẫu cạnh các chuỗi tham chiếu đã biết genotype/lineage.
+Đây là cách chặt chẽ nhất khi cần đưa vào bài báo; (a) và (b) dùng để định hướng chọn chuỗi tham chiếu.</p>
+<h3>6.3. Công cụ phân loại theo virus (xác nhận phiên bản mới nhất khi dùng)</h3>
+<table>
+<thead>
+<tr>
+<th>Virus</th>
+<th>Cách thường dùng</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dengue 1-4</td>
+<td>Nextclade dataset (nếu có), BLAST, Dengue Genotyping Tool của NCBI, cây với chuỗi đại diện genotype; thường dựa trên gene E</td>
+</tr>
+<tr>
+<td>Zika</td>
+<td>Nextclade dataset (nếu có), cây với chuỗi đại diện lineage Châu Phi và Châu Á</td>
+</tr>
+<tr>
+<td>Chikungunya</td>
+<td>Nextclade dataset (nếu có), cây với chuỗi ECSA/WA/Asian/IOL; gene E1 hoặc toàn CDS</td>
+</tr>
+<tr>
+<td>Dại</td>
+<td>Công cụ gán lineage chuyên biệt như RABV-GLUE (nếu dùng được), BLAST, cây với chuỗi đại diện clade; gene N hoặc toàn genome</td>
+</tr>
+<tr>
+<td>Enterovirus</td>
+<td>Xác định type bằng VP1 (BLAST hoặc Enterovirus Genotyping Tool), sau đó genogroup/subgenogroup bằng cây VP1</td>
+</tr>
+</tbody>
+</table>
+<h3>6.4. Kiểm tra nhiễm hỗn hợp và nhầm type</h3>
+<p>Một mẫu có thể chứa hai type (ví dụ đồng nhiễm 2 serotype dengue). Dấu hiệu: nhiều biến thể có tần số allele trung
+gian (không gần 0 hoặc 1) và độ phủ amplicon bất thường. Kiểm tra bằng cách map reads lên tất cả reference của
+virus rồi so số reads map:</p>
+<pre><code class="language-bash"># ref_all.fa: gộp reference của mọi type (ví dụ 4 serotype dengue)
+minimap2 -ax sr ref_all.fa sample_R1.fastq.gz sample_R2.fastq.gz | samtools view -F 4 | cut -f3 | sort | uniq -c
+</code></pre>
+<p>Reads dồn vào một reference là mẫu đơn type; chia đáng kể giữa hai reference nên xem lại (cần minimap2 và samtools
+trong môi trường).</p>
+<hr />
+<h2>Bước 7 — Chọn chuỗi tham chiếu từ NCBI (metadata trước, tải trình tự sau)</h2>
+<p>Cách này kiểm soát được chuỗi nào vào cây và để lại danh sách accession cho phụ lục bài báo.
+Nếu có khoá API NCBI, đặt <code>export NCBI_API_KEY=&lt;khoá&gt;</code> để tăng giới hạn tốc độ (đừng dán khoá vào nơi công khai).</p>
+<p>Đặt biến cho virus đang làm (tên taxon dùng đúng như NCBI Taxonomy; kiểm tra bằng
+<code>datasets summary taxonomy taxon "&lt;tên&gt;"</code>):</p>
+<pre><code class="language-bash">cd $WD/downstream
+export TAXON=&quot;Dengue virus 1&quot;      # ví dụ: &quot;Dengue virus 2&quot;, &quot;Zika virus&quot;, &quot;Chikungunya virus&quot;, &quot;Rabies virus&quot;
+export LEN_MIN=10500 LEN_MAX=10800 # khoảng độ dài genome hoàn chỉnh của virus (xem bảng ở đầu tài liệu)
+export REF_ACC=NC_001477.1         # accession reference đã dùng trong pipeline
+</code></pre>
+<p><strong>(a) Lấy metadata genome hoàn chỉnh:</strong></p>
+<pre><code class="language-bash">datasets summary virus genome taxon &quot;$TAXON&quot; --complete-only --as-json-lines \
+ | dataformat tsv virus-genome \
+     --fields accession,virus-name,length,isolate-collection-date,geo-location,geo-region,host-name,release-date \
+ &gt; ${TAG}_metadata.tsv
+wc -l ${TAG}_metadata.tsv
+head -n 5 ${TAG}_metadata.tsv
+</code></pre>
+<p>Tên trường có thể khác giữa các phiên bản; xem <code>dataformat tsv virus-genome --help</code> nếu báo lỗi.
+Thứ tự cột: 1 accession, 2 tên virus, 3 độ dài, 4 ngày thu mẫu, 5 vị trí, 6 vùng, 7 host, 8 ngày công bố.
+Nhiều chuỗi cũ thiếu ngày, vị trí hoặc host. Với Enterovirus, lọc theo type (từ tên virus hoặc tài liệu);
+với Dại, host không phải người (chó, dơi...) là bình thường nên đừng lọc theo <code>Homo sapiens</code>.</p>
+<p><strong>(b) Xem phân bố trước khi lọc:</strong></p>
+<pre><code class="language-bash">cut -f5 ${TAG}_metadata.tsv | cut -d: -f1 | sort | uniq -c | sort -nr | head -n 25      # theo nước
+cut -f7 ${TAG}_metadata.tsv | sort | uniq -c | sort -nr | head                           # theo host
+awk -F'\t' 'NR&gt;1 &amp;&amp; $4!=&quot;&quot; &amp;&amp; $5!=&quot;&quot; &amp;&amp; $7!=&quot;&quot;' ${TAG}_metadata.tsv | wc -l              # đủ ngày+vị trí+host
+awk -F'\t' '$5 ~ /Viet/ {print substr($4,1,4)}' ${TAG}_metadata.tsv | sort | uniq -c      # ví dụ: Việt Nam theo năm
+</code></pre>
+<p>Ví dụ lô D1 (DENV1, 2.912 genome): Brazil 850, Việt Nam 808, Trung Quốc 246, Singapore 193, Mexico 116,
+Campuchia 110, Thái Lan 68, Philippines 62, Indonesia 51... NCBI ghi nước là <code>Viet Nam</code>, nên dùng regex <code>Viet</code>.</p>
+<p><strong>(c) Lọc và giảm mẫu theo nhóm</strong> (tránh thiên lệch do vài nghiên cứu lớn; có điểm khởi tạo cố định nên chạy lại ra
+cùng kết quả). Sửa danh sách nước theo khu vực của bạn: nhóm 1 (khu vực nghiên cứu) lấy nhiều hơn, nhóm 2 (lân cận)
+vừa phải, nhóm 3 (các nơi còn lại) chỉ lấy vài đại diện:</p>
+<pre><code class="language-bash">GROUP1='^(Viet Nam)$'
+GROUP2='^(Cambodia|Thailand|Singapore|China|Philippines|Indonesia|Malaysia|Laos|Myanmar)$'
+GROUP3='^(Brazil|Mexico|Venezuela|Nicaragua|Colombia|Puerto Rico|USA|Argentina|Ecuador|India|Sri Lanka|Bangladesh|Japan|Nigeria|New Caledonia|French Polynesia)$'
+
+(head -n 1 ${TAG}_metadata.tsv; tail -n +2 ${TAG}_metadata.tsv | shuf --random-source=&lt;(yes)) \
+| awk -F'\t' -v len_min=$LEN_MIN -v len_max=$LEN_MAX -v g1=&quot;$GROUP1&quot; -v g2=&quot;$GROUP2&quot; -v g3=&quot;$GROUP3&quot; '
+  NR==1{print; next}
+  $3&gt;=len_min &amp;&amp; $3&lt;=len_max &amp;&amp; $4 ~ /^[0-9][0-9][0-9][0-9]/ &amp;&amp; $5!=&quot;&quot; {
+    split($5,g,&quot;:&quot;); c=g[1]; y=substr($4,1,4)
+    if (c ~ g1)      {cap=3; k=c&quot;_&quot;y}
+    else if (c ~ g2) {cap=2; k=c&quot;_&quot;y}
+    else if (c ~ g3) {cap=3; k=c}
+    else next
+    if (++n[k] &lt;= cap) print
+  }' &gt; ${TAG}_subsampled.tsv
+
+wc -l ${TAG}_subsampled.tsv
+cut -f5 ${TAG}_subsampled.tsv | cut -d: -f1 | sort | uniq -c | sort -nr
+</code></pre>
+<p>Bộ lọc host (ví dụ chỉ <code>homo sapiens</code> cho virus ở người) thêm bằng điều kiện <code>&amp;&amp; tolower($7) ~ /homo sapiens/</code> vào
+dòng điều kiện. Mục tiêu hợp lý cho cây toàn vùng mã hóa là khoảng 100 đến 300 chuỗi; nhiều quá thì giảm <code>cap</code>,
+ít quá thì tăng. Nên thêm vài chuỗi đại diện từng genotype/lineage từ bài phân loại đã công bố (hoặc chọn theo kết quả
+phân loại ở Bước 6), và các chuỗi lưu hành gần đây ở khu vực.</p>
+<p><strong>(d) Danh sách accession (luôn gồm reference đã dùng trong pipeline):</strong></p>
+<pre><code class="language-bash">cut -f1 ${TAG}_subsampled.tsv | tail -n +2 &gt; refs_accessions.txt
+echo &quot;$REF_ACC&quot; &gt;&gt; refs_accessions.txt
+# echo &quot;ACCESSION_đại_diện_genotype&quot; &gt;&gt; refs_accessions.txt
+sort -u refs_accessions.txt -o refs_accessions.txt
+wc -l refs_accessions.txt
+</code></pre>
+<p><strong>(e) Tải trình tự theo accession và kiểm tra:</strong></p>
+<pre><code class="language-bash">datasets download virus genome accession --inputfile refs_accessions.txt --filename refs_${TAG}.zip
+unzip -o refs_${TAG}.zip -d refs_${TAG}
+grep -c '&gt;' refs_${TAG}/ncbi_dataset/data/genomic.fna
+grep '&gt;' refs_${TAG}/ncbi_dataset/data/genomic.fna | cut -d' ' -f1 | tr -d '&gt;' | sort &gt; got.txt
+sort refs_accessions.txt | comm -23 - got.txt        # accession còn thiếu
+</code></pre>
+<p>Danh sách quá dài thì chia nhỏ bằng <code>split -l 200 refs_accessions.txt</code> rồi tải từng phần.</p>
+<p><strong>(f) Đặt tên dễ đọc (<code>accession_nước_năm</code>) và gộp với mẫu của bạn:</strong></p>
+<pre><code class="language-bash">awk -F'\t' 'NR&gt;1{split($5,g,&quot;:&quot;); gsub(/ /,&quot;&quot;,g[1]); y=substr($4,1,4); if(y==&quot;&quot;)y=&quot;NA&quot;; if(g[1]==&quot;&quot;)g[1]=&quot;NA&quot;; print $1&quot;\t&quot;$1&quot;_&quot;g[1]&quot;_&quot;y}' ${TAG}_subsampled.tsv &gt; rename.tsv
+echo -e &quot;${REF_ACC}\t${REF_ACC}_ref&quot; &gt;&gt; rename.tsv
+
+sed 's/ .*//' refs_${TAG}/ncbi_dataset/data/genomic.fna | seqkit rmdup -s &gt; refs_clean.fasta
+seqkit replace -p '^(.+)$' -r '{kv}' -k rename.tsv refs_clean.fasta &gt; refs_named.fasta
+grep '&gt;' refs_named.fasta | head -n 5
+
+cat ${TAG}_good.fasta refs_named.fasta &gt; tree_input.fasta
+grep -c '&gt;' tree_input.fasta
+</code></pre>
+<p>Quy ước tên <code>accession_nước_năm</code> được script vẽ cây ở Bước 9 dùng để tô màu theo nước. Ví dụ lô D1: 9 mẫu cộng
+khoảng 166 chuỗi tham chiếu thành 175 chuỗi.</p>
+<hr />
+<h2>Bước 8 — Align, cắt vùng mã hóa, kiểm tra và dựng cây IQ-TREE</h2>
+<h3>8.1. Align bằng MAFFT</h3>
+<pre><code class="language-bash">mafft --auto --thread 16 tree_input.fasta &gt; aligned.fasta
+seqkit stats aligned.fasta
+</code></pre>
+<p>Ví dụ lô D1: 175 chuỗi, cùng dài 10.823 cột (genome gốc 10.735 bp, nên có thêm cột gap). Dòng
+<code>ambiguous characters</code> chỉ là N và mã IUPAC, không phải lỗi. Kiểm tra trước khi cắt:</p>
+<pre><code class="language-bash">grep -c &quot;^&gt;${TAG}-&quot; aligned.fasta          # đúng bằng số mẫu của bạn (nếu tên mẫu bắt đầu bằng ${TAG}-)
+grep -c &quot;^&gt;${REF_ACC}&quot; aligned.fasta       # phải bằng 1 (reference dùng để cắt vùng)
+grep '&gt;' aligned.fasta | sort | uniq -d    # không được in dòng nào (tên trùng sẽ làm IQ-TREE lỗi)
+</code></pre>
+<h3>8.2. Cắt về vùng mã hóa (bỏ UTR)</h3>
+<p>Lấy tọa độ vùng mã hóa từ GFF của reference:</p>
+<pre><code class="language-bash">grep -v '^#' $WD/$GFF | awk '$3==&quot;CDS&quot;{print $4&quot;\t&quot;$5}' | sort -n | awk 'NR==1{s=$1} {e=($2&gt;e?$2:e)} END{print &quot;bat dau:&quot;, s, &quot; ket thuc:&quot;, e}'
+</code></pre>
+<ul>
+<li>Một CDS (Dengue, Zika, Enterovirus): lấy trực tiếp (ví dụ DENV1 <code>NC_001477.1</code>: 95-10273).</li>
+<li>Nhiều CDS (Dại, Chikungunya): lấy từ đầu CDS đầu tiên đến cuối CDS cuối cùng (vùng giữa có thể gồm đoạn không mã hóa
+  nhỏ, chấp nhận được khi dựng cây toàn vùng). Nếu chỉ cần một gene (ví dụ E1, N, VP1), dùng tọa độ của riêng gene đó.</li>
+</ul>
+<p>Lưu script để dùng lại (tên reference và tọa độ là tham số):</p>
+<pre><code class="language-bash">cat &gt; cut_region.py &lt;&lt; 'EOF'
+import sys
+
+def read_fasta(p):
+    d, k = {}, None
+    for line in open(p):
+        line = line.rstrip()
+        if line.startswith('&gt;'):
+            k = line[1:]; d[k] = []
+        elif k:
+            d[k].append(line)
+    return
+
+# Cách dùng: python3 cut_region.py aligned.fasta out.fasta &lt;tiền_tố_tên_reference&gt; &lt;bắt_đầu&gt; &lt;kết_thúc&gt;
+inp, out, refprefix = sys.argv[1], sys.argv[2], sys.argv[3]
+start, end = int(sys.argv[4]), int(sys.argv[5])      # tọa độ trên reference
+aln = read_fasta(inp)
+ref = next(v for k, v in aln.items() if k.startswith(refprefix))
+pos, cols = 0, []
+for i, c in enumerate(ref):
+    if c != '-':
+        pos += 1
+    if start &lt;= pos &lt;= end:
+        cols.append(i)
+lo, hi = cols[0], cols[-1] + 1
+with open(out, 'w') as f:
+    for k, v in aln.items():
+        f.write('&gt;' + k + '\n' + v[lo:hi] + '\n')
+print('Các cột giữ lại:', lo, hi, 'độ dài:', hi - lo)
+EOF
+
+python3 cut_region.py aligned.fasta cds_aligned.fasta $REF_ACC 95 10273    # đổi tọa độ theo virus
+seqkit stats cds_aligned.fasta
+</code></pre>
+<p>Độ dài kỳ vọng xấp xỉ (kết thúc − bắt đầu + 1) cộng thêm các gap chèn trong vùng này.</p>
+<h3>8.3. Kiểm tra chất lượng alignment trước khi dựng cây</h3>
+<p>Tỷ lệ gap và N của từng chuỗi sau khi cắt, 15 chuỗi cao nhất:</p>
+<pre><code class="language-bash">awk '/^&gt;/{x=$0; g+=gsub(/[-Nn]/,&quot;&quot;,x); t+=length($0)}END' cds_aligned.fasta \
+  | sort -t$'\t' -k3 -nr | head -n 15
+</code></pre>
+<p>Ví dụ lô D1: chuỗi tệ nhất chỉ 2,6% gap/N, còn lại gần 0%; chín mẫu của bạn không nằm trong danh sách đầu, xác nhận
+vùng mã hóa đầy đủ. Chuỗi có tỷ lệ cao bất thường thì loại (ngưỡng tự đặt theo yêu cầu bài):</p>
+<pre><code class="language-bash">seqkit grep -v -p &quot;TÊN_THẬT_CỦA_CHUỖI&quot; cds_aligned.fasta &gt; cds_clean.fasta
+</code></pre>
+<p>Chỉ chạy lệnh trên khi có chuỗi cần loại, và thay <code>TÊN_THẬT_CỦA_CHUỖI</code> bằng tên thật; nếu không <code>cds_clean.fasta</code> chỉ là
+bản sao của <code>cds_aligned.fasta</code>.</p>
+<p>Ma trận khác biệt giữa các mẫu (số SNP từng cặp), hữu ích để thấy mẫu nào giống hệt hoặc gần giống nhau:</p>
+<pre><code class="language-bash">snp-dists -m cds_aligned.fasta &gt; snp_matrix.tsv
+</code></pre>
+<h3>8.4. Dựng cây IQ-TREE</h3>
+<p><strong>Lưu ý phiên bản:</strong> IQ-TREE 3.x trong conda dùng lệnh <code>iqtree</code>, không có <code>iqtree2</code>. Kiểm tra bằng <code>iqtree --version</code>.</p>
+<p><strong>Cây thử nhanh</strong> (vài phút, chỉ để kiểm tra, không dùng trong bài):</p>
+<pre><code class="language-bash">iqtree -s cds_aligned.fasta -m GTR+G -fast -T 8 --prefix test_fast
+</code></pre>
+<p><strong>Cây chính (chạy trong tmux)</strong>, vì có thể mất từ vài phút đến vài giờ:</p>
+<pre><code class="language-bash">tmux new -As phylo
+conda activate phylo
+cd $WD/downstream
+iqtree -s cds_aligned.fasta -m MFP -B 1000 -T 16 --prefix ${TAG}_cds
+</code></pre>
+<ul>
+<li><code>-m MFP</code>: tự chọn mô hình thay thế nucleotide tốt nhất; <code>-B 1000</code>: ultrafast bootstrap 1000 lần;
+  <code>-T 16</code>: số luồng; <code>--prefix</code>: tiền tố tên file kết quả.</li>
+<li>Nếu bị ngắt, chạy lại đúng lệnh (IQ-TREE tự tiếp tục từ checkpoint hoặc báo cần <code>--redo</code>).</li>
+<li>Cảnh báo <code>identical sequences</code> trong log là bình thường khi nhiều mẫu giống hệt nhau.</li>
+</ul>
+<h3>8.5. Đọc kết quả IQ-TREE</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Là gì</th>
+<th>Dùng để</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>D1_cds.treefile</code></td>
+<td>Cây ML tốt nhất, có giá trị UFBoot trên nhánh</td>
+<td><strong>Cây chính để vẽ và đưa vào bài</strong></td>
+</tr>
+<tr>
+<td><code>D1_cds.contree</code></td>
+<td>Cây đồng thuận (consensus) của bootstrap</td>
+<td>Tham khảo, so sánh</td>
+</tr>
+<tr>
+<td><code>D1_cds.iqtree</code></td>
+<td>Báo cáo: mô hình, tham số, số vị trí, thống kê</td>
+<td>Ghi Methods</td>
+</tr>
+<tr>
+<td><code>D1_cds.log</code></td>
+<td>Log chạy</td>
+<td>Truy lỗi, kiểm tra cảnh báo</td>
+</tr>
+<tr>
+<td><code>D1_cds.splits.nex</code>, <code>D1_cds.mldist</code></td>
+<td>Hỗ trợ split, ma trận khoảng cách</td>
+<td>Phân tích bổ sung</td>
+</tr>
+</tbody>
+</table>
+<p>Trích thông tin cần cho Methods từ file báo cáo:</p>
+<pre><code class="language-bash">grep -E &quot;Input data|constant sites|parsimony|Best-fit model|Model of substitution|Log-likelihood of the tree&quot; ${TAG}_cds.iqtree
+</code></pre>
+<p>Ghi lại: số chuỗi, số vị trí, mô hình tốt nhất (dòng <code>Best-fit model</code>), UFBoot 1000 lần, phiên bản IQ-TREE.</p>
+<p>Ví dụ lô D1: 175 chuỗi, tổng thời gian thực khoảng 4 phút 24 giây với 16 luồng, log-likelihood tốt nhất khoảng
+-80172,6. Tham số cho thấy chuyển đổi (transition) C-T và A-G lớn hơn nhiều các hoán đổi khác, điển hình của virus RNA.
+Log gợi ý mô hình GTR có tỷ lệ vị trí bất biến và tốc độ biến thiên theo FreeRate, nhưng hãy đọc dòng <code>Best-fit model</code>
+để ghi chính xác.</p>
+<hr />
+<h2>Bước 9 — Vẽ cây và xuất hình chất lượng xuất bản (TIFF 300 dpi)</h2>
+<p>Nên xuất <strong>vector (PDF/SVG)</strong> để chỉnh sửa và giữ chất lượng, đồng thời xuất <strong>TIFF 300 dpi</strong> nếu tạp chí yêu cầu ảnh
+raster. Làm trên server qua SSH được, vì R xuất file trực tiếp, không cần màn hình đồ họa.</p>
+<h3>9.1. Cài môi trường R (một lần)</h3>
+<p>Dùng môi trường riêng để không ảnh hưởng <code>phylo</code> và <code>nf-core</code>:</p>
+<pre><code class="language-bash">conda create -n rtree -c conda-forge -c bioconda \
+  r-base r-ggplot2 bioconductor-ggtree r-ape r-phangorn r-ragg -y
+conda activate rtree
+Rscript -e 'library(ggtree); cat(&quot;ggtree&quot;, as.character(packageVersion(&quot;ggtree&quot;)), &quot;\n&quot;)'
+</code></pre>
+<p>Nếu <code>conda</code> báo xung đột gói, thử <code>mamba</code> hoặc bỏ <code>r-ragg</code> (script có phương án dự phòng ở Mục 9.3).</p>
+<h3>9.2. Script <code>plot_tree.R</code> (dùng chung cho mọi virus)</h3>
+<p>Script nhận tham số dòng lệnh, nên không phải sửa code khi đổi virus. Tên đầu nhánh theo quy ước
+<code>accession_nước_năm</code> (Bước 7f); mẫu của bạn nhận diện bằng một biểu thức chính quy; chuỗi reference có tên bắt đầu <code>NC_</code>.</p>
+<pre><code class="language-bash">cd $WD/downstream
+cat &gt; plot_tree.R &lt;&lt; 'EOF'
+suppressPackageStartupMessages({
+  library(ape); library(ggplot2); library(ggtree); library(phangorn)
+})
+
+## Cách dùng:
+## Rscript plot_tree.R &lt;treefile&gt; &lt;out_prefix&gt; [own_regex] [outgroup_regex] [groups.tsv]
+args &lt;- commandArgs(trailingOnly = TRUE)
+if (length(args) &lt; 2)
+  stop(&quot;Cách dùng: Rscript plot_tree.R &lt;treefile&gt; &lt;out_prefix&gt; [own_regex] [outgroup_regex] [groups.tsv]&quot;)
+TREE_FILE  &lt;- args[1]
+OUT_PREFIX &lt;- args[2]
+OWN_REGEX  &lt;- if (length(args) &gt;= 3 &amp;&amp; nzchar(args[3])) args[3] else &quot;^D[1-4]-&quot;   # tên mẫu của bạn
+OUT_REGEX  &lt;- if (length(args) &gt;= 4 &amp;&amp; nzchar(args[4])) args[4] else &quot;&quot;           # outgroup; rỗng = midpoint
+GROUPS_TSV &lt;- if (length(args) &gt;= 5 &amp;&amp; nzchar(args[5])) args[5] else &quot;&quot;           # ghi đè nhóm: label&lt;TAB&gt;group
+WIDTH_MM &lt;- 180; HEIGHT_MM &lt;- 240      # 2 cột ~180 mm; 1 cột ~85 mm (theo yêu cầu tạp chí)
+TOP_N &lt;- 7                             # số nước hiển thị riêng, còn lại gộp &quot;Other&quot;
+SUPPORT_CUTOFF &lt;- 95                   # chấm xám trên nhánh có UFBoot &gt;= ngưỡng này
+
+## ---- Đọc cây và đặt gốc ----
+tr &lt;- read.tree(TREE_FILE)
+if (nzchar(OUT_REGEX)) {
+  og &lt;- grep(OUT_REGEX, tr$tip.label, value = TRUE)
+  if (length(og) == 0) stop(&quot;Không tìm thấy outgroup khớp: &quot;, OUT_REGEX)
+  tr &lt;- ape::root(tr, outgroup = og, resolve.root = TRUE, edgelabel = TRUE)
+} else {
+  tr &lt;- phangorn::midpoint(tr, node.labels = &quot;support&quot;)      # tạm thời, chỉ để xem sơ bộ
+}
+
+## ---- Nhóm cho từng đầu nhánh (tên: accession_nước_năm) ----
+tips &lt;- tr$tip.label
+parts &lt;- strsplit(tips, &quot;_&quot;)
+country &lt;- vapply(parts, function(x) if (length(x) &gt;= 3) x[length(x) - 1] else &quot;NA&quot;, character(1))
+group &lt;- ifelse(grepl(OWN_REGEX, tips), &quot;This study&quot;,
+         ifelse(grepl(&quot;^NC_&quot;, tips), &quot;Reference&quot;, country))
+top &lt;- names(sort(table(group[!group %in% c(&quot;This study&quot;, &quot;Reference&quot;)]), decreasing = TRUE))
+top &lt;- head(top, TOP_N)
+group &lt;- ifelse(group %in% c(&quot;This study&quot;, &quot;Reference&quot;, top), group, &quot;Other&quot;)
+
+if (nzchar(GROUPS_TSV)) {                                    # tuỳ chọn: tự gán nhóm (ví dụ genotype)
+  g &lt;- read.delim(GROUPS_TSV, header = FALSE, stringsAsFactors = FALSE, col.names = c(&quot;label&quot;, &quot;group&quot;))
+  m &lt;- match(tips, g$label)
+  group[!is.na(m)] &lt;- g$group[m[!is.na(m)]]
+}
+
+lv &lt;- c(&quot;This study&quot;, setdiff(unique(group), c(&quot;This study&quot;, &quot;Other&quot;, &quot;Reference&quot;)), &quot;Other&quot;, &quot;Reference&quot;)
+lv &lt;- lv[lv %in% group]
+mid &lt;- setdiff(lv, c(&quot;This study&quot;, &quot;Other&quot;, &quot;Reference&quot;))
+pal &lt;- c(&quot;#0072B2&quot;,&quot;#E69F00&quot;,&quot;#009E73&quot;,&quot;#CC79A7&quot;,&quot;#56B4E9&quot;,&quot;#F0E442&quot;,&quot;#882255&quot;,&quot;#44AA99&quot;,&quot;#DDCC77&quot;,&quot;#117733&quot;)
+cols &lt;- c(&quot;This study&quot; = &quot;#D55E00&quot;, setNames(rep(pal, length.out = length(mid)), mid),
+          &quot;Other&quot; = &quot;#BBBBBB&quot;, &quot;Reference&quot; = &quot;#000000&quot;)[lv]
+shapes &lt;- setNames(ifelse(lv == &quot;This study&quot;, 17, ifelse(lv == &quot;Reference&quot;, 15, 16)), lv)
+sizes  &lt;- setNames(ifelse(lv == &quot;This study&quot;, 2.2, ifelse(lv == &quot;Reference&quot;, 1.6, 1.0)), lv)
+
+lab &lt;- sub(&quot;_S[0-9]+_L[0-9]+$&quot;, &quot;&quot;, tips)                    # D1-4000_S31_L001 -&gt; D1-4000
+df  &lt;- data.frame(label = tips, group = factor(group, levels = lv), lab = lab, stringsAsFactors = FALSE)
+
+## ---- Vẽ cây ----
+p &lt;- ggtree(tr, size = 0.25) %&lt;+% df
+p$data$support &lt;- suppressWarnings(as.numeric(p$data$label))   # UFBoot trên nút trong
+
+p2 &lt;- p +
+  geom_nodepoint(aes(subset = !isTip &amp; !is.na(support) &amp; support &gt;= SUPPORT_CUTOFF),
+                 size = 0.6, color = &quot;grey25&quot;) +
+  geom_tippoint(aes(color = group, shape = group, size = group), na.rm = TRUE) +
+  geom_tiplab(aes(label = lab, subset = group == &quot;This study&quot;),
+              size = 1.9, fontface = &quot;bold&quot;, offset = 0.002, na.rm = TRUE) +
+  scale_color_manual(values = cols,   breaks = lv, name = NULL, drop = FALSE) +
+  scale_shape_manual(values = shapes, breaks = lv, name = NULL, drop = FALSE) +
+  scale_size_manual(values = sizes,   breaks = lv, name = NULL, drop = FALSE) +
+  geom_treescale(width = 0.01, fontsize = 2.5, linesize = 0.3) +
+  coord_cartesian(clip = &quot;off&quot;) +
+  theme(legend.position = &quot;bottom&quot;,
+        legend.text = element_text(size = 7),
+        plot.margin = margin(4, 28, 4, 4),
+        plot.background = element_rect(fill = &quot;white&quot;, color = NA))
+
+## ---- Xuất file ----
+ggsave(paste0(OUT_PREFIX, &quot;.pdf&quot;), p2,
+       width = WIDTH_MM, height = HEIGHT_MM, units = &quot;mm&quot;)                  # vector (nên giữ)
+ggsave(paste0(OUT_PREFIX, &quot;_preview.png&quot;), p2,
+       width = WIDTH_MM, height = HEIGHT_MM, units = &quot;mm&quot;, dpi = 100)       # xem nhanh
+ggsave(paste0(OUT_PREFIX, &quot;_300dpi.tiff&quot;), p2,
+       width = WIDTH_MM, height = HEIGHT_MM, units = &quot;mm&quot;, dpi = 300,
+       device = ragg::agg_tiff, compression = &quot;lzw&quot;)                        # TIFF 300 dpi
+cat(&quot;Xong:&quot;, OUT_PREFIX, &quot;.pdf / _preview.png / _300dpi.tiff\n&quot;)
+EOF
+</code></pre>
+<p>Ý nghĩa các phần chính:
+- <strong>Rooting:</strong> không truyền <code>outgroup_regex</code> thì dùng midpoint, chỉ mang tính tạm thời. Với bài báo, đặt gốc theo outgroup hoặc nhóm gốc có cơ sở từ tài liệu.
+- <strong>Nhóm màu:</strong> tên đầu nhánh <code>accession_nước_năm</code> được tách để lấy nước; <code>TOP_N</code> nước phổ biến nhất được tô riêng, còn lại gộp <code>Other</code>.
+  Mẫu của bạn tô cam đỏ, hình tam giác lớn, kèm nhãn in đậm.
+- <strong>Ghi đè nhóm:</strong> muốn tô màu theo genotype thay vì nước, tạo file <code>groups.tsv</code> (hai cột: tên đầu nhánh, nhóm; không có tiêu đề) và truyền làm tham số thứ năm.
+- <strong>Chấm xám trên nút:</strong> nhánh có UFBoot từ 95 trở lên. Ghi ngưỡng này trong chú thích hình.
+- <strong>Bảng màu</strong> theo Okabe-Ito, phân biệt được với người mù màu.</p>
+<h3>9.3. Chạy script</h3>
+<pre><code class="language-bash">conda activate rtree
+cd $WD/downstream
+Rscript plot_tree.R ${TAG}_cds.treefile tree_${TAG} &quot;^${TAG}-&quot; 2&gt;&amp;1 | tail -n 20
+ls -lh tree_${TAG}*
+</code></pre>
+<p>Ví dụ với outgroup: <code>Rscript plot_tree.R ${TAG}_cds.treefile tree_${TAG} "^${TAG}-" "^ACCESSION1|^ACCESSION2"</code>.
+Cảnh báo <code>codetools</code> và <code>size</code> đã lỗi thời của ggplot2 là vô hại.</p>
+<p><strong>Phương án dự phòng</strong> nếu <code>ragg</code> lỗi: thay đoạn <code>ggsave(... _300dpi.tiff ...)</code> bằng</p>
+<pre><code class="language-r">tiff(paste0(OUT_PREFIX, &quot;_300dpi.tiff&quot;), width = WIDTH_MM, height = HEIGHT_MM,
+     units = &quot;mm&quot;, res = 300, compression = &quot;lzw&quot;, type = &quot;cairo&quot;)
+print(p2)
+dev.off()
+</code></pre>
+<p>Hoặc chuyển từ PDF sang TIFF bằng dòng lệnh (nếu có ImageMagick): <code>magick -density 300 tree_D1.pdf -compress lzw tree_D1_300dpi.tiff</code>.</p>
+<h3>9.4. Kiểm tra TIFF đã đúng 300 dpi chưa</h3>
+<p>Khổ 180 × 240 mm ở 300 dpi tương ứng khoảng 2126 × 2835 điểm ảnh (lệch một điểm do làm tròn là bình thường):</p>
+<pre><code class="language-bash">file tree_${TAG}_300dpi.tiff
+tiffinfo tree_${TAG}_300dpi.tiff 2&gt;/dev/null | grep -i -E &quot;resolution|image width|length&quot;
+python3 -c &quot;from PIL import Image; im=Image.open('tree_${TAG}_300dpi.tiff'); print(im.size, im.info.get('dpi'))&quot; 2&gt;/dev/null
+</code></pre>
+<p>Ví dụ lô D1: 2125 × 2834 điểm ảnh, <code>Resolution: 300, 300 pixels/inch</code>, nén LZW, màu RGB. Giá trị <code>bps</code> lạ trong
+kết quả của lệnh <code>file</code> không đáng lo nếu <code>tiffinfo</code> đọc đúng; cách xác nhận cuối là mở TIFF bằng Fiji hoặc GIMP.</p>
+<h3>9.5. Tải về và xem</h3>
+<p>Tải về từ <strong>PowerShell trên máy client</strong> (cú pháp ở Mục 4.6):</p>
+<pre><code class="language-powershell">cd $HOME\Downloads
+scp daohuymanh@&lt;IP-tailscale&gt;:/mnt/e/Analysis/downstream/tree_D1_preview.png .
+scp daohuymanh@&lt;IP-tailscale&gt;:/mnt/e/Analysis/downstream/tree_D1.pdf .
+scp daohuymanh@&lt;IP-tailscale&gt;:/mnt/e/Analysis/downstream/tree_D1_300dpi.tiff .
+</code></pre>
+<p>Xem <code>preview.png</code> trước để chỉnh nhanh. Mở PDF bằng trình đọc PDF hoặc Inkscape; mở TIFF bằng Windows Photos, GIMP hoặc Fiji.
+Cây <code>.treefile</code> cũng mở được trực tiếp bằng FigTree hoặc iTOL nếu muốn chỉnh tay.</p>
+<h3>9.6. Chỉnh hình khi chưa đẹp</h3>
+<p>Sửa giá trị trong <code>plot_tree.R</code> rồi chạy lại (vài giây):
+- Nhãn bị cắt bên phải: tăng số thứ hai trong <code>plot.margin = margin(4, 28, 4, 4)</code> (ví dụ 40).
+- Chữ nhãn quá nhỏ hoặc to: sửa <code>size = 1.9</code> trong <code>geom_tiplab</code>.
+- Muốn hình 1 cột: <code>WIDTH_MM &lt;- 85</code> (chữ tối thiểu khoảng 6 pt để còn đọc được).
+- Hình quá dày đặc: giảm số chuỗi tham chiếu ở Bước 7, hoặc đưa cây đầy đủ vào phụ lục và chỉ hiển thị phiên bản thu gọn trong bài chính.
+- Tô màu theo genotype/lineage: dùng file <code>groups.tsv</code> (Mục 9.2).</p>
+<h3>9.7. Danh sách kiểm tra hình trước khi nộp</h3>
+<ul>
+<li>Tra hướng dẫn tác giả của tạp chí: định dạng, dpi (hình nét vẽ thường yêu cầu cao hơn ảnh thông thường), kích thước, chế độ màu (RGB hay CMYK), kiểu nén.</li>
+<li>Gốc cây được nêu rõ (outgroup hay midpoint) và có cơ sở trong Methods.</li>
+<li>Chú thích hình nêu: số chuỗi, vùng genome, phần mềm và mô hình, ý nghĩa chấm trên nhánh (UFBoot ≥ ngưỡng), thanh tỷ lệ (số thay thế trên vị trí), nghĩa của màu và ký hiệu.</li>
+<li>Màu phân biệt được với người mù màu và đọc được khi in đen trắng nếu tạp chí yêu cầu.</li>
+<li>Font phổ biến (Arial/Helvetica), PDF nhúng font; giữ lại file vector, <code>.treefile</code> và script để sửa khi phản biện.</li>
+</ul>
+<hr />
+<h2>Bước 10 — Tìm và tóm tắt đột biến</h2>
+<h3>10.1. Các nguồn dữ liệu đột biến</h3>
+<table>
+<thead>
+<tr>
+<th>Nguồn</th>
+<th>Có gì</th>
+<th>Dùng khi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>variants/bcftools/variants_long_table.csv</code></td>
+<td>Một dòng cho mỗi biến thể của mỗi mẫu, kèm chú giải SnpEff</td>
+<td>Lọc, so sánh nhiều mẫu cùng lúc</td>
+</tr>
+<tr>
+<td><code>variants/bcftools/snpeff/</code></td>
+<td>VCF chú giải amino acid và báo cáo SnpEff từng mẫu</td>
+<td>Xem chi tiết một mẫu</td>
+</tr>
+<tr>
+<td><code>variants/bcftools/consensus/bcftools/*.filtered.vcf.gz</code></td>
+<td>Biến thể thực sự được đưa vào consensus</td>
+<td>Biết đột biến nào nằm trong chuỗi consensus</td>
+</tr>
+<tr>
+<td><code>nextclade_out/nextclade.tsv</code> (Bước 6)</td>
+<td>Đột biến nucleotide và amino acid so với reference của dataset, theo gene</td>
+<td>Khi virus có dataset Nextclade</td>
+</tr>
+<tr>
+<td>Alignment <code>cds_aligned.fasta</code></td>
+<td>So sánh trực tiếp giữa các mẫu và chuỗi tham chiếu</td>
+<td>Tìm vị trí khác biệt giữa các mẫu</td>
+</tr>
+</tbody>
+</table>
+<p>Xem tên các cột trước khi lọc:</p>
+<pre><code class="language-bash">cd $WD/$OUT/variants/bcftools
+head -n 1 variants_long_table.csv | tr ',' '\n' | cat -n
+wc -l variants_long_table.csv
+</code></pre>
+<p>Các cột thường gặp gồm tên mẫu, vị trí, REF, ALT, FILTER, độ sâu (DP), tần số allele (AF), gene, loại tác động và ký hiệu
+thay đổi amino acid; tên chính xác có thể khác, nên đối chiếu với kết quả lệnh trên.</p>
+<h3>10.2. Script tóm tắt đột biến theo ngưỡng</h3>
+<p>Script đọc <code>variants_long_table.csv</code>, lọc theo AF và DP, rồi tạo hai bảng: danh sách đột biến kèm số mẫu mang đột biến,
+và ma trận có/không theo mẫu. Nếu tên cột của bạn khác, sửa trong hàm <code>g(...)</code>.</p>
+<pre><code class="language-bash">cat &gt; summarize_variants.py &lt;&lt; 'EOF'
+import csv, sys, collections
+
+# Cách dùng: python3 summarize_variants.py variants_long_table.csv [min_AF] [min_DP] [tiền_tố_đầu_ra]
+path = sys.argv[1]
+min_af = float(sys.argv[2]) if len(sys.argv) &gt; 2 else 0.75
+min_dp = float(sys.argv[3]) if len(sys.argv) &gt; 3 else 20
+prefix = sys.argv[4] if len(sys.argv) &gt; 4 else &quot;mutations&quot;
+
+rows = list(csv.DictReader(open(path, newline='')))
+if not rows:
+    sys.exit(&quot;File rỗng&quot;)
+print(&quot;Các cột:&quot;, &quot;, &quot;.join(rows[0].keys()), file=sys.stderr)
+
+def g(r, *names):
+    for n in names:
+        if n in r and r[n] not in (&quot;&quot;, None):
+            return r[n]
+    return &quot;&quot;
+
+mut = collections.defaultdict(set)      # (khóa đột biến, tác động) -&gt; tập mẫu
+per_sample = collections.Counter()
+samples = set()
+for r in rows:
+    flt = g(r, &quot;FILTER&quot;)
+    if flt and flt not in (&quot;PASS&quot;, &quot;.&quot;):
+        continue
+    try:
+        af = float(g(r, &quot;AF&quot;)); dp = float(g(r, &quot;DP&quot;))
+    except ValueError:
+        continue
+    s = g(r, &quot;SAMPLE&quot;)
+    samples.add(s)
+    if af &lt; min_af or dp &lt; min_dp:
+        continue
+    gene = g(r, &quot;GENE&quot;)
+    prot = g(r, &quot;HGVS_P_1LETTER&quot;, &quot;HGVS_P&quot;)
+    eff = g(r, &quot;EFFECT&quot;)
+    key = f&quot;{gene}:{prot}&quot; if prot else f&quot;{g(r,'CHROM')}:{g(r,'POS')}{g(r,'REF')}&gt;{g(r,'ALT')}&quot;
+    mut[(key, eff)].add(s)
+    per_sample[s] += 1
+
+samples = sorted(samples)
+with open(prefix + &quot;_list.tsv&quot;, &quot;w&quot;) as f:
+    f.write(&quot;dot_bien\ttac_dong\tso_mau\tcac_mau\n&quot;)
+    for (k, e), ss in sorted(mut.items(), key=lambda x: -len(x[1])):
+        f.write(f&quot;{k}\t{e}\t{len(ss)}\t\n&quot;)
+with open(prefix + &quot;_matrix.tsv&quot;, &quot;w&quot;) as f:
+    f.write(&quot;dot_bien\t&quot; + &quot;\t&quot;.join(samples) + &quot;\n&quot;)
+    for (k, e), ss in sorted(mut.items(), key=lambda x: -len(x[1])):
+        f.write(k + &quot;\t&quot; + &quot;\t&quot;.join(&quot;1&quot; if s in ss else &quot;0&quot; for s in samples) + &quot;\n&quot;)
+print(f&quot;Số mẫu: {len(samples)}; số đột biến sau lọc: {len(mut)}&quot;, file=sys.stderr)
+for s in samples:
+    print(f&quot;{s}\t{per_sample[s]}&quot;, file=sys.stderr)
+EOF
+
+python3 summarize_variants.py variants_long_table.csv 0.75 20 $WD/downstream/${TAG}_mut
+head $WD/downstream/${TAG}_mut_list.tsv
+</code></pre>
+<p>Kết quả: <code>*_mut_list.tsv</code> (mỗi đột biến, số mẫu mang, danh sách mẫu) và <code>*_mut_matrix.tsv</code> (ma trận 0/1 để vẽ bản đồ nhiệt
+hoặc lọc bằng Excel/R). Ngưỡng 0,75 và 20 chỉ là ví dụ; hãy tự đặt theo chất lượng dữ liệu và mục tiêu (xem 10.4).</p>
+<h3>10.3. Cách đánh số vị trí amino acid</h3>
+<ul>
+<li><strong>Polyprotein đơn (Dengue, Zika, Enterovirus):</strong> SnpEff báo vị trí theo toàn polyprotein. Để ghi theo từng protein
+  (ví dụ E:D390N), lấy tọa độ protein trưởng thành từ GFF rồi trừ vị trí bắt đầu của protein, hoặc dùng Nextclade (báo theo từng gene).
+  <code>bash
+  grep -v '^#' $WD/$GFF | cut -f3 | sort | uniq -c
+  awk -F'\t' '$3 ~ /mature/ {match($9,/product=[^;]*/); print $4"\t"$5"\t"substr($9,RSTART+8,RLENGTH-8)}' $WD/$GFF</code>
+  Nếu GFF không có feature <code>mature_peptide</code>, lấy ranh giới protein từ ghi chú của accession trên NCBI hoặc từ tài liệu.</li>
+<li><strong>Nhiều CDS (Dại, Chikungunya):</strong> SnpEff báo theo từng gene hoặc ORF; ghi rõ đánh số tính theo gene/ORF hay theo polyprotein.</li>
+<li>Luôn ghi <strong>reference và accession</strong> dùng để đánh số trong Methods, vì số vị trí phụ thuộc vào reference.</li>
+</ul>
+<h3>10.4. Chọn ngưỡng và loại biến thể không đáng tin</h3>
+<table>
+<thead>
+<tr>
+<th>Mục tiêu</th>
+<th>Gợi ý cách lọc</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Đột biến mức consensus (cho cây, so sánh genotype)</td>
+<td>AF cao (ví dụ từ 0,75 trở lên), DP đủ lớn, FILTER đạt</td>
+</tr>
+<tr>
+<td>Biến thể tần số thấp (quần thể, nhiễm hỗn hợp, thích ứng)</td>
+<td>Hạ AF, nhưng cần DP cao, kiểm tra trùng lặp giữa các lần chạy và loại vị trí gần primer; cần caller phù hợp (iVar thường dùng cho việc này)</td>
+</tr>
+<tr>
+<td>Đột biến mới của riêng mẫu</td>
+<td>Loại các vị trí chung của cả nhóm (khác biệt cố định so với reference)</td>
+</tr>
+</tbody>
+</table>
+<p>Cần loại hoặc kiểm tra kỹ:
+- <strong>Biến thể nằm ở vị trí gắn primer:</strong> primer có thể làm sai lệch trình tự ở đó; pipeline cắt primer, nhưng vị trí sát primer vẫn cần thận trọng.
+- <strong>Vùng độ sâu thấp</strong> hoặc ngay sát khoảng trống mất amplicon.
+- <strong>Indel trong vùng lặp</strong> (dễ sai ở dữ liệu Illumina và rất dễ sai ở Nanopore).
+- <strong>Vùng bị mất amplicon:</strong> không được kết luận có hay không có đột biến ở đó.</p>
+<h3>10.5. Phân biệt khác biệt do genotype và đột biến thật sự</h3>
+<p>Mẫu của bạn so với reference có thể khác hàng trăm vị trí (lô D1: khoảng 800 SNP). Phần lớn là <strong>khác biệt cố định giữa
+genotype</strong>, không phải đột biến mới. Để tách:
+1. Đếm số mẫu mang mỗi đột biến (<code>*_mut_list.tsv</code>): đột biến có ở hầu hết mẫu thường là khác biệt genotype so với reference.
+2. Đột biến chỉ có ở một hai mẫu hoặc một cụm mẫu mới đáng chú ý, và cần kiểm tra thêm (độ sâu, AF, vị trí gần primer).
+3. Dùng reference gần genotype của mẫu (Bước 2) để giảm số khác biệt "nền", hoặc so sánh trực tiếp giữa các mẫu và với chuỗi tham chiếu cùng genotype trong alignment.
+4. Với đột biến có ý nghĩa sinh học, đối chiếu tài liệu về vị trí đó (kháng nguyên, thích ứng vector, kháng thuốc...) thay vì suy diễn từ việc nó là missense.</p>
+<hr />
+<h2>Bước 11 — Diễn giải kết quả và kiểm tra trước khi xuất bản</h2>
+<h3>11.1. Cách đọc cây phát sinh loài</h3>
+<ol>
+<li><strong>Đặt gốc trước khi diễn giải.</strong> Midpoint chỉ để xem sơ bộ. Cây chưa có gốc đúng có thể cho thấy quan hệ họ hàng sai chiều. Dùng outgroup (chuỗi thuộc type/lineage khác nhưng cùng virus, được tài liệu ủng hộ).</li>
+<li><strong>Gán genotype/lineage cho mẫu:</strong> tìm cụm (clade) chứa chuỗi tham chiếu đã biết genotype/lineage và có UFBoot từ khoảng 95 trở lên; nếu mẫu nằm trong cụm đó và cụm đơn nguồn (monophyletic) thì gán theo. Đối chiếu với kết quả BLAST và Nextclade (Bước 6).</li>
+<li><strong>UFBoot</strong> (chấm xám trên nhánh): ngưỡng khoảng 95 trở lên thường được coi là hỗ trợ tốt, nhưng hãy theo quy ước của tạp chí và nhớ rằng UFBoot khác bootstrap thường (diễn giải khác nhau).</li>
+<li><strong>Nhánh dài bất thường</strong> của một chuỗi: nghi ngờ lỗi (chuỗi kém chất lượng, nhiều N, lỗi alignment, nhiễm chéo, hoặc là chuỗi lai/tái tổ hợp). Kiểm tra lại chuỗi đó trước khi đưa vào bài.</li>
+<li><strong>Mẫu gom thành cụm riêng của bạn:</strong> các mẫu giống hệt hoặc gần giống nhau (xem <code>snp_matrix.tsv</code>) cho thấy có thể cùng nguồn lây, nhưng <strong>kết luận về chuỗi lây truyền chỉ có giá trị khi kết hợp dữ liệu dịch tễ</strong> (thời gian, địa điểm, tiếp xúc), vì chuỗi giống nhau cũng có thể là tình cờ khi virus ít biến đổi.</li>
+<li><strong>Mẫu nằm cạnh chuỗi từ nước khác:</strong> gợi ý mối liên hệ về nguồn gốc hoặc nhập khẩu, nhưng bị ảnh hưởng mạnh bởi <strong>thiên lệch lấy mẫu</strong> (nước có nhiều chuỗi công bố, như Brazil hay Việt Nam, dễ xuất hiện nhiều hơn). Đừng kết luận hướng lây truyền chỉ từ vị trí trên cây.</li>
+<li><strong>Thời gian tiến hóa</strong> (ước tính ngày tổ tiên chung gần nhất, tốc độ tiến hóa) cần phân tích riêng bằng phần mềm có mô hình đồng hồ phân tử (ví dụ TreeTime hoặc BEAST) và dữ liệu có ngày thu mẫu đầy đủ; cây ML không cho thông tin này.</li>
+</ol>
+<h3>11.2. Cách đọc kết quả phân loại</h3>
+<ul>
+<li>Hai phương pháp độc lập (BLAST/Nextclade và cây) cùng cho một kết quả thì đáng tin; nếu khác nhau, xem lại chất lượng mẫu và chuỗi tham chiếu.</li>
+<li>Độ tương đồng thấp với chuỗi gần nhất (ví dụ dưới khoảng 95% đối với virus có genotype gần nhau) gợi ý genotype/lineage chưa có đại diện trong cơ sở dữ liệu hoặc nhầm type.</li>
+<li>Với virus có hệ phân loại đang thay đổi (ví dụ Dengue, Chikungunya, Dại), ghi rõ <strong>hệ thống phân loại và phiên bản dataset/tài liệu</strong> đã dùng.</li>
+</ul>
+<h3>11.3. Cách đọc kết quả đột biến</h3>
+<ul>
+<li>Phân biệt đột biến <strong>đồng nghĩa</strong> (synonymous) và <strong>sai nghĩa</strong> (missense); đột biến sai nghĩa không tự động có ý nghĩa chức năng.</li>
+<li>Báo cáo kèm tần số allele, độ sâu và vị trí tương đối so với primer; với biến thể tần số thấp, nói rõ giới hạn của phương pháp.</li>
+<li>Đối chiếu với tài liệu trước khi gắn ý nghĩa sinh học; tránh suy diễn từ một vị trí duy nhất.</li>
+<li>Đột biến chỉ thấy ở một mẫu có thể là lỗi kỹ thuật (PCR, giải trình tự, nhiễm chéo); nên xác nhận bằng mẫu lặp hoặc phương pháp khác khi kết luận quan trọng.</li>
+</ul>
+<h3>11.4. Danh sách kiểm tra trước khi xuất bản</h3>
+<ol>
+<li>Xác nhận type và genotype/lineage bằng ít nhất hai phương pháp; loại trừ nhầm type và nhiễm hỗn hợp.</li>
+<li>Dùng reference gần genotype của mẫu và BED đúng tọa độ reference đó.</li>
+<li>Đặt tiêu chí lọc mẫu rõ ràng (độ sâu tối thiểu, tỷ lệ N tối đa, vùng mã hóa đầy đủ) và áp dụng thống nhất.</li>
+<li>Báo cáo độ sâu trung bình, tỷ lệ genome đạt ngưỡng độ sâu và vị trí các khoảng trống từng mẫu.</li>
+<li>Kiểm tra mẫu đối chứng âm của lô giải trình tự để loại trừ nhiễm chéo.</li>
+<li>Với phân tích đột biến, nêu rõ ngưỡng DP, AF, caller và reference dùng để so sánh và đánh số.</li>
+<li>Nộp reads lên SRA và chuỗi lên GenBank nếu tạp chí yêu cầu; mô tả đúng loại chuỗi (đủ vùng mã hóa hay toàn bộ genome) theo hướng dẫn của GenBank.</li>
+<li>Phần Methods ghi rõ phiên bản và tham số:
+   - nf-core/viralrecon 3.0.0, Nextflow 25.04.6, reference (accession), bộ primer, các tham số <code>--skip_*</code>, <code>custom.config</code> (lấy từ <code>pipeline_info/</code>);
+   - cách chọn chuỗi tham chiếu cho cây: nguồn (NCBI Virus/datasets), tiêu chí lọc (genome hoàn chỉnh, host, vùng địa lý), cách giảm mẫu, ngày tải dữ liệu, và <strong>danh sách accession</strong> (<code>refs_accessions.txt</code>, <code>*_subsampled.tsv</code>) ở phụ lục;
+   - MAFFT (phiên bản, chế độ <code>--auto</code>), vùng cắt (CDS, bỏ UTR), IQ-TREE (phiên bản, mô hình từ dòng <code>Best-fit model</code>, số chuỗi, số vị trí, UFBoot 1000 lần), phần mềm vẽ cây và cách đặt gốc.</li>
+<li>Lưu các file trung gian để tái lập: <code>tree_input.fasta</code>, <code>aligned.fasta</code>, <code>cds_aligned.fasta</code>, <code>*_cds.*</code>, các script (<code>cut_region.py</code>, <code>plot_tree.R</code>, <code>summarize_variants.py</code>, <code>qc_consensus.py</code>) và các lệnh đã chạy.</li>
+</ol>
+<hr />
+<h2>Phụ lục A — Điều chỉnh cho từng virus</h2>
+<p>Các ghi chú dưới đây là hướng dẫn thực hành, không thay thế tài liệu chuyên ngành. Trước khi dùng, hãy xác nhận
+accession, hệ phân loại và công cụ phân loại hiện hành.</p>
+<h3>A.1. Dengue 1, 2, 3, 4</h3>
+<ul>
+<li><strong>Quy trình giống lô DENV1:</strong> mỗi serotype một reference, GFF, BED và samplesheet riêng; không trộn serotype trong cùng lần chạy.
+  Thay <code>TAXON</code> ở Bước 7 bằng <code>"Dengue virus 2"</code>, <code>"Dengue virus 3"</code>, <code>"Dengue virus 4"</code> và đổi <code>REF_ACC</code>
+  (ví dụ DENV2 NC_001474.2, DENV3 NC_001475.2, DENV4 NC_002640.1; xác nhận lại trên NCBI).</li>
+<li><strong>Tọa độ CDS khác nhau giữa serotype:</strong> luôn lấy lại từ GFF (Bước 8.2), không dùng lại tọa độ 95-10273 của DENV1.</li>
+<li><strong>Phân loại:</strong> thường dựa trên gene E; với DENV2 có nhiều hệ thống đặt tên genotype/lineage (cũ và mới), nên nêu rõ hệ thống bạn dùng.</li>
+<li><strong>Đồng nhiễm nhiều serotype</strong> có thể gặp trong vùng dịch; dùng cách kiểm tra ở Bước 6.4 (map lên 4 reference).</li>
+<li><strong>Reference nên gần genotype lưu hành:</strong> bài học lô D1 cho thấy reference RefSeq có thể cách mẫu khoảng 7% và làm mất amplicon.</li>
+</ul>
+<h3>A.2. Zika</h3>
+<ul>
+<li>Reference tham khảo NC_012532.1, một polyprotein; quy trình giống Dengue.</li>
+<li>Phân loại chủ yếu giữa lineage Châu Phi và Châu Á (nhánh Châu Á gồm các chuỗi Châu Mỹ); kiểm tra Nextclade dataset (<code>nextclade dataset list</code>) hoặc dùng cây với chuỗi đại diện.</li>
+<li>Mẫu thường có tải lượng virus thấp, nên <strong>mất amplicon (dropout)</strong> hay gặp; đọc kỹ Bước 5, mục 4 và 5.</li>
+<li>Số chuỗi công bố ít hơn Dengue; bộ chuỗi tham chiếu cho cây có thể lấy gần như toàn bộ genome hoàn chỉnh thay vì giảm mẫu mạnh.</li>
+<li>Bộ mồi amplicon có thể dùng bộ đã công bố cho Zika (kiểu PrimalSeq) hoặc thiết kế mới bằng PrimalScheme.</li>
+</ul>
+<h3>A.3. Chikungunya</h3>
+<ul>
+<li>Reference tham khảo NC_004162.2. Genome có <strong>hai ORF</strong> (polyprotein không cấu trúc nsP1-4 và polyprotein cấu trúc), nên GFF có hai CDS chính.</li>
+<li>Vùng dùng cho cây toàn vùng mã hóa: từ đầu CDS đầu tiên đến cuối CDS cuối cùng, hoặc chỉ gene E1 nếu so sánh với dữ liệu E1 công bố.</li>
+<li>SnpEff báo vị trí theo từng ORF; ghi rõ cách đánh số khi báo cáo.</li>
+<li>Phân loại: genotype ECSA, West Africa, Asian, cùng nhánh IOL (Indian Ocean Lineage) trong ECSA. Dùng gene E1 hoặc toàn CDS; kiểm tra Nextclade dataset nếu có.</li>
+<li>Một số đột biến ở protein E1 và E2 được nêu trong tài liệu liên quan đến thích ứng với muỗi vector; khi báo cáo, đối chiếu tài liệu và ghi rõ vị trí tính theo protein và reference.</li>
+<li>Lọc tải về từ NCBI theo <code>"Chikungunya virus"</code>; độ dài genome hoàn chỉnh khoảng 11,6-12,0 kb (đặt <code>LEN_MIN</code>, <code>LEN_MAX</code> tương ứng).</li>
+</ul>
+<h3>A.4. Virus Dại (RABV)</h3>
+<ul>
+<li>Reference tham khảo NC_001542.1. Genome có <strong>5 gene riêng</strong> (N, P, M, G, L), nên GFF có 5 CDS; SnpEff báo theo từng gene, rất thuận tiện cho diễn giải.</li>
+<li><strong>Host rất đa dạng</strong> (chó, dơi, động vật hoang dã...): đừng lọc theo <code>Homo sapiens</code> ở Bước 7; lọc theo host phù hợp với nghiên cứu (ví dụ chó nhà) và nêu rõ.</li>
+<li>Phân loại theo clade/lineage (ví dụ Cosmopolitan, Asian, Arctic-like, các nhánh Châu Phi); có công cụ gán lineage chuyên biệt như RABV-GLUE (xác nhận hiện còn dùng được và phiên bản). Phân loại thường dựa trên gene N hoặc toàn genome.</li>
+<li>Mẫu thường là mô não; tải lượng có thể biến động, và chất lượng RNA phụ thuộc bảo quản; kiểm tra Bước 5 kỹ.</li>
+<li>Cấu trúc lineage phụ thuộc mạnh vào địa lý và vật chủ; khi chọn chuỗi tham chiếu, thêm chuỗi từ nhiều lineage để không áp đặt kết quả phân loại.</li>
+<li>Dữ liệu công bố lệch theo nước và loài; lưu ý trong diễn giải.</li>
+<li>Cân nhắc <strong>không bỏ assembly</strong> (<code>--skip_assembly</code>) để so consensus mapping với contig de novo khi mẫu khác reference nhiều.</li>
+</ul>
+<h3>A.5. Enterovirus</h3>
+<ul>
+<li><strong>Không dùng một reference chung cho nhiều type:</strong> Enterovirus gồm rất nhiều type (ví dụ EV-A71, CV-A16, CV-A6, EV-D68, các echovirus), khác nhau lớn đến mức mapping lên reference sai type cho kết quả kém.
+  Quy trình:
+  1. Xác định type bằng <strong>gene VP1</strong> (BLAST hoặc công cụ Enterovirus Genotyping Tool); tiêu chí tương đồng VP1 để định type có trong tài liệu phân loại (tra cứu ngưỡng hiện hành).
+  2. Chọn một reference <strong>đúng type</strong> (bằng Bước 2), tạo GFF, BED và samplesheet riêng cho từng type.</li>
+<li>Genome ngắn hơn (khoảng 7,4 kb) với một polyprotein; vùng dùng cho cây là toàn CDS (từ GFF) hoặc VP1.</li>
+<li>Phân loại tiếp ở mức <strong>genogroup/subgenogroup</strong> bằng cây VP1 với chuỗi đại diện đã công bố (ví dụ EV-A71 có các genogroup A, B, C và các nhánh con).</li>
+<li><strong>Tái tổ hợp thường gặp:</strong> dựng thêm cây theo vùng khác (ví dụ VP1 so với vùng 3D hoặc 5'UTR); cây khác nhau gợi ý tái tổ hợp, cần công cụ phát hiện tái tổ hợp (ví dụ RDP, GARD, 3SEQ).</li>
+<li>Đa dạng cao nên mapping lên reference có thể thiên lệch; nên <strong>giữ assembly de novo</strong> (bỏ <code>--skip_assembly</code>) và so sánh với consensus.</li>
+<li>Lọc tải về từ NCBI theo đúng type (tên taxon dùng trong NCBI Taxonomy; xác nhận bằng <code>datasets summary taxonomy taxon "&lt;tên&gt;"</code>), và đặt <code>LEN_MIN</code>, <code>LEN_MAX</code> quanh 7,2-7,6 kb.</li>
+</ul>
+<h3>A.6. Các virus RNA khác</h3>
+<p>Quy trình áp dụng được cho virus RNA có thể sinh khuếch đại đa mồi. Cần xác định trước:
+reference và GFF đúng, bộ mồi và BED, khoảng độ dài genome hoàn chỉnh, vùng thường dùng để phân loại,
+hệ phân loại (genotype/lineage) và công cụ phân loại hiện hành, và cấu trúc gene (polyprotein đơn hay nhiều gene).</p>
+<hr />
+<h2>Phụ lục B — Danh sách việc cần làm khi chuyển sang virus mới</h2>
+<ol>
+<li>Chọn reference (RefSeq hoặc chuỗi gần nhất) và tải GFF <strong>cùng accession</strong> (Bước 4.1).</li>
+<li>Chuẩn bị bảng mồi và dựng BED đúng tọa độ reference đó (Bước 0-3); kiểm tra hậu tố <code>_LEFT</code>/<code>_RIGHT</code>.</li>
+<li>Đặt biến dùng chung (<code>TAG</code>, <code>REF</code>, <code>GFF</code>, <code>BED</code>, <code>OUT</code>; Bước 4.0).</li>
+<li>Chạy viralrecon với <code>--skip_pangolin --skip_nextclade --skip_freyja</code>; cân nhắc <code>--skip_assembly</code> hay giữ tùy độ đa dạng của virus (Bước 4.4).</li>
+<li>Đánh giá chất lượng bằng <code>qc_consensus.py</code> (đổi tọa độ CDS) và các lệnh ở Bước 5; lập <code>good_samples.txt</code>.</li>
+<li>Phân loại (Bước 6): kiểm tra <code>nextclade dataset list</code> cho virus; nếu không có thì BLAST và cây.</li>
+<li>Đặt <code>TAXON</code>, <code>LEN_MIN</code>, <code>LEN_MAX</code>, danh sách nước, bộ lọc host phù hợp rồi chọn chuỗi tham chiếu (Bước 7).</li>
+<li>Lấy tọa độ vùng cắt từ GFF (một hay nhiều CDS) rồi chạy <code>cut_region.py</code> (Bước 8.2).</li>
+<li>Dựng cây với IQ-TREE (<code>iqtree</code>), ghi lại mô hình (Bước 8.4-8.5).</li>
+<li>Vẽ cây bằng <code>plot_tree.R</code>, đổi biểu thức chính quy cho tên mẫu và outgroup (Bước 9).</li>
+<li>Tóm tắt đột biến bằng <code>summarize_variants.py</code> với ngưỡng phù hợp mục tiêu (Bước 10).</li>
+<li>Diễn giải và kiểm tra theo Bước 11, rồi ghi Methods đầy đủ phiên bản và tham số.</li>
+</ol>
+<hr />
+<h2>Phụ lục C — Tóm tắt lệnh theo thứ tự (cho lô mới)</h2>
+<pre><code class="language-bash"># 0. Môi trường và biến
+conda activate nf-core
+export WD=/mnt/e/Analysis TAG=... REF=... GFF=... BED=... SAMPLESHEET=... OUT=...
+cd $WD &amp;&amp; export NXF_CONDA_CACHEDIR=$HOME/nf_conda_cache
+
+# 1. Chạy viralrecon trong tmux (Bước 4.4)
+tmux new -As viralrecon
+NXF_VER=25.04.6 nextflow run nf-core/viralrecon -r 3.0.0 --input $SAMPLESHEET --platform illumina \
+  --outdir $OUT --fasta $REF --gff $GFF --primer_bed $BED \
+  --skip_pangolin --skip_nextclade --skip_freyja --skip_assembly --skip_variants_quast \
+  -profile conda -c custom.config -ansi-log false -resume
+
+# 2. Đánh giá chất lượng (Bước 5)
+python3 qc_consensus.py &quot;$OUT/variants/bcftools/consensus/bcftools/*.consensus.fa&quot; &lt;bắt_đầu_CDS&gt; &lt;kết_thúc_CDS&gt; | column -t
+
+# 3. Phân loại, chuỗi tham chiếu, cây (Bước 6-8)
+conda activate phylo &amp;&amp; cd $WD/downstream
+#   gom consensus -&gt; Nextclade/BLAST -&gt; metadata NCBI -&gt; tải chuỗi -&gt; mafft -&gt; cut_region.py -&gt; iqtree
+
+# 4. Vẽ cây (Bước 9)
+conda activate rtree
+Rscript plot_tree.R ${TAG}_cds.treefile tree_${TAG} &quot;^${TAG}-&quot;
+
+# 5. Đột biến (Bước 10)
+python3 summarize_variants.py $WD/$OUT/variants/bcftools/variants_long_table.csv 0.75 20 ${TAG}_mut
+</code></pre>
 <hr />
 <h2>Yêu cầu công cụ</h2>
 <table>
@@ -217,7 +1497,23 @@ serotype dùng bộ <code>--fasta</code>/<code>--primer_bed</code>/<code>--prime
 </tr>
 <tr>
 <td>04</td>
-<td>Nextflow, Docker/Singularity, Internet (kéo pipeline + container nf-core/viralrecon)</td>
+<td>Nextflow (ghim <code>NXF_VER</code>), conda hoặc Docker/Singularity (profile conda đã kiểm chứng), Internet (kéo pipeline), <code>tmux</code> trên server</td>
+</tr>
+<tr>
+<td>05</td>
+<td>Python 3 (script <code>qc_consensus.py</code>), IGV (xem BAM, tuỳ chọn)</td>
+</tr>
+<tr>
+<td>06-08</td>
+<td>Môi trường conda <code>phylo</code>: <code>nextclade</code>, <code>mafft</code>, <code>iqtree</code> (lệnh <code>iqtree</code>), <code>seqkit</code>, <code>entrez-direct</code>, <code>ncbi-datasets-cli</code> (gồm <code>datasets</code>, <code>dataformat</code>), <code>snp-dists</code>; Python 3; <code>minimap2</code> và <code>samtools</code> nếu kiểm tra đồng nhiễm</td>
+</tr>
+<tr>
+<td>09</td>
+<td>Môi trường conda <code>rtree</code>: <code>r-base</code>, <code>r-ggplot2</code>, <code>bioconductor-ggtree</code>, <code>r-ape</code>, <code>r-phangorn</code>, <code>r-ragg</code>; FigTree hoặc iTOL và Inkscape/GIMP/Fiji trên máy client (tuỳ chọn)</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Python 3 (script <code>summarize_variants.py</code>); Excel hoặc R để vẽ ma trận đột biến (tuỳ chọn)</td>
 </tr>
 </tbody>
 </table>
