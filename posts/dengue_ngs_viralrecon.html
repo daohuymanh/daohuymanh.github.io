@@ -543,7 +543,7 @@ dùng <code>-w $HOME/nf_work</code> (lưu ý đổi thư mục work thì <code>-
 <p>Chạy trong <strong>PowerShell trên máy client</strong>, không phải trong WSL của server. Cú pháp là <code>người_dùng@địa_chỉ:đường_dẫn</code>
 với tên đăng nhập SSH của server (không phải tên tài khoản Windows của client):</p>
 <pre><code class="language-powershell">cd $HOME\Downloads
-scp daohuymanh@&lt;IP-tailscale&gt;:/mnt/e/Analysis/output/result_illumina_D1/multiqc/multiqc_report.html .
+scp maychu:/E:/Analysis/output/result_illumina_D1/multiqc/multiqc_report.html .
 </code></pre>
 <ul>
 <li><code>hostname contains invalid characters</code>: sai cú pháp (thiếu <code>user@</code> hoặc <code>:</code>), hoặc gõ trong WSL thay vì client.</li>
@@ -1261,9 +1261,9 @@ kết quả của lệnh <code>file</code> không đáng lo nếu <code>tiffinfo
 <h3>9.5. Tải về và xem</h3>
 <p>Tải về từ <strong>PowerShell trên máy client</strong> (cú pháp ở Mục 4.6):</p>
 <pre><code class="language-powershell">cd $HOME\Downloads
-scp daohuymanh@&lt;IP-tailscale&gt;:/mnt/e/Analysis/downstream/tree_D1_preview.png .
-scp daohuymanh@&lt;IP-tailscale&gt;:/mnt/e/Analysis/downstream/tree_D1.pdf .
-scp daohuymanh@&lt;IP-tailscale&gt;:/mnt/e/Analysis/downstream/tree_D1_300dpi.tiff .
+scp maychu:/E:/Analysis/downstream/tree_D1_preview.png .
+scp maychu:/E:/Analysis/downstream/tree_D1.pdf .
+scp maychu:/E:/Analysis/downstream/tree_D1_300dpi.tiff .
 </code></pre>
 <p>Xem <code>preview.png</code> trước để chỉnh nhanh. Mở PDF bằng trình đọc PDF hoặc Inkscape; mở TIFF bằng Windows Photos, GIMP hoặc Fiji.
 Cây <code>.treefile</code> cũng mở được trực tiếp bằng FigTree hoặc iTOL nếu muốn chỉnh tay.</p>
