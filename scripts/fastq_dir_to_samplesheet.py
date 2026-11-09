@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+#
+# Dựa trên bin/fastq_dir_to_samplesheet.py của nf-core/viralrecon (giấy phép MIT).
+# Thay đổi so với bản gốc:
+#   - Không báo KeyError khi có file R2 mà không có R1 cùng mẫu (in cảnh báo và bỏ qua).
+#   - Cảnh báo khi số file R1 và R2 của một mẫu không bằng nhau.
+# Gợi ý đặt tên mẫu: với tên file D1-879_S35_L001_R1_001.fastq.gz, mặc định tên mẫu là "D1-879_S35_L001"
+# (mỗi lane một mẫu riêng). Để gộp nhiều lane thành một mẫu (technical replicates, pipeline tự nối),
+# dùng:  -sn -si 2   (giữ 2 phần đầu tách theo "_"  ->  "D1-879_S35").
+#
 
 import os
 import sys
@@ -103,6 +112,9 @@ def fastq_dir_to_samplesheet(
     if not single_end:
         for read2_file in get_fastqs(read2_extension):
             sample = sanitize_sample(read2_file, read2_extension)
+            if sample not in read_dict:
+                print(f"WARNING: {read2_file} có R2 nhưng không có R1 tương ứng, bỏ qua.", file=sys.stderr)
+                continue
             read_dict[sample]["R2"].append(read2_file)
 
     ## Write to file
@@ -115,6 +127,9 @@ def fastq_dir_to_samplesheet(
             header = ["sample", "fastq_1", "fastq_2"]
             fout.write(",".join(header) + "\n")
             for sample, reads in sorted(read_dict.items()):
+                if not single_end and len(reads["R1"]) != len(reads["R2"]):
+                    print(f"WARNING: mẫu {sample} có {len(reads['R1'])} file R1 nhưng {len(reads['R2'])} file R2.",
+                          file=sys.stderr)
                 for idx, read_1 in enumerate(reads["R1"]):
                     read_2 = ""
                     if idx < len(reads["R2"]):

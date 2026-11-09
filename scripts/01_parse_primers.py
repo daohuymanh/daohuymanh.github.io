@@ -1,42 +1,44 @@
 #!/usr/bin/env python3
 """
-01_parse_primers.py
---------------------
-Đọc file Excel chứa danh sách mồi Dengue (4 serotype D1-D4, mỗi serotype là một
-khối được phân cách bởi dòng trống, mỗi khối có các cột:
-  It. | Name | From | To | Sequence (5'-3') | Length | Tm | Size(bp) | PCR1 | Pool
+01_parse_primers.py  (phiên bản 2)
+----------------------------------
+Đọc file Excel chứa danh sách mồi amplicon đa mồi (ví dụ Dengue D1-D4, hoặc Zika, Chikungunya...).
+Mỗi hàng là một mồi, các cột (đếm từ 0, có thể đổi bằng tham số --col-*):
+  0 It. | 1 Name | 2 From | 3 To | 4 Sequence (5'-3') | 5 Length | 6 Tm | 7 Size(bp) | 8 PCR1 | 9 Pool
 
-Sinh ra, cho MỖI serotype:
-  - <SEROTYPE>_primers.csv     : bảng mồi đã chuẩn hoá (tên, toạ độ, chiều, pool)
-  - <SEROTYPE>_primers.fasta   : FASTA mồi (dùng cho --primer_fasta / Cutadapt)
-  - <SEROTYPE>_primers.provisional.bed
-        BED "tạm" dựng THẲNG từ toạ độ From/To có sẵn trong file Excel.
-        LƯU Ý QUAN TRỌNG: toạ độ này chỉ đúng nếu nó đã được đánh số theo ĐÚNG
-        bản genome tham chiếu bạn sẽ dùng để chạy viralrecon. Tên sheet gốc là
-        "primer seq DEN old (pool)" - chữ "old" cho thấy khả năng cao đây là toạ
-        độ theo một reference cũ/khác. => Luôn chạy tiếp 03_build_primer_bed.py
-        (BLAST từng mồi lên reference đã chọn ở bước 2) để có BED chính xác,
-        không dùng thẳng file .provisional.bed này để phân tích chính thức.
+Tên mồi phải có dạng  <nhóm><dấu phân cách><số amplicon><F|R>[bis|alt...]
+  ví dụ: D1,1F   D1,17R   D1.23Rbis   ZIKV_12F
+  - <nhóm>  : serotype/virus/bộ mồi (D1, D2, ZIKV...). Mỗi nhóm sinh ra bộ file riêng.
+  - <số amplicon>: số thứ tự amplicon; mồi F và R cùng số thuộc CÙNG một amplicon.
+  - hậu tố bis/alt: mồi thay thế (alternative) cho cùng amplicon.
 
-Quy ước sinh BED (theo chuẩn ARTIC/iVar - primal-page spec):
-  cột 1 chrom       : id serotype tạm (DENV1/DENV2/DENV3/DENV4) - sẽ thay bằng
-                       accession NCBI thật sau bước chọn reference.
-  cột 2-3 start/end : BED 0-based, half-open  (start = From-1, end = To)
-  cột 4 name        : <TênMồi>_LEFT  hoặc  <TênMồi>_RIGHT
-  cột 5 pool        : lấy từ cột "Pool" trong Excel nếu có; nếu trống thì suy
-                       luận bằng cách luân phiên 1,2,1,2... theo từng cặp mồi
-                       liên tiếp trong khối (F/R) - được đánh dấu inferred=True
-                       trong file CSV để bạn xác nhận lại với protocol PCR gốc.
-  cột 6 strand      : '+' cho mồi F (LEFT, xuôi chiều reference)
-                       '-' cho mồi R (RIGHT, ngược chiều reference)
+Với MỖI nhóm sinh ra:
+  <nhóm>_primers.csv                : bảng mồi chuẩn hoá (cả tên gốc và tên ARTIC)
+  <nhóm>_primers.fasta              : FASTA mồi (header = tên ARTIC), dùng cho --primer_fasta
+  <nhóm>_primers.provisional.bed    : BED "tạm" dựng từ toạ độ From/To trong Excel
+
+TÊN ARTIC (quan trọng cho viralrecon):
+  viralrecon/iVar/ARTIC ghép mồi trái-phải thành amplicon dựa trên tên có dạng
+  <tên_amplicon>_LEFT và <tên_amplicon>_RIGHT (cùng <tên_amplicon>). Vì vậy script đổi
+  'D1,18F' -> 'D1_18_LEFT', 'D1,18R' -> 'D1_18_RIGHT', mồi thay thế -> 'D1_18_RIGHT_alt'.
+  Tên gốc vẫn được giữ trong cột `name` của CSV để đối chiếu.
+
+BED "tạm" chỉ đúng nếu toạ độ trong Excel đã đánh số theo ĐÚNG reference sẽ dùng. Luôn chạy tiếp
+02_select_reference.sh và 03_build_primer_bed.py để BLAST lại từng mồi lên reference đã chọn.
+
+Pool: nếu cột Pool trống, suy luận theo amplicon (amplicon liền kề luân phiên pool 1,2,1,2...) và
+đánh dấu pool_inferred=True trong CSV; hãy đối chiếu lại với protocol PCR gốc.
 
 Cách dùng:
-    python3 01_parse_primers.py <file_excel> <thư_mục_output>
+    python3 01_parse_primers.py <file_excel> <thư_mục_output> [--sheet TÊN_SHEET]
+        [--name-regex REGEX] [--col-name 1 --col-from 2 --col-to 3 --col-seq 4 --col-pool 9]
 """
-import sys
-import re
+import argparse
 import csv
 import os
+import re
+import sys
+from collections import defaultdict
 from pathlib import Path
 
 try:
@@ -44,165 +46,150 @@ try:
 except ImportError:
     sys.exit("Cần cài openpyxl: pip install openpyxl")
 
-
-def classify_direction(name: str) -> str:
-    """Xác định mồi F (LEFT) hay R (RIGHT) từ tên mồi, vd 'D1,1F' -> F, 'D1.23Rbis' -> R."""
-    # bỏ hậu tố 'bis'/'Bis' khi xét ký tự cuối F/R
-    core = re.sub(r"(?i)bis$", "", name.strip())
-    core = core.rstrip()
-    last_alpha = core[-1].upper() if core and core[-1].isalpha() else None
-    if last_alpha == "F":
-        return "LEFT"
-    if last_alpha == "R":
-        return "RIGHT"
-    raise ValueError(f"Không xác định được chiều mồi từ tên: {name!r}")
+DEFAULT_NAME_REGEX = (
+    r"^\s*(?P<group>[A-Za-z0-9]+?)[.,_\-\s]+(?P<num>\d+)\s*(?P<dir>[FfRr])\s*"
+    r"(?P<alt>(?i:bis)|(?i:alt)\w*)?\s*$"
+)
 
 
-def parse_workbook(xlsx_path: str):
-    wb = openpyxl.load_workbook(xlsx_path, data_only=True)
-    ws = wb.active
+def to_int(v):
+    try:
+        return int(str(v).strip())
+    except (ValueError, TypeError):
+        return None
 
-    blocks = {}  # serotype -> list[dict]
-    current_serotype = None
 
+def parse_workbook(path, sheet, name_re, cols):
+    wb = openpyxl.load_workbook(path, data_only=True)
+    ws = wb[sheet] if sheet else wb.active
+    groups = defaultdict(list)
+    skipped = []
     for row in ws.iter_rows(min_row=1, values_only=True):
-        name = row[1]
-        frm = row[2]
-        to = row[3]
-        seq = row[4]
-        pool_raw = row[9] if len(row) > 9 else None
-
-        if not name or not isinstance(name, str):
+        if len(row) <= max(cols.values()):
+            row = tuple(row) + (None,) * (max(cols.values()) + 1 - len(row))
+        name, frm, to = row[cols["name"]], row[cols["from"]], row[cols["to"]]
+        seq, pool_raw = row[cols["seq"]], row[cols["pool"]]
+        if not isinstance(name, str) or not isinstance(seq, str) or not seq.strip():
             continue
-        if not seq or not isinstance(seq, str):
+        if name.strip().lower() in ("name", "primer", "primer name", "tên mồi"):   # dòng tiêu đề
             continue
-
-        m = re.match(r"^\s*D(\d)[.,]", name)
+        m = name_re.match(name)
         if not m:
+            skipped.append(name.strip())
             continue
-        serotype = f"D{m.group(1)}"
-        current_serotype = serotype
-
-        # toạ độ đôi khi bị lưu dạng chuỗi ('12', '-', ...) hoặc thiếu
-        def to_int(v):
-            try:
-                return int(str(v).strip())
-            except (ValueError, TypeError):
-                return None
-
-        frm_i = to_int(frm)
-        to_i = to_int(to)
-
+        direction = "LEFT" if m.group("dir").upper() == "F" else "RIGHT"
         pool = None
-        if pool_raw and isinstance(pool_raw, str) and pool_raw.strip().upper() in ("P1", "P2", "1", "2"):
-            pool = pool_raw.strip().upper().replace("P", "")
-
-        blocks.setdefault(serotype, []).append(
+        if pool_raw is not None and str(pool_raw).strip().upper() in ("P1", "P2", "1", "2", "1.0", "2.0"):
+            pool = str(pool_raw).strip().upper().replace("P", "").replace(".0", "")
+        groups[m.group("group")].append(
             {
                 "name": name.strip(),
-                "from": frm_i,
-                "to": to_i,
-                "seq": seq.strip().upper(),
+                "group": m.group("group"),
+                "amplicon": int(m.group("num")),
+                "direction": direction,
+                "alt": bool(m.group("alt")),
+                "from": to_int(frm),
+                "to": to_int(to),
+                "seq": re.sub(r"\s+", "", seq).upper(),
                 "pool_given": pool,
             }
         )
-    return blocks
+    return groups, skipped
 
 
-def infer_pools(records):
-    """Điền pool còn thiếu: lan truyền pool đã biết cho cặp mồi liền kề (F,R cùng amplicon),
-    nếu cả cặp đều thiếu thì luân phiên 1,2,1,2... theo thứ tự amplicon xuất hiện."""
-    n = len(records)
-    i = 0
-    next_alt_pool = 1
-    while i < n:
-        pair = records[i : i + 2]
-        given = {p["pool_given"] for p in pair if p["pool_given"]}
-        if given:
-            pool = sorted(given)[0]
-            inferred = len(given) == 0
-        else:
-            pool = str(next_alt_pool)
-            next_alt_pool = 2 if next_alt_pool == 1 else 1
-            inferred = True
-        for p in pair:
+def assign_names_and_pools(records):
+    """Gán tên ARTIC duy nhất và pool (theo amplicon)."""
+    # pool theo amplicon: lấy pool đã cho (nếu có) của bất kỳ mồi nào trong amplicon
+    by_amp = defaultdict(list)
+    for r in records:
+        by_amp[r["amplicon"]].append(r)
+    for rank, amp in enumerate(sorted(by_amp)):
+        given = sorted({p["pool_given"] for p in by_amp[amp] if p["pool_given"]})
+        pool = given[0] if given else str(rank % 2 + 1)
+        for p in by_amp[amp]:
             p["pool"] = p["pool_given"] or pool
             p["pool_inferred"] = p["pool_given"] is None
-        i += 2
+    # tên ARTIC duy nhất
+    seen = defaultdict(int)
+    for r in records:
+        base = f"{r['group']}_{r['amplicon']}_{r['direction']}"
+        if r["alt"]:
+            base += "_alt"
+        seen[base] += 1
+        r["artic_name"] = base if seen[base] == 1 else f"{base}{seen[base]}"
     return records
 
 
 def main():
-    if len(sys.argv) != 3:
-        sys.exit(f"Dùng: python3 {sys.argv[0]} <file_excel> <thư_mục_output>")
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("excel")
+    ap.add_argument("outdir")
+    ap.add_argument("--sheet", default=None, help="Tên sheet (mặc định: sheet đang hoạt động)")
+    ap.add_argument("--name-regex", default=DEFAULT_NAME_REGEX,
+                    help="Regex có nhóm group, num, dir, alt để phân tích tên mồi")
+    ap.add_argument("--col-name", type=int, default=1)
+    ap.add_argument("--col-from", type=int, default=2)
+    ap.add_argument("--col-to", type=int, default=3)
+    ap.add_argument("--col-seq", type=int, default=4)
+    ap.add_argument("--col-pool", type=int, default=9)
+    args = ap.parse_args()
 
-    xlsx_path, outdir = sys.argv[1], sys.argv[2]
-    Path(outdir).mkdir(parents=True, exist_ok=True)
+    cols = {"name": args.col_name, "from": args.col_from, "to": args.col_to,
+            "seq": args.col_seq, "pool": args.col_pool}
+    name_re = re.compile(args.name_regex)
+    Path(args.outdir).mkdir(parents=True, exist_ok=True)
 
-    blocks = parse_workbook(xlsx_path)
-    if not blocks:
-        sys.exit("Không tìm thấy dòng mồi nào hợp lệ trong file Excel.")
+    groups, skipped = parse_workbook(args.excel, args.sheet, name_re, cols)
+    if not groups:
+        sys.exit("Không tìm thấy dòng mồi hợp lệ. Kiểm tra --name-regex và chỉ số cột (--col-*).")
+    if skipped:
+        print(f"[!] Bỏ qua {len(skipped)} dòng có tên không khớp quy ước: {', '.join(skipped[:10])}"
+              + (" ..." if len(skipped) > 10 else ""))
 
-    for serotype, records in sorted(blocks.items()):
-        records = infer_pools(records)
+    for group, records in sorted(groups.items()):
+        records = assign_names_and_pools(records)
+        records.sort(key=lambda r: (r["amplicon"], r["direction"] != "LEFT", r["alt"]))
 
-        csv_path = os.path.join(outdir, f"{serotype}_primers.csv")
-        fasta_path = os.path.join(outdir, f"{serotype}_primers.fasta")
-        bed_path = os.path.join(outdir, f"{serotype}_primers.provisional.bed")
+        csv_path = os.path.join(args.outdir, f"{group}_primers.csv")
+        fasta_path = os.path.join(args.outdir, f"{group}_primers.fasta")
+        bed_path = os.path.join(args.outdir, f"{group}_primers.provisional.bed")
 
-        with open(csv_path, "w", newline="") as fcsv:
-            writer = csv.writer(fcsv)
-            writer.writerow(
-                ["name", "direction", "from_1based", "to_1based", "length",
-                 "sequence", "pool", "pool_inferred"]
-            )
+        with open(csv_path, "w", newline="", encoding="utf-8") as fcsv:
+            w = csv.writer(fcsv)
+            w.writerow(["name", "artic_name", "group", "amplicon", "direction", "alt",
+                        "from_1based", "to_1based", "length", "sequence", "pool", "pool_inferred"])
             for r in records:
-                direction = classify_direction(r["name"])
-                writer.writerow(
-                    [
-                        r["name"],
-                        direction,
-                        r["from"],
-                        r["to"],
-                        len(r["seq"]),
-                        r["seq"],
-                        r["pool"],
-                        r["pool_inferred"],
-                    ]
-                )
+                w.writerow([r["name"], r["artic_name"], r["group"], r["amplicon"], r["direction"],
+                            r["alt"], r["from"], r["to"], len(r["seq"]), r["seq"], r["pool"],
+                            r["pool_inferred"]])
 
-        with open(fasta_path, "w") as ffa:
+        with open(fasta_path, "w", encoding="utf-8") as ffa:
             for r in records:
-                ffa.write(f">{r['name']}\n{r['seq']}\n")
+                ffa.write(f">{r['artic_name']}\n{r['seq']}\n")
 
-        chrom_placeholder = f"{serotype.replace('D', 'DENV')}_REPLACE_WITH_ACCESSION"
-        n_missing_coords = 0
-        with open(bed_path, "w") as fbed:
+        n_missing = 0
+        chrom = f"{group}_REPLACE_WITH_ACCESSION"
+        with open(bed_path, "w", encoding="utf-8") as fbed:
             for r in records:
-                direction = classify_direction(r["name"])
-                suffix = "_LEFT" if direction == "LEFT" else "_RIGHT"
-                strand = "+" if direction == "LEFT" else "-"
                 if r["from"] is None or r["to"] is None:
-                    n_missing_coords += 1
+                    n_missing += 1
                     continue
-                start0 = r["from"] - 1
-                end0 = r["to"]
-                fbed.write(
-                    f"{chrom_placeholder}\t{start0}\t{end0}\t{r['name']}{suffix}\t{r['pool']}\t{strand}\n"
-                )
+                lo, hi = sorted((r["from"], r["to"]))
+                strand = "+" if r["direction"] == "LEFT" else "-"
+                fbed.write(f"{chrom}\t{lo - 1}\t{hi}\t{r['artic_name']}\t{r['pool']}\t{strand}\n")
 
-        n_inferred = sum(1 for r in records if r["pool_inferred"])
-        print(
-            f"[{serotype}] {len(records)} mồi -> {csv_path}, {fasta_path}, {bed_path}"
-            f" | pool tự suy luận: {n_inferred}/{len(records)}"
-            + (f" | THIẾU TOẠ ĐỘ: {n_missing_coords} mồi (xem CSV, cột from/to trống)" if n_missing_coords else "")
-        )
+        n_inf = sum(1 for r in records if r["pool_inferred"])
+        amps = {r["amplicon"] for r in records}
+        incomplete = [a for a in sorted(amps)
+                      if not ({"LEFT", "RIGHT"} <= {r["direction"] for r in records if r["amplicon"] == a})]
+        print(f"[{group}] {len(records)} mồi, {len(amps)} amplicon -> {csv_path}, {fasta_path}, {bed_path}"
+              f" | pool tự suy luận: {n_inf}/{len(records)}"
+              + (f" | THIẾU TOẠ ĐỘ: {n_missing}" if n_missing else ""))
+        if incomplete:
+            print(f"    [!] Amplicon thiếu mồi trái hoặc phải: {incomplete}")
 
-    print(
-        "\n⚠️  BED trên là PROVISIONAL (dựa thẳng vào cột From/To trong Excel).\n"
-        "    Bắt buộc chạy 02_select_reference.sh rồi 03_build_primer_bed.py để BLAST\n"
-        "    lại từng mồi lên đúng reference đã chọn trước khi dùng cho viralrecon."
-    )
+    print("\n[!] BED trên là PROVISIONAL (dựa vào cột From/To trong Excel). Hãy chạy 02_select_reference.sh\n"
+          "    rồi 03_build_primer_bed.py để BLAST lại từng mồi lên đúng reference trước khi chạy viralrecon.")
 
 
 if __name__ == "__main__":

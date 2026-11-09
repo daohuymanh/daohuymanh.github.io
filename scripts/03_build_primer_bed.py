@@ -1,150 +1,216 @@
 #!/usr/bin/env python3
 """
-03_build_primer_bed.py
------------------------
-Dựng file .bed mồi CHÍNH XÁC cho iVar/artic minion bằng cách BLAST (blastn-short)
-từng trình tự mồi (từ <SEROTYPE>_primers.fasta, sinh ở bước 01) lên chính bản
-reference đã chọn ở bước 02 - thay vì tin thẳng cột From/To trong Excel gốc
-(có thể lệch nếu Excel được đánh số theo một reference/isolate khác).
+03_build_primer_bed.py  (phiên bản 2)
+-------------------------------------
+Dựng file .bed mồi CHÍNH XÁC cho iVar/viralrecon bằng cách BLAST (blastn-short) từng trình tự mồi
+(<nhóm>_primers.fasta từ bước 01) lên CHÍNH reference đã chọn ở bước 02, thay vì tin cột From/To
+trong Excel (có thể được đánh số theo reference khác).
 
-YÊU CẦU: blastn (ncbi-blast+) cài sẵn trong PATH. Chạy trên máy có blast+,
-KHÔNG chạy trong sandbox chat này.
+So với phiên bản 1:
+  - Toạ độ BED bao trọn TOÀN BỘ chiều dài mồi (kể cả khi 1-2 base ở đầu mồi không khớp reference
+    nên BLAST chỉ căn một phần), vì iVar cắt primer theo toạ độ này.
+  - Kiểm tra chiều: mồi LEFT phải khớp chiều xuôi (plus), mồi RIGHT phải khớp chiều ngược (minus).
+  - Kiểm tra amplicon: mỗi amplicon phải có cả mồi trái và phải, độ dài hợp lý (--min-amplicon / --max-amplicon).
+  - Tên mồi trong BED là tên ARTIC (<nhóm>_<số>_LEFT / _RIGHT / _RIGHT_alt) để viralrecon ghép cặp amplicon.
+  - Mặc định thoát với mã 0 kể cả khi có cảnh báo (an toàn trong vòng lặp shell); dùng --strict để thoát 1.
+
+YÊU CẦU: blastn và makeblastdb (ncbi-blast+) trong PATH.
 
 Cách dùng:
     python3 03_build_primer_bed.py \
-        --primers-fasta primers_parsed/D2_primers.fasta \
-        --primers-csv   primers_parsed/D2_primers.csv \
-        --reference     references/D2_chosen_reference.fasta \
-        --out-prefix    final_bed/D2
+        --primers-fasta primers_parsed/D1_primers.fasta \
+        --primers-csv   primers_parsed/D1_primers.csv \
+        --reference     ref_selection_out/references/D1_chosen_reference.fasta \
+        --out-prefix    final_bed/D1
 
 Sinh ra:
-    <out-prefix>.bed              : BED cuối cùng dùng cho --primer_bed
-    <out-prefix>.primer_fasta.fa  : copy lại FASTA mồi dùng cho --primer_fasta
-    <out-prefix>.mapping_report.tsv : chi tiết % identity / coverage mỗi mồi,
-                                       để bạn soát lại các mồi map yếu (<95% identity
-                                       hoặc coverage <100%) trước khi dùng.
+    <out-prefix>.bed                 : BED dùng cho --primer_bed
+    <out-prefix>.primer_fasta.fa     : FASTA mồi dùng cho --primer_fasta
+    <out-prefix>.mapping_report.tsv  : %identity, coverage, chiều, toạ độ từng mồi
+    <out-prefix>.amplicons.tsv       : toạ độ và độ dài từng amplicon
 """
 import argparse
 import csv
+import os
 import subprocess
 import sys
 import tempfile
-import os
+from collections import defaultdict
+
+BLAST_FIELDS = ("qseqid sseqid pident length qcovs qstart qend qlen "
+                "sstart send sstrand evalue bitscore").split()
+
+
+def read_ref_length(reference_fasta):
+    """Độ dài bản ghi đầu tiên của FASTA reference và tên sequence (token đầu của header)."""
+    name, length = None, 0
+    with open(reference_fasta) as fh:
+        for line in fh:
+            if line.startswith(">"):
+                if name is not None:
+                    break
+                name = line[1:].split()[0]
+            else:
+                length += len(line.strip())
+    return name or "REF", length
 
 
 def run_blast(primers_fasta, reference_fasta):
-    """BLAST ngắn (tối ưu cho mồi 18-25bp) từng mồi lên reference, trả về dict
-    name -> best hit (sstart, send, sstrand, pident, qcovs, length)."""
+    """BLAST ngắn từng mồi lên reference; trả về dict tên mồi -> hit tốt nhất (theo bitscore)."""
     with tempfile.TemporaryDirectory() as tmp:
-        db_prefix = os.path.join(tmp, "ref_db")
-        subprocess.run(
-            ["makeblastdb", "-in", reference_fasta, "-dbtype", "nucl", "-out", db_prefix],
-            check=True, capture_output=True,
-        )
-        cmd = [
-            "blastn", "-task", "blastn-short",
-            "-query", primers_fasta, "-db", db_prefix,
-            "-outfmt", "6 qseqid sseqid pident length qcovs sstart send sstrand evalue bitscore",
-            "-evalue", "1000", "-word_size", "7", "-max_target_seqs", "5",
-        ]
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        db = os.path.join(tmp, "ref_db")
+        subprocess.run(["makeblastdb", "-in", reference_fasta, "-dbtype", "nucl", "-out", db],
+                       check=True, capture_output=True)
+        cmd = ["blastn", "-task", "blastn-short", "-query", primers_fasta, "-db", db,
+               "-outfmt", "6 " + " ".join(BLAST_FIELDS),
+               "-evalue", "1000", "-word_size", "7", "-max_target_seqs", "5"]
+        res = subprocess.run(cmd, check=True, capture_output=True, text=True)
+    return parse_blast(res.stdout)
 
+
+def parse_blast(text):
     hits = {}
-    for line in result.stdout.strip().splitlines():
-        f = line.split("\t")
-        qseqid, sseqid, pident, length, qcovs, sstart, send, sstrand, evalue, bitscore = f
-        pident, length, qcovs, bitscore = float(pident), int(length), float(qcovs), float(bitscore)
-        best = hits.get(qseqid)
-        if best is None or bitscore > best["bitscore"]:
-            hits[qseqid] = dict(
-                sseqid=sseqid, pident=pident, length=length, qcovs=qcovs,
-                sstart=int(sstart), send=int(send), sstrand=sstrand, bitscore=bitscore,
-            )
+    for line in text.strip().splitlines():
+        f = dict(zip(BLAST_FIELDS, line.split("\t")))
+        h = {
+            "pident": float(f["pident"]), "qcovs": float(f["qcovs"]),
+            "qstart": int(f["qstart"]), "qend": int(f["qend"]), "qlen": int(f["qlen"]),
+            "sstart": int(f["sstart"]), "send": int(f["send"]),
+            "sstrand": f["sstrand"], "bitscore": float(f["bitscore"]),
+        }
+        best = hits.get(f["qseqid"])
+        if best is None or h["bitscore"] > best["bitscore"]:
+            hits[f["qseqid"]] = h
     return hits
 
 
-def load_pool_and_direction(primers_csv):
-    info = {}
-    with open(primers_csv) as f:
-        for row in csv.DictReader(f):
-            info[row["name"]] = row
-    return info
+def footprint(hit, ref_len):
+    """Toạ độ BED (0-based, half-open) bao trọn toàn bộ mồi trên reference."""
+    qs, qe, ql = hit["qstart"], hit["qend"], hit["qlen"]
+    ss, se = hit["sstart"], hit["send"]
+    if ss <= se:                      # mồi khớp chiều xuôi
+        low, high = ss - (qs - 1), se + (ql - qe)
+    else:                             # mồi khớp chiều ngược
+        low, high = se - (ql - qe), ss + (qs - 1)
+    low, high = max(low, 1), min(high, ref_len)
+    return low - 1, high
+
+
+def amplicon_id(artic_name):
+    """'D1_18_RIGHT_alt2' -> ('D1_18', 'RIGHT'); trả (None, None) nếu không nhận ra."""
+    for tag in ("_LEFT", "_RIGHT"):
+        if tag in artic_name:
+            return artic_name.split(tag)[0], tag[1:]
+    return None, None
+
+
+def check_amplicons(bed_rows, min_len, max_len):
+    amps = defaultdict(lambda: {"LEFT": [], "RIGHT": [], "pool": ""})
+    for chrom, start0, end0, name, pool, strand in bed_rows:
+        aid, side = amplicon_id(name)
+        if aid is None:
+            continue
+        amps[aid][side].append((start0, end0))
+        amps[aid]["pool"] = pool
+    rows, warnings = [], []
+    for aid in sorted(amps, key=lambda a: min([s for s, _ in amps[a]["LEFT"] + amps[a]["RIGHT"]] or [0])):
+        L, R = amps[aid]["LEFT"], amps[aid]["RIGHT"]
+        if not L or not R:
+            warnings.append(f"Amplicon {aid} thiếu mồi {'trái' if not L else 'phải'}")
+            rows.append([aid, "", "", "", amps[aid]["pool"], "THIEU_MOI"])
+            continue
+        start = min(s for s, _ in L)
+        end = max(e for _, e in R)
+        length = end - start
+        flag = "ok"
+        if length < min_len or length > max_len:
+            flag = "DO_DAI_BAT_THUONG"
+            warnings.append(f"Amplicon {aid}: độ dài {length} bp nằm ngoài [{min_len}, {max_len}] "
+                            f"(kiểm tra mồi map nhầm vị trí hoặc đánh số amplicon)")
+        rows.append([aid, start, end, length, amps[aid]["pool"], flag])
+    return rows, warnings
 
 
 def main():
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--primers-fasta", required=True)
     ap.add_argument("--primers-csv", required=True)
     ap.add_argument("--reference", required=True)
     ap.add_argument("--out-prefix", required=True)
-    ap.add_argument("--min-pident", type=float, default=90.0,
-                     help="Ngưỡng %%identity tối thiểu để chấp nhận mồi map được (default 90)")
+    ap.add_argument("--min-pident", type=float, default=90.0, help="%%identity tối thiểu (mặc định 90)")
+    ap.add_argument("--min-qcov", type=float, default=90.0, help="coverage tối thiểu của mồi (mặc định 90)")
+    ap.add_argument("--min-amplicon", type=int, default=100)
+    ap.add_argument("--max-amplicon", type=int, default=3000)
+    ap.add_argument("--strict", action="store_true", help="Thoát mã 1 nếu có cảnh báo")
     args = ap.parse_args()
 
     os.makedirs(os.path.dirname(args.out_prefix) or ".", exist_ok=True)
-
+    chrom, ref_len = read_ref_length(args.reference)
     hits = run_blast(args.primers_fasta, args.reference)
-    pool_info = load_pool_and_direction(args.primers_csv)
 
-    # lấy tên chrom từ header đầu tiên của file reference fasta
-    with open(args.reference) as fh:
-        header = fh.readline().strip()
-    chrom = header.split()[0].lstrip(">") if header.startswith(">") else "REF"
+    meta = {}
+    with open(args.primers_csv, encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            meta[row.get("artic_name") or row["name"]] = row
 
-    bed_lines = []
-    report_rows = []
-    n_missing, n_low_identity = 0, 0
+    bed_rows, report, warnings = [], [], []
+    n_missing = n_weak = n_strand = n_partial = 0
 
-    for name, meta in pool_info.items():
-        direction = meta["direction"]  # LEFT / RIGHT
-        pool = meta["pool"]
+    for name, m in meta.items():
+        direction, pool = m["direction"], m["pool"]
         hit = hits.get(name)
-
         if hit is None:
             n_missing += 1
-            report_rows.append([name, direction, "NO_HIT", "", "", "", ""])
+            report.append([name, direction, "NO_HIT", "", "", "", "", "", ""])
             continue
-
-        if hit["pident"] < args.min_pident or hit["qcovs"] < 90:
-            n_low_identity += 1
-
-        s, e = sorted([hit["sstart"], hit["send"]])
-        start0, end0 = s - 1, e  # BED 0-based half-open
-        # strand chuẩn hoá theo quy ước ARTIC/iVar: LEFT='+' , RIGHT='-'
+        if hit["pident"] < args.min_pident or hit["qcovs"] < args.min_qcov:
+            n_weak += 1
+        expect = "plus" if direction == "LEFT" else "minus"
+        strand_ok = hit["sstrand"] == expect
+        if not strand_ok:
+            n_strand += 1
+        partial = hit["qend"] - hit["qstart"] + 1 < hit["qlen"]
+        if partial:
+            n_partial += 1
+        start0, end0 = footprint(hit, ref_len)
         strand = "+" if direction == "LEFT" else "-"
-        suffix = "_LEFT" if direction == "LEFT" else "_RIGHT"
+        bed_rows.append((chrom, start0, end0, name, pool, strand))
+        report.append([name, direction, f"{hit['pident']:.1f}", f"{hit['qcovs']:.0f}", hit["sstrand"],
+                       "ok" if strand_ok else "SAI_CHIEU", "partial" if partial else "full", start0, end0])
 
-        bed_lines.append((chrom, start0, end0, f"{name}{suffix}", pool, strand))
-        report_rows.append(
-            [name, direction, f"{hit['pident']:.1f}", f"{hit['qcovs']:.0f}",
-             hit["sstrand"], start0, end0]
-        )
+    bed_rows.sort(key=lambda x: (x[1], x[2]))
+    amp_rows, amp_warn = check_amplicons(bed_rows, args.min_amplicon, args.max_amplicon)
+    warnings.extend(amp_warn)
 
-    bed_lines.sort(key=lambda x: x[1])  # sắp theo toạ độ tăng dần
-
-    bed_path = f"{args.out_prefix}.bed"
-    with open(bed_path, "w") as fbed:
-        for chrom_, start0, end0, name_, pool_, strand_ in bed_lines:
-            fbed.write(f"{chrom_}\t{start0}\t{end0}\t{name_}\t{pool_}\t{strand_}\n")
-
-    report_path = f"{args.out_prefix}.mapping_report.tsv"
-    with open(report_path, "w", newline="") as frep:
-        w = csv.writer(frep, delimiter="\t")
-        w.writerow(["name", "direction", "pident", "qcovs", "blast_strand", "bed_start0", "bed_end0"])
-        w.writerows(report_rows)
-
-    fasta_copy = f"{args.out_prefix}.primer_fasta.fa"
-    with open(args.primers_fasta) as src, open(fasta_copy, "w") as dst:
+    with open(f"{args.out_prefix}.bed", "w") as fbed:
+        for r in bed_rows:
+            fbed.write("\t".join(str(x) for x in r) + "\n")
+    with open(f"{args.out_prefix}.mapping_report.tsv", "w", newline="") as f:
+        w = csv.writer(f, delimiter="\t")
+        w.writerow(["name", "direction", "pident", "qcovs", "blast_strand", "strand_check",
+                    "alignment", "bed_start0", "bed_end0"])
+        w.writerows(report)
+    with open(f"{args.out_prefix}.amplicons.tsv", "w", newline="") as f:
+        w = csv.writer(f, delimiter="\t")
+        w.writerow(["amplicon", "start0", "end0", "length", "pool", "check"])
+        w.writerows(amp_rows)
+    with open(args.primers_fasta) as src, open(f"{args.out_prefix}.primer_fasta.fa", "w") as dst:
         dst.write(src.read())
 
-    print(f"-> {bed_path}  ({len(bed_lines)} mồi map thành công)")
-    print(f"-> {report_path}")
-    print(f"-> {fasta_copy}")
+    print(f"-> {args.out_prefix}.bed  ({len(bed_rows)} mồi map; reference {chrom}, {ref_len} bp)")
+    print(f"-> {args.out_prefix}.mapping_report.tsv, {args.out_prefix}.amplicons.tsv, "
+          f"{args.out_prefix}.primer_fasta.fa")
     if n_missing:
-        print(f"⚠️  {n_missing} mồi KHÔNG map được lên reference này - kiểm tra lại serotype/reference đã chọn.")
-    if n_low_identity:
-        print(f"⚠️  {n_low_identity} mồi có %identity<{args.min_pident} hoặc coverage<90% - xem report để soát tay.")
-    if n_missing or n_low_identity:
+        warnings.append(f"{n_missing} mồi KHÔNG map được lên reference này (sai type/reference?)")
+    if n_weak:
+        warnings.append(f"{n_weak} mồi có %identity<{args.min_pident} hoặc coverage<{args.min_qcov}% (xem report)")
+    if n_strand:
+        warnings.append(f"{n_strand} mồi khớp SAI CHIỀU (LEFT phải plus, RIGHT phải minus): kiểm tra tên/chiều mồi")
+    if n_partial:
+        print(f"[i] {n_partial} mồi chỉ căn một phần; toạ độ BED đã được mở rộng ra đủ chiều dài mồi.")
+    for w_ in warnings:
+        print(f"[!] {w_}")
+    if warnings and args.strict:
         sys.exit(1)
 
 

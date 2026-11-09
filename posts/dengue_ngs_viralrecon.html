@@ -43,7 +43,7 @@
     <span class="tag tag--tools">Công cụ phân tích</span>
     <h1>Pipeline giải trình tự Dengue và các virus RNA khác (multi-primer amplicon) trên nf-core/viralrecon</h1>
     <div class="article-meta">
-      <span>2026.09.23</span>
+      <span>2026.09.11</span>
       <span>90 phút đọc</span>
     </div>
     <div class="article-author">
@@ -67,8 +67,13 @@
       <li><span class="script-download-icon">📎</span><a href="../scripts/03_build_primer_bed.py" download>03_build_primer_bed.py</a></li>
       <li><span class="script-download-icon">📎</span><a href="../scripts/04_run_viralrecon.sh" download>04_run_viralrecon.sh</a></li>
       <li><span class="script-download-icon">📎</span><a href="../scripts/fastq_dir_to_samplesheet.py" download>fastq_dir_to_samplesheet.py</a></li>
+      <li><span class="script-download-icon">📎</span><a href="../scripts/qc_consensus.py" download>qc_consensus.py</a></li>
+      <li><span class="script-download-icon">📎</span><a href="../scripts/cut_region.py" download>cut_region.py</a></li>
+      <li><span class="script-download-icon">📎</span><a href="../scripts/summarize_variants.py" download>summarize_variants.py</a></li>
+      <li><span class="script-download-icon">📎</span><a href="../scripts/plot_tree.R" download>plot_tree.R</a></li>
       </ul>
     </div>
+     
 
 <h1>Pipeline giải trình tự Dengue và các virus RNA khác (multi-primer amplicon) trên nf-core/viralrecon</h1>
 <p>Tài liệu này đi trọn quy trình, từ file mồi và dữ liệu thô đến diễn giải kết quả (genotype, cây phát sinh loài, đột biến).
@@ -97,10 +102,15 @@ DENV2, DENV3, DENV4, Zika, Chikungunya, virus Dại và Enterovirus.</p>
                    ▼
         Bước 11: diễn giải kết quả và kiểm tra trước khi xuất bản
 </code></pre>
-<p><strong>Quan trọng:</strong> các script 02 và 03 cần <code>blastn</code>/<code>makeblastdb</code> (gói <code>ncbi-blast+</code>)
-và Internet (để tải genome tham chiếu). Các script 01-03 được viết cho 4 serotype Dengue
-(thư mục <code>D1</code> đến <code>D4</code>); với virus khác, đổi tên nhóm (type) tương ứng và kiểm tra lại vòng lặp trong script.</p>
+<p><strong>Quan trọng:</strong> các script 02 và 03 cần <code>blastn</code>/<code>makeblastdb</code> (gói <code>ncbi-blast+</code>) và Internet
+(để tải genome tham chiếu). Bộ script phiên bản 2 đi kèm tài liệu này dùng được cho nhiều virus: script 01 tách nhóm
+(type) từ chính tên mồi, script 02 coi mỗi thư mục con là một type (accession RefSeq lấy từ bảng mặc định của Dengue
+hoặc từ file <code>REFSEQ_TSV</code>), script 03 và 04 nhận reference, BED và samplesheet theo từng type. Mô tả chi tiết ở Phụ lục D.</p>
 <blockquote>
+<p><strong>Cảnh báo quan trọng về <code>--protocol</code>:</strong> mặc định của viralrecon là <code>metagenomic</code>. Với dữ liệu amplicon <strong>bắt buộc
+truyền <code>--protocol amplicon</code></strong>; nếu không, iVar không cắt primer, <code>--primer_bed</code> không được dùng để cắt và trình tự
+consensus tại các vị trí mồi phản ánh trình tự MỒI chứ không phải trình tự mẫu. Script <code>04_run_viralrecon.sh</code> đã tự
+truyền cờ này. Cách kiểm tra sau khi chạy: <code>grep -c -i ivar_trim $OUT/pipeline_info/execution_trace_*.txt</code> phải lớn hơn 0 (Bước 4.4).</p>
 <p><strong>Bài học quan trọng từ lô DENV1:</strong> dùng thẳng reference RefSeq mà bỏ qua Bước 2 có thể làm mẫu cách reference
 khoảng 7% (khoảng 800 SNP trên genome 10,7 kb). Khi đó QUAST không align được, primer có thể bắt cặp kém và
 một số amplicon bị mất. <strong>Chọn reference gần genotype của mẫu (Bước 2) và BED đúng tọa độ reference đó (Bước 3)
@@ -197,11 +207,24 @@ trước khi dùng, vì tên gọi và cách phân loại thay đổi theo thờ
 <p>Nếu dùng bộ mồi có sẵn kiểu ARTIC/PrimalScheme (đã có file BED), chỉ cần kiểm tra tên mồi có hậu tố <code>_LEFT</code> và
 <code>_RIGHT</code> và cột đầu của BED trùng tên sequence trong FASTA reference. Với virus chưa có bộ mồi công bố, có thể thiết kế
 bằng PrimalScheme (xem tài liệu của công cụ) trên các genome đại diện của virus đó.</p>
+<p><strong>Quy ước tên mồi (script 01 cần):</strong> <code>&lt;nhóm&gt;&lt;dấu phân cách&gt;&lt;số amplicon&gt;&lt;F|R&gt;[bis|alt...]</code>, ví dụ <code>D1,1F</code>, <code>D1,17R</code>,
+<code>D1.23Rbis</code>, <code>ZIKV_12F</code>. Mồi F và R cùng số thuộc cùng một amplicon; hậu tố <code>bis</code>/<code>alt</code> là mồi thay thế cho amplicon đó.
+Dòng nào không khớp quy ước sẽ được liệt kê và bỏ qua (có thể đổi bằng <code>--name-regex</code>).</p>
 <hr />
 <h2>Bước 1 — chuẩn hoá bảng mồi</h2>
 <p>Chạy sau khi có file primer Excel:</p>
 <pre><code class="language-bash">python3 scripts/01_parse_primers.py Mồi_NGS_DEN.xlsx primers_parsed
 </code></pre>
+<p>Cột trong Excel mặc định (đếm từ 0): 1 tên, 2 From, 3 To, 4 trình tự, 9 Pool; đổi bằng <code>--col-name</code>, <code>--col-from</code>,
+<code>--col-to</code>, <code>--col-seq</code>, <code>--col-pool</code> và chọn sheet bằng <code>--sheet</code>. Với mỗi nhóm (D1, D2...), script tạo:
+- <code>&lt;nhóm&gt;_primers.csv</code>: cả tên gốc (<code>name</code>) và <strong>tên ARTIC</strong> (<code>artic_name</code>), hướng, số amplicon, pool, cờ <code>pool_inferred</code>;
+- <code>&lt;nhóm&gt;_primers.fasta</code>: header là tên ARTIC;
+- <code>&lt;nhóm&gt;_primers.provisional.bed</code>: BED tạm từ toạ độ Excel (không dùng cho phân tích chính thức).</p>
+<p><strong>Vì sao đổi sang tên ARTIC:</strong> viralrecon ghép mồi trái và phải thành amplicon dựa trên tên có dạng
+<code>&lt;tên_amplicon&gt;_LEFT</code> và <code>&lt;tên_amplicon&gt;_RIGHT</code> (cùng <code>&lt;tên_amplicon&gt;</code>). Tên kiểu <code>D1,18F_LEFT</code> và <code>D1,18R_RIGHT</code> có phần
+đầu khác nhau (<code>D1,18F</code> và <code>D1,18R</code>) nên không ghép được thành một amplicon. Script đổi thành <code>D1_18_LEFT</code> và <code>D1_18_RIGHT</code>;
+mồi thay thế thành <code>D1_18_RIGHT_alt</code>. Pool, nếu cột Pool trống, được suy luận theo amplicon (luân phiên 1, 2, 1, 2...)
+và đánh dấu <code>pool_inferred=True</code>; hãy đối chiếu lại với protocol PCR gốc.</p>
 <h2>Bước 2 — Chọn reference (genotype) phù hợp, TRONG PHẠM VI type đã biết trước</h2>
 <p>Vì type (serotype) mỗi mẫu <strong>đã biết trước</strong> (RT-PCR định type...), script không còn
 BLAST để "đoán type" nữa — chỉ BLAST để chọn đúng <strong>genotype/isolate</strong>
@@ -225,7 +248,14 @@ ref_selection_out/references/D2_extra.fasta
 <p>Chạy:</p>
 <pre><code class="language-bash">bash scripts/02_select_reference.sh contigs_per_sample/ ref_selection_out/
 </code></pre>
-<p>Script tự động: với mỗi type có mẫu → build ngân hàng BLAST riêng (RefSeq
+<p>Biến môi trường tuỳ chọn:
+- <code>REFSEQ_TSV=refseq.tsv</code>: file hai cột (tên type, accession) cho virus ngoài Dengue; type nào không có accession sẽ bị bỏ qua và báo.
+- <code>PIDENT_WARN=95</code>: cảnh báo khi mẫu khác reference nhiều hơn ngưỡng này (identity thấp hơn 95%).
+- <code>AUTO_CHOOSE=1</code>: tự tải accession được chọn nhiều nhất thành <code>&lt;type&gt;_chosen_reference.fasta</code>.</p>
+<p>Cách chọn "best hit" ở phiên bản 2: gộp mọi đoạn căn của mẫu theo từng reference, chọn reference có <strong>tổng bitscore</strong> cao
+nhất, và tính identity có trọng số theo độ dài căn (không để một đoạn căn ngắn có identity cao đánh lừa). Kết quả gồm
+<code>best_reference_per_sample.tsv</code> và <code>reference_choice_per_type.tsv</code> (accession nào được chọn nhiều nhất cho mỗi type).
+Script tự động: với mỗi type có mẫu → build ngân hàng BLAST riêng (RefSeq
 + file <code>_extra.fasta</code> nếu có) → BLAST từng mẫu trong đúng type đó.</p>
 <p>Kết quả <code>ref_selection_out/results/best_reference_per_sample.tsv</code> cho biết
 accession NCBI khớp nhất với từng mẫu (kèm cột type để đối chiếu). Trong
@@ -274,10 +304,17 @@ done
 <p>Kiểm tra <code>final_bed/D*.mapping_report.tsv</code> — mồi nào có <code>pident&lt;90</code> hoặc
 <code>qcovs&lt;90</code> cần xem lại (thiết kế mồi lệch reference, hoặc reference chọn sai
 genotype).</p>
-<p><strong>Lưu ý về BED:</strong> tên primer phải có hậu tố <code>_LEFT</code> và <code>_RIGHT</code> (ví dụ <code>D1,18F_LEFT</code>,
-<code>D1,17R_RIGHT</code>). Nếu dùng hậu tố khác, thêm <code>--primer_left_suffix</code> và
-<code>--primer_right_suffix</code> khi chạy viralrecon. Cột đầu của BED phải trùng tên sequence trong file FASTA reference
-(ví dụ <code>NC_001477.1</code>).</p>
+<p>Script 03 (phiên bản 2) khác phiên bản đầu ở các điểm sau:
+- <strong>Toạ độ bao trọn toàn bộ mồi:</strong> nếu 1-2 base ở đầu mồi không khớp reference nên BLAST chỉ căn một phần, toạ độ BED vẫn được
+  mở rộng ra đủ chiều dài mồi, vì iVar cắt primer theo toạ độ này.
+- <strong>Kiểm tra chiều:</strong> mồi LEFT phải khớp chiều xuôi (plus), mồi RIGHT phải khớp chiều ngược (minus); sai chiều được báo.
+- <strong>Kiểm tra amplicon</strong> (<code>&lt;out-prefix&gt;.amplicons.tsv</code>): mỗi amplicon cần cả mồi trái và phải, độ dài trong khoảng
+  <code>--min-amplicon</code> đến <code>--max-amplicon</code> (mặc định 100-3000 bp).
+- <strong>Tên mồi trong BED là tên ARTIC</strong> (<code>D1_18_LEFT</code>, <code>D1_18_RIGHT</code>, <code>D1_18_RIGHT_alt</code>), để viralrecon ghép cặp amplicon.
+- Mặc định thoát với mã 0 kể cả khi có cảnh báo (an toàn trong vòng lặp shell); thêm <code>--strict</code> để thoát mã 1.</p>
+<p>Kiểm tra <code>final_bed/D*.mapping_report.tsv</code> và <code>final_bed/D*.amplicons.tsv</code> ngay sau khi chạy. Cột đầu của BED phải trùng tên
+sequence trong FASTA reference (ví dụ <code>NC_001477.1</code>); script 04 sẽ kiểm tra lại điều này trước khi chạy. Nếu dùng hậu tố
+khác <code>_LEFT</code>/<code>_RIGHT</code>, thêm <code>--primer_left_suffix</code> và <code>--primer_right_suffix</code> khi chạy viralrecon.</p>
 <hr />
 <h2>Bước 4 — Chuẩn bị môi trường và chạy nf-core/viralrecon</h2>
 <h3>4.0. Đặt biến dùng chung (sửa theo virus và lô)</h3>
@@ -349,10 +386,17 @@ executor {
   <code>bash
   NXF_VER=25.04.6 nextflow -c custom.config config ~/.nextflow/assets/nf-core/viralrecon -profile conda -flat | grep -i quast</code></li>
 </ul>
-<h3>4.4. Lệnh chạy Illumina (đã kiểm chứng với dengue D1)</h3>
+<h3>4.4. Lệnh chạy Illumina (amplicon)</h3>
+<blockquote>
+<p><strong>Bắt buộc <code>--protocol amplicon</code>.</strong> Mặc định của viralrecon là <code>metagenomic</code>: khi đó iVar không cắt primer, <code>--primer_bed</code>
+không được dùng để cắt và caller mặc định là bcftools. Với dữ liệu amplicon, nếu primer không bị cắt thì consensus tại các
+vị trí mồi phản ánh trình tự <strong>mồi</strong> (thiết kế theo reference) chứ không phải trình tự mẫu, nghiêm trọng hơn khi mẫu khác
+reference. Sau khi chạy, kiểm tra: <code>grep -c -i ivar_trim $OUT/pipeline_info/execution_trace_*.txt</code> phải lớn hơn 0.</p>
+</blockquote>
 <pre><code class="language-bash">NXF_VER=25.04.6 nextflow run nf-core/viralrecon -r 3.0.0 \
   --input $SAMPLESHEET \
   --platform illumina \
+  --protocol amplicon \
   --outdir $OUT \
   --fasta $REF \
   --gff $GFF \
@@ -367,7 +411,7 @@ executor {
   -ansi-log false \
   -resume
 </code></pre>
-<p>Giải thích các tham số bỏ qua (Pangolin, Freyja và dataset Nextclade mặc định dành cho SARS-CoV-2):</p>
+<p>Giải thích các tham số (Pangolin, Freyja và dataset Nextclade mặc định dành cho SARS-CoV-2):</p>
 <table>
 <thead>
 <tr>
@@ -376,6 +420,10 @@ executor {
 </tr>
 </thead>
 <tbody>
+<tr>
+<td><code>--protocol amplicon</code></td>
+<td>Bật cắt primer bằng iVar theo <code>--primer_bed</code>; caller biến thể mặc định là iVar (bcftools ở chế độ metagenomic)</td>
+</tr>
 <tr>
 <td><code>--skip_pangolin</code></td>
 <td>Pangolin chỉ dành cho SARS-CoV-2; bước <code>PANGOLIN_UPDATEDATA</code> còn có thể lỗi khi tạo env conda</td>
@@ -400,28 +448,46 @@ executor {
 <td><code>--skip_kraken2</code> (tuỳ chọn)</td>
 <td>Bỏ bước loại reads người nếu không cần, tiết kiệm thời gian và RAM</td>
 </tr>
+<tr>
+<td><code>--variant_caller bcftools</code> (tuỳ chọn)</td>
+<td>Ép dùng bcftools thay cho iVar (mặc định của chế độ amplicon)</td>
+</tr>
 </tbody>
 </table>
-<p><code>-ansi-log false</code> giúp log dễ đọc hơn trong tmux và trên màn hình nhỏ (tablet). Caller biến thể trong lô
-D1 là bcftools (thư mục <code>variants/bcftools</code>); kiểm tra caller thực tế trong <code>pipeline_info/params_*.json</code>.</p>
-<p>Script <code>04_run_viralrecon.sh</code> (Illumina MiSeq, ví dụ type D2):</p>
-<pre><code class="language-bash">bash scripts/04_run_viralrecon.sh illumina D2 \
-  samplesheet_illumina_D2.csv \
-  final_bed/D2.bed \
-  final_bed/D2.primer_fasta.fa \
-  ref_selection_out/references/D2_chosen_reference.fasta \
-  results_illumina_D2
+<p><code>-ansi-log false</code> giúp log dễ đọc hơn trong tmux và trên màn hình nhỏ (tablet). Với <code>--protocol amplicon</code>, thư mục kết quả biến thể
+đặt theo tên caller (<code>variants/ivar/</code> hoặc <code>variants/bcftools/</code>); cấu trúc bên trong tương tự. Các lệnh ở Bước 5-10 dùng
+<code>find</code> để tự tìm đúng đường dẫn, nên không phụ thuộc caller. Xem caller thực tế trong <code>pipeline_info/params_*.json</code>.</p>
+<p><strong>Chạy lại lô đã chạy thiếu <code>--protocol amplicon</code>:</strong> thêm cờ rồi chạy lại với <code>-resume</code> và cân nhắc <code>--outdir</code> mới để giữ kết quả
+cũ. Các bước trước khi cắt primer (fastp, Bowtie2) được tái sử dụng từ cache; các bước sau (cắt primer, gọi biến thể,
+consensus, thống kê) chạy lại. Sau đó thay mọi số liệu minh hoạ và nhận định dựa trên lần chạy cũ (Bước 5 trở đi).</p>
+<p><strong>Dùng script <code>04_run_viralrecon.sh</code></strong> (bản 2 đã gồm sẵn <code>--protocol amplicon</code>, ghim phiên bản, <code>-c custom.config</code>, các <code>--skip_*</code>
+và kiểm tra BED/FASTA trước khi chạy). Illumina, ví dụ type D1:</p>
+<pre><code class="language-bash">GFF=reference/dengue/DENV1.gff \
+  bash scripts/04_run_viralrecon.sh illumina D1 \
+    samplesheet_D1.csv \
+    final_bed/D1.bed \
+    ref_selection_out/references/D1_chosen_reference.fasta \
+    results_illumina_D1
 </code></pre>
-<p>Nên mở script và đảm bảo nó đã gồm các tham số trên (ghim <code>-r</code>, <code>-c custom.config</code>, các <code>--skip_*</code>).</p>
-<p><strong>Nanopore</strong> (Medaka, không cần fast5), ví dụ type D2:</p>
-<pre><code class="language-bash">bash scripts/04_run_viralrecon.sh nanopore D2 \
-  samplesheet_nanopore_D2.csv \
-  final_bed/D2.bed \
-  ref_selection_out/references/D2_chosen_reference.fasta \
-  results_nanopore_D2 \
-  fastq_pass_D2/ \
-  medaka &lt;tên_model_medaka_theo_kit/flowcell&gt;
+<p>Biến môi trường tuỳ chọn: <code>GFF</code>, <code>PRIMER_FASTA</code>, <code>VARIANT_CALLER</code>, <code>SKIP_PANGOLIN</code>, <code>SKIP_ASSEMBLY</code>, <code>SKIP_QUAST</code>, <code>SKIP_KRAKEN2</code>
+(1 = bỏ bước đó), <code>EXTRA_ARGS</code>, <code>VR_VERSION</code>, <code>NXF_VER</code>, <code>PROFILE</code>, <code>CUSTOM_CONFIG</code>, <code>DRY_RUN=1</code> (chỉ in lệnh, không chạy; nên
+chạy thử trước). Script thoát với lỗi nếu cột đầu của BED không khớp tên sequence trong FASTA hoặc tên mồi thiếu <code>_LEFT</code>/<code>_RIGHT</code>.</p>
+<p><strong>Nanopore (chưa kiểm chứng trên dữ liệu thật):</strong> viralrecon 3.0.0 chỉ hỗ trợ Nanopore amplicon theo ARTIC (Clair3), với tham số
+khác phiên bản 2.x: không còn <code>--artic_minion_caller</code> và tham số Medaka. Bản script cũ dùng các tham số đó nên sẽ không chạy đúng.
+Bản 2 dùng tham số của 3.0.0; kiểm tra bằng <code>nextflow run nf-core/viralrecon -r 3.0.0 --help</code> trước khi chạy:</p>
+<pre><code class="language-bash">PRIMER_SET=artic PRIMER_SET_VERSION=3 \
+  bash scripts/04_run_viralrecon.sh nanopore D1 \
+    samplesheet_nanopore_D1.csv final_bed/D1.bed \
+    ref_selection_out/references/D1_chosen_reference.fasta \
+    results_nanopore_D1 fastq_pass_D1/
 </code></pre>
+<p>Primer scheme tuỳ chỉnh cho ARTIC cần đúng cấu trúc thư mục scheme của ARTIC; hãy đọc tài liệu viralrecon 3.0.0 mục Nanopore.</p>
+<p><strong>Tạo samplesheet Illumina từ thư mục FASTQ:</strong></p>
+<pre><code class="language-bash">python3 scripts/fastq_dir_to_samplesheet.py fastq_dir samplesheet_D1.csv
+# gộp nhiều lane thành một mẫu (tên D1-879_S35_L001, ..._L002 -&gt; D1-879_S35):
+python3 scripts/fastq_dir_to_samplesheet.py fastq_dir samplesheet_D1.csv -sn -si 2
+</code></pre>
+<p>Mặc định mỗi lane là một mẫu riêng (tên như <code>D1-879_S35_L001</code>). Script cảnh báo khi có R2 không có R1 hoặc số file R1 và R2 không bằng nhau.</p>
 <p>Samplesheet mẫu:</p>
 <pre><code class="language-csv"># Illumina
 sample,fastq_1,fastq_2
@@ -564,6 +630,26 @@ scp daohuymanh@&lt;IP-tailscale&gt;:/mnt/e/Analysis/output/result_illumina_D1/mu
 <td>Cảnh báo của ggplot2/ggtree/R</td>
 <td>Vô hại</td>
 </tr>
+<tr>
+<td><code>grep -c -i ivar_trim $OUT/pipeline_info/execution_trace_*.txt</code> trả về 0 ở dữ liệu amplicon</td>
+<td>Chạy ở chế độ mặc định <code>metagenomic</code>, primer không được cắt</td>
+<td>Thêm <code>--protocol amplicon</code> rồi chạy lại với <code>-resume</code> (Mục 4.4)</td>
+</tr>
+<tr>
+<td>Không có thư mục <code>mosdepth/amplicon</code> hoặc amplicon không ghép cặp</td>
+<td>Tên mồi trong BED không dạng <code>&lt;amplicon&gt;_LEFT</code>/<code>_RIGHT</code> cùng tên amplicon</td>
+<td>Dựng lại BED bằng script 01 và 03 phiên bản 2 (tên ARTIC)</td>
+</tr>
+<tr>
+<td>Báo tham số không nhận ra như <code>--artic_minion_caller</code> ở Nanopore</td>
+<td>Tham số của viralrecon 2.x, không có trong 3.0.0</td>
+<td>Dùng script 04 phiên bản 2 và kiểm tra <code>--help</code> của 3.0.0</td>
+</tr>
+<tr>
+<td>Script 04: cột 1 của BED không khớp tên sequence trong FASTA</td>
+<td>BED dựng cho reference khác</td>
+<td>Chạy lại script 03 với đúng reference đang dùng</td>
+</tr>
 </tbody>
 </table>
 <p>Khi gặp lỗi lạ, xem 30 dòng cuối của <code>.nextflow.log</code> và nội dung <code>.command.err</code> trong thư mục work của
@@ -615,7 +701,8 @@ tiến trình lỗi (đường dẫn in trong thông báo <code>Work dir:</code>
 </tr>
 </tbody>
 </table>
-<p>Cấu trúc thực tế trong <code>variants/</code> (caller bcftools):</p>
+<p>Cấu trúc thực tế trong <code>variants/</code> quan sát được ở lần chạy chế độ metagenomic (caller bcftools); với <code>--protocol amplicon</code>
+thư mục caller mặc định là <code>ivar</code> và bên trong còn có BAM đã cắt primer cùng thống kê amplicon (xác nhận bằng <code>find $OUT -maxdepth 3</code>):</p>
 <pre><code>variants/
 ├── bowtie2/
 │   ├── log/                 # log Bowtie2: có dòng &quot;overall alignment rate&quot;
@@ -646,6 +733,21 @@ vì xoá <code>work/</code> làm <code>-resume</code> không dùng lại đượ
 <hr />
 <h2>Bước 5 — Đánh giá chất lượng mẫu (và cách diễn giải)</h2>
 <p>Mở <code>multiqc/multiqc_report.html</code> trước, rồi kiểm tra thêm bằng các lệnh dưới đây (chạy trong <code>$WD</code>).</p>
+<p><strong>5.0. Kiểm tra trước: primer đã được cắt chưa, và tìm thư mục consensus</strong></p>
+<pre><code class="language-bash">cd $WD
+grep -c -i ivar_trim $OUT/pipeline_info/execution_trace_*.txt   # mỗi lần chạy một file; phải &gt; 0 ở dữ liệu amplicon (0 = primer CHƯA được cắt)
+grep -h '&quot;protocol&quot;' $OUT/pipeline_info/params_*.json            # null hoặc metagenomic = chưa bật chế độ amplicon
+export CONS_DIR=$(dirname &quot;$(find $WD/$OUT -name '*.consensus.fa' | head -n 1)&quot;)
+echo $CONS_DIR; ls $CONS_DIR | head -n 5
+find $OUT -type d -path '*mosdepth*' -name 'amplicon*' | head   # thống kê độ phủ theo amplicon (nếu có)
+</code></pre>
+<p>Không dùng <code>.nextflow.log</code> làm bằng chứng: mọi lệnh <code>nextflow</code> (kể cả <code>nextflow config</code>) đều ghi đè nó. Nếu <code>IVAR_TRIM</code> bằng 0 ở các file <code>execution_trace</code>, dừng lại và chạy lại với <code>--protocol amplicon</code> (Mục 4.4) trước khi đánh giá các mục dưới.
+<code>CONS_DIR</code> được dùng ở các mục sau để không phụ thuộc caller (<code>variants/ivar/...</code> hay <code>variants/bcftools/...</code>).</p>
+<blockquote>
+<p><strong>Lưu ý về số liệu minh hoạ:</strong> các ví dụ số liệu của lô D1 trong tài liệu này lấy từ lần chạy đầu ở chế độ <code>metagenomic</code>
+(chưa cắt primer). Khi chạy lại với <code>--protocol amplicon</code>, độ sâu quanh vị trí mồi, số N và đặc biệt trình tự consensus tại
+vị trí mồi có thể thay đổi; hãy tính lại số liệu và nhận định (mất amplicon, nhóm mẫu A/B/C) từ kết quả mới.</p>
+</blockquote>
 <p><strong>1. Tỷ lệ reads map vào reference.</strong> Chỉ số <code>100% mapped</code> trong flagstat <strong>không có ý nghĩa</strong> vì reads không
 map đã bị loại; hãy xem log Bowtie2:</p>
 <pre><code class="language-bash">grep -H &quot;overall alignment rate&quot; $(find $OUT -name '*.bowtie2.log')
@@ -672,12 +774,12 @@ for f in files:
     name = f.split('/')[-1].replace('.consensus.fa', '')
     print(f&quot;{name}\t{len(seq)}\t{n}\t\t{nw}\t\t{longest}&quot;)
 EOF
-python3 qc_consensus.py &quot;$OUT/variants/bcftools/consensus/bcftools/*.consensus.fa&quot; 95 10273 | column -t
+python3 qc_consensus.py &quot;$CONS_DIR/*.consensus.fa&quot; 95 10273 | column -t
 </code></pre>
 <p>Thay <code>95 10273</code> bằng tọa độ CDS của reference (lấy từ GFF, Mục 4.1). Lưu ý cách tính này giả định consensus giữ
 nguyên độ dài và tọa độ của reference (đúng với lô D1: mọi consensus dài 10.735 bp).</p>
 <p><strong>4. Vị trí các đoạn N</strong> (quan trọng hơn tỷ lệ N):</p>
-<pre><code class="language-bash">for f in $OUT/variants/bcftools/consensus/bcftools/*.consensus.fa; do
+<pre><code class="language-bash">for f in $CONS_DIR/*.consensus.fa; do
   echo &quot;== $(basename $f)&quot;
   grep -v '&gt;' $f | tr -d '\n' | grep -ob 'N\+' | awk -F: '{print $1+1 &quot;-&quot; $1+length($2)}' | head -n 20
 done
@@ -743,7 +845,7 @@ conda activate phylo
 mkdir -p $WD/downstream &amp;&amp; cd $WD/downstream
 </code></pre>
 <h3>6.1. Gom consensus của mẫu đạt chuẩn</h3>
-<pre><code class="language-bash">CONS=$WD/$OUT/variants/bcftools/consensus/bcftools
+<pre><code class="language-bash">CONS=$(dirname &quot;$(find $WD/$OUT -name '*.consensus.fa' | head -n 1)&quot;)   # thư mục chứa *.consensus.fa
 cd $WD/downstream
 # good_samples.txt: mỗi dòng một tên mẫu đạt chuẩn (xem Bước 5)
 for s in $(cat good_samples.txt); do cat $CONS/${s}.consensus.fa; done &gt; ${TAG}_good.fasta
@@ -1193,17 +1295,17 @@ Cây <code>.treefile</code> cũng mở được trực tiếp bằng FigTree ho�
 </thead>
 <tbody>
 <tr>
-<td><code>variants/bcftools/variants_long_table.csv</code></td>
+<td><code>variants/&lt;caller&gt;/variants_long_table.csv</code></td>
 <td>Một dòng cho mỗi biến thể của mỗi mẫu, kèm chú giải SnpEff</td>
 <td>Lọc, so sánh nhiều mẫu cùng lúc</td>
 </tr>
 <tr>
-<td><code>variants/bcftools/snpeff/</code></td>
+<td><code>variants/&lt;caller&gt;/snpeff/</code></td>
 <td>VCF chú giải amino acid và báo cáo SnpEff từng mẫu</td>
 <td>Xem chi tiết một mẫu</td>
 </tr>
 <tr>
-<td><code>variants/bcftools/consensus/bcftools/*.filtered.vcf.gz</code></td>
+<td><code>variants/&lt;caller&gt;/consensus/*/*.filtered.vcf.gz</code></td>
 <td>Biến thể thực sự được đưa vào consensus</td>
 <td>Biết đột biến nào nằm trong chuỗi consensus</td>
 </tr>
@@ -1220,7 +1322,7 @@ Cây <code>.treefile</code> cũng mở được trực tiếp bằng FigTree ho�
 </tbody>
 </table>
 <p>Xem tên các cột trước khi lọc:</p>
-<pre><code class="language-bash">cd $WD/$OUT/variants/bcftools
+<pre><code class="language-bash">cd &quot;$(dirname &quot;$(find $WD/$OUT -name variants_long_table.csv | head -n 1)&quot;)&quot;   # thư mục variants/&lt;caller&gt;
 head -n 1 variants_long_table.csv | tr ',' '\n' | cat -n
 wc -l variants_long_table.csv
 </code></pre>
@@ -1439,7 +1541,7 @@ hệ phân loại (genotype/lineage) và công cụ phân loại hiện hành, v
 <li>Chọn reference (RefSeq hoặc chuỗi gần nhất) và tải GFF <strong>cùng accession</strong> (Bước 4.1).</li>
 <li>Chuẩn bị bảng mồi và dựng BED đúng tọa độ reference đó (Bước 0-3); kiểm tra hậu tố <code>_LEFT</code>/<code>_RIGHT</code>.</li>
 <li>Đặt biến dùng chung (<code>TAG</code>, <code>REF</code>, <code>GFF</code>, <code>BED</code>, <code>OUT</code>; Bước 4.0).</li>
-<li>Chạy viralrecon với <code>--skip_pangolin --skip_nextclade --skip_freyja</code>; cân nhắc <code>--skip_assembly</code> hay giữ tùy độ đa dạng của virus (Bước 4.4).</li>
+<li>Chạy viralrecon với <strong><code>--protocol amplicon</code></strong> và <code>--skip_pangolin --skip_nextclade --skip_freyja</code>; cân nhắc <code>--skip_assembly</code> hay giữ tùy độ đa dạng của virus (Bước 4.4); sau khi chạy kiểm tra <code>grep -c -i ivar_trim $OUT/pipeline_info/execution_trace_*.txt</code> lớn hơn 0.</li>
 <li>Đánh giá chất lượng bằng <code>qc_consensus.py</code> (đổi tọa độ CDS) và các lệnh ở Bước 5; lập <code>good_samples.txt</code>.</li>
 <li>Phân loại (Bước 6): kiểm tra <code>nextclade dataset list</code> cho virus; nếu không có thì BLAST và cây.</li>
 <li>Đặt <code>TAXON</code>, <code>LEN_MIN</code>, <code>LEN_MAX</code>, danh sách nước, bộ lọc host phù hợp rồi chọn chuỗi tham chiếu (Bước 7).</li>
@@ -1456,27 +1558,99 @@ conda activate nf-core
 export WD=/mnt/e/Analysis TAG=... REF=... GFF=... BED=... SAMPLESHEET=... OUT=...
 cd $WD &amp;&amp; export NXF_CONDA_CACHEDIR=$HOME/nf_conda_cache
 
-# 1. Chạy viralrecon trong tmux (Bước 4.4)
+# 1. Mồi, reference, BED (Bước 0-3)
+python3 scripts/01_parse_primers.py primers.xlsx primers_parsed
+bash scripts/02_select_reference.sh contigs_per_sample/ ref_selection_out/
+python3 scripts/03_build_primer_bed.py --primers-fasta primers_parsed/D1_primers.fasta \
+  --primers-csv primers_parsed/D1_primers.csv --reference ref_selection_out/references/D1_chosen_reference.fasta \
+  --out-prefix final_bed/D1
+
+# 2. Samplesheet và chạy viralrecon trong tmux (Bước 4.4)
+python3 scripts/fastq_dir_to_samplesheet.py fastq_dir $SAMPLESHEET
 tmux new -As viralrecon
-NXF_VER=25.04.6 nextflow run nf-core/viralrecon -r 3.0.0 --input $SAMPLESHEET --platform illumina \
-  --outdir $OUT --fasta $REF --gff $GFF --primer_bed $BED \
-  --skip_pangolin --skip_nextclade --skip_freyja --skip_assembly --skip_variants_quast \
-  -profile conda -c custom.config -ansi-log false -resume
+DRY_RUN=1 GFF=$GFF bash scripts/04_run_viralrecon.sh illumina $TAG $SAMPLESHEET $BED $REF $OUT   # xem lệnh trước
+GFF=$GFF bash scripts/04_run_viralrecon.sh illumina $TAG $SAMPLESHEET $BED $REF $OUT
+grep -c -i ivar_trim $OUT/pipeline_info/execution_trace_*.txt   # phải &gt; 0
 
-# 2. Đánh giá chất lượng (Bước 5)
-python3 qc_consensus.py &quot;$OUT/variants/bcftools/consensus/bcftools/*.consensus.fa&quot; &lt;bắt_đầu_CDS&gt; &lt;kết_thúc_CDS&gt; | column -t
+# 3. Đánh giá chất lượng (Bước 5)
+export CONS_DIR=$(dirname &quot;$(find $WD/$OUT -name '*.consensus.fa' | head -n 1)&quot;)
+python3 scripts/qc_consensus.py &quot;$CONS_DIR/*.consensus.fa&quot; &lt;bắt_đầu_CDS&gt; &lt;kết_thúc_CDS&gt; | column -t
 
-# 3. Phân loại, chuỗi tham chiếu, cây (Bước 6-8)
+# 4. Phân loại, chuỗi tham chiếu, cây (Bước 6-8)
 conda activate phylo &amp;&amp; cd $WD/downstream
 #   gom consensus -&gt; Nextclade/BLAST -&gt; metadata NCBI -&gt; tải chuỗi -&gt; mafft -&gt; cut_region.py -&gt; iqtree
 
-# 4. Vẽ cây (Bước 9)
+# 5. Vẽ cây (Bước 9)
 conda activate rtree
-Rscript plot_tree.R ${TAG}_cds.treefile tree_${TAG} &quot;^${TAG}-&quot;
+Rscript scripts/plot_tree.R ${TAG}_cds.treefile tree_${TAG} &quot;^${TAG}-&quot;
 
-# 5. Đột biến (Bước 10)
-python3 summarize_variants.py $WD/$OUT/variants/bcftools/variants_long_table.csv 0.75 20 ${TAG}_mut
+# 6. Đột biến (Bước 10)
+python3 scripts/summarize_variants.py &quot;$(find $WD/$OUT -name variants_long_table.csv | head -n 1)&quot; 0.75 20 ${TAG}_mut
 </code></pre>
+<hr />
+<h2>Phụ lục D — Bộ script đi kèm</h2>
+<p>Đặt tất cả vào thư mục <code>scripts/</code> và chạy <code>chmod +x scripts/*</code>. Phần "đã thử" ghi rõ cách mỗi script được kiểm tra.</p>
+<table>
+<thead>
+<tr>
+<th>Script</th>
+<th>Chức năng</th>
+<th>Đã thử</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>01_parse_primers.py</code></td>
+<td>Đọc Excel mồi, tách nhóm, sinh CSV, FASTA, BED tạm với tên ARTIC; suy luận pool theo amplicon</td>
+<td>Với file Excel giả cùng cấu trúc: tách nhóm, tên ARTIC, mồi <code>bis</code>, pool đúng. Chưa thử với file Excel thật</td>
+</tr>
+<tr>
+<td><code>02_select_reference.sh</code></td>
+<td>BLAST mẫu lên ngân hàng reference theo type; chọn best hit theo tổng bitscore; cảnh báo khi khác xa; tóm tắt theo type; tuỳ chọn tự tải reference</td>
+<td>Với lệnh BLAST và <code>efetch</code> giả: gộp đoạn căn, cảnh báo identity thấp, tóm tắt và <code>AUTO_CHOOSE</code> đúng. Chưa chạy với BLAST và NCBI thật</td>
+</tr>
+<tr>
+<td><code>03_build_primer_bed.py</code></td>
+<td>BLAST mồi lên reference; BED bao trọn mồi; kiểm tra chiều và amplicon; báo cáo</td>
+<td>Các hàm tính toạ độ, chiều, kiểm tra amplicon thử riêng bằng dữ liệu giả. Chưa chạy toàn bộ với BLAST thật</td>
+</tr>
+<tr>
+<td><code>04_run_viralrecon.sh</code></td>
+<td>Dựng và chạy lệnh viralrecon (amplicon), kiểm tra BED/FASTA/GFF, <code>DRY_RUN</code></td>
+<td><code>DRY_RUN</code>: lệnh Illumina, Nanopore, các biến môi trường và các trường hợp báo lỗi. Chưa chạy Nextflow thật với các cờ này; nhánh Nanopore chưa kiểm chứng</td>
+</tr>
+<tr>
+<td><code>fastq_dir_to_samplesheet.py</code></td>
+<td>Tạo samplesheet từ thư mục FASTQ (gốc từ nf-core, đã vá lỗi R2 mồ côi, thêm cảnh báo)</td>
+<td>Tên file giả: chế độ mặc định, gộp lane, R2 mồ côi, lệch số file</td>
+</tr>
+<tr>
+<td><code>qc_consensus.py</code></td>
+<td>Độ dài, số N, N trong vùng mã hóa, đoạn N dài nhất</td>
+<td>Dữ liệu giả</td>
+</tr>
+<tr>
+<td><code>cut_region.py</code></td>
+<td>Cắt alignment theo toạ độ reference</td>
+<td>Dữ liệu giả</td>
+</tr>
+<tr>
+<td><code>summarize_variants.py</code></td>
+<td>Lọc <code>variants_long_table.csv</code> theo AF/DP, bảng đột biến và ma trận mẫu</td>
+<td>Dữ liệu giả (tên cột là giả định, hãy đối chiếu dòng <code>Các cột:</code> in ra)</td>
+</tr>
+<tr>
+<td><code>plot_tree.R</code></td>
+<td>Vẽ cây, xuất PDF/PNG/TIFF 300 dpi</td>
+<td>Bản gốc đã chạy trên server cho cây DENV1; bản dùng chung (tham số dòng lệnh, nhóm theo nước, <code>groups.tsv</code>) chưa chạy thử</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Thay đổi từ phiên bản 1 sang 2:</strong>
+- <code>01</code>: không cố định <code>D1..D4</code>; tên ARTIC; pool theo amplicon (phiên bản cũ ghép theo từng cặp liên tiếp nên lệch khi có mồi <code>bis</code>); cờ cột và sheet.
+- <code>02</code>: không cố định type; best hit theo tổng bitscore (phiên bản cũ có thể chọn đoạn căn ngắn có identity cao); cảnh báo khác xa; tóm tắt theo type; <code>AUTO_CHOOSE</code>.
+- <code>03</code>: BED bao trọn mồi; kiểm tra chiều và amplicon; tên ARTIC; không thoát lỗi mặc định.
+- <code>04</code>: thêm <code>--protocol amplicon</code> (thiếu ở phiên bản 1, dẫn đến chạy ở chế độ metagenomic); ghim phiên bản; mặc định profile conda; kiểm tra đầu vào; bỏ tham số Nanopore của 2.x; <code>DRY_RUN</code>.</p>
 <hr />
 <h2>Yêu cầu công cụ</h2>
 <table>
